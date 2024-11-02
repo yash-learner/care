@@ -24,7 +24,7 @@ class PlugConfigViewset(
             serializer = self.get_serializer(self.queryset, many=True)
             response = serializer.data
             cache.set(self.cache_key, response)
-        return Response({"configs": [response]})
+        return Response({"configs": response})
 
     def perform_create(self, serializer):
         cache.delete(self.cache_key)
