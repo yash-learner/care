@@ -15,7 +15,6 @@ class PlugConfigViewset(
     serializer_class = PLugConfigSerializer
     queryset = PlugConfig.objects.all().order_by("slug")
     cache_key = "care_plug_viewset_list"
-    authentication_classes = []
 
     def list(self, request, *args, **kwargs):
         # Cache data and return
