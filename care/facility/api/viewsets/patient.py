@@ -1045,12 +1045,13 @@ class PatientNotesViewSet(
             created_by=self.request.user,
         )
 
-        create_consultation_events(
-            instance.consultation_id,
-            instance,
-            self.request.user.id,
-            instance.created_date,
-        )
+        if patient.last_consultation is not None:
+            create_consultation_events(
+                instance.consultation_id,
+                instance,
+                self.request.user.id,
+                instance.created_date,
+            )
 
         message = {
             "facility_id": str(patient.facility.external_id),
