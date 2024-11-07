@@ -1,11 +1,12 @@
 from enum import Enum
 from unittest.mock import patch
 
+from django.utils import timezone
 from django.utils.timezone import now, timedelta
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from care.facility.models import PatientNoteThreadChoices
+from care.facility.models import PatientConsultation, PatientNoteThreadChoices
 from care.facility.models.file_upload import FileUpload
 from care.facility.models.icd11_diagnosis import (
     ConditionVerificationStatus,
@@ -328,25 +329,59 @@ class PatientNotesTestCase(TestUtils, APITestCase):
         self.assertEqual(data[0]["note"], new_note_content)
         self.assertEqual(data[1]["note"], note_content)
 
-    @patch("care.facility.events.handler.create_consultation_events")
+    @patch("care.facility.api.viewsets.patient.create_consultation_events")
     def test_note_without_consultation_does_not_call_create_consultation_events(
         self, mock_create_consultation_events
     ):
-        # Create a note without a consultation
+        patient_without_consultation = self.create_patient(self.district, self.facility)
+        response = self.client.post(
+            f"/api/v1/patient/{patient_without_consultation.external_id}/notes/",
+            data={
+                "note": "This is a test note without consultation",
+                "facility": self.facility.external_id,
+                "thread": PatientNoteThreadChoices.DOCTORS,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        mock_create_consultation_events.assert_not_called()
+
+    @patch("care.facility.api.viewsets.patient.create_consultation_events")
+    def test_note_with_inactive_consultation_does_not_call_create_consultation_events(
+        self, mock_create_consultation_events
+    ):
+        consultation = PatientConsultation.objects.get(id=self.consultation.id)
+        consultation.discharge_date = timezone.now()
+        consultation.save()
+
+        self.assertIsNotNone(consultation.discharge_date)
+
         response = self.client.post(
             f"/api/v1/patient/{self.patient.external_id}/notes/",
             data={
-                "note": "This is a test note without consultation",
+                "note": "This is a test note with inactive consultation",
                 "facility": self.patient.facility.external_id,
                 "thread": PatientNoteThreadChoices.DOCTORS,
             },
         )
 
-        # Check that the response is successful
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        # Verify that create_consultation_events was not called
         mock_create_consultation_events.assert_not_called()
+
+    @patch("care.facility.api.viewsets.patient.create_consultation_events")
+    def test_note_with_active_consultation_calls_create_consultation_events(
+        self, mock_create_consultation_events
+    ):
+        response = self.client.post(
+            f"/api/v1/patient/{self.patient.external_id}/notes/",
+            data={
+                "note": "This is a test note with active consultation",
+                "facility": self.patient.facility.external_id,
+                "thread": PatientNoteThreadChoices.DOCTORS,
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        mock_create_consultation_events.assert_called_once()
 
 
 class PatientTestCase(TestUtils, APITestCase):
