@@ -1,4 +1,5 @@
 from enum import Enum
+from unittest.mock import patch
 
 from django.utils.timezone import now, timedelta
 from rest_framework import status
@@ -326,6 +327,26 @@ class PatientNotesTestCase(TestUtils, APITestCase):
         self.assertEqual(len(data), 2)
         self.assertEqual(data[0]["note"], new_note_content)
         self.assertEqual(data[1]["note"], note_content)
+
+    @patch("care.facility.events.handler.create_consultation_events")
+    def test_note_without_consultation_does_not_call_create_consultation_events(
+        self, mock_create_consultation_events
+    ):
+        # Create a note without a consultation
+        response = self.client.post(
+            f"/api/v1/patient/{self.patient.external_id}/notes/",
+            data={
+                "note": "This is a test note without consultation",
+                "facility": self.patient.facility.external_id,
+                "thread": PatientNoteThreadChoices.DOCTORS,
+            },
+        )
+
+        # Check that the response is successful
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # Verify that create_consultation_events was not called
+        mock_create_consultation_events.assert_not_called()
 
 
 class PatientTestCase(TestUtils, APITestCase):
