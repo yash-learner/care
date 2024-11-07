@@ -1045,7 +1045,10 @@ class PatientNotesViewSet(
             created_by=self.request.user,
         )
 
-        if patient.last_consultation is not None:
+        if (
+            patient.last_consultation is not None
+            and patient.last_consultation.discharge_date is None
+        ):
             create_consultation_events(
                 instance.consultation_id,
                 instance,
