@@ -42,6 +42,8 @@ redis-om = "==0.3.1" # > 0.3.1 broken with pydantic < 2
 requests = "==2.32.3"
 sentry-sdk = "==2.14.0"
 whitenoise = "==6.7.0"
+simplejson = "*"
+json-fingerprint = "*"
 
 [dev-packages]
 boto3-stubs = { extras = ["s3", "boto3"], version = "==1.35.29" }

@@ -123,11 +123,7 @@ THIRD_PARTY_APPS = [
     "django_rest_passwordreset",
     "healthy_django",
 ]
-LOCAL_APPS = [
-    "care.facility",
-    "care.users",
-    "care.audit_log",
-]
+LOCAL_APPS = ["care.facility", "care.users", "care.audit_log", "care.emr"]
 
 PLUGIN_APPS = manager.get_apps()
 
