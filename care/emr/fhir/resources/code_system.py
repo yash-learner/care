@@ -1,6 +1,8 @@
+# ruff : noqa : N815
+
 from pydantic.main import BaseModel
 
-from care.emr.fhir.exceptions import MoreThanOneFHIRResourceFound
+from care.emr.fhir.exceptions import MoreThanOneFHIRResourceFoundError
 from care.emr.fhir.resources.base import ResourceManger
 from care.facility.models import User
 
@@ -28,7 +30,7 @@ class CodeSystemResource(ResourceManger):
     def get(self):
         full_result = self.query("GET", self.resource, self._filters)
         if full_result["total"] != 1:
-            raise MoreThanOneFHIRResourceFound("Exact Match of resource not found")
+            raise MoreThanOneFHIRResourceFoundError
         results = full_result["entry"]
         return self.serialize(results[0])
 
@@ -39,8 +41,3 @@ class CodeSystem(BaseModel):
     id: str
     url: str
     title: str
-    # status: str
-    # publisher: str
-    # hierarchyMeaning: str
-    # compositional: bool
-    # content: str

@@ -1,6 +1,6 @@
-class BaseFHIRException(Exception):
+class BaseFHIRError(Exception):
     pass
 
 
-class MoreThanOneFHIRResourceFound(BaseFHIRException):
+class MoreThanOneFHIRResourceFoundError(BaseFHIRError):
     pass

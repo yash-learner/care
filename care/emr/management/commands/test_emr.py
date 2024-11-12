@@ -1,5 +1,8 @@
+# ruff : noqa : T201 F841
+
 from django.core.management.base import BaseCommand
 
+from care.emr.fhir.resources.care_valueset import DISEASE_VALUESET
 from care.emr.fhir.resources.code_concept import CodeConceptResource
 from care.emr.fhir.resources.code_system import CodeSystemResource
 from care.emr.fhir.resources.valueset import ValueSetResource
@@ -24,7 +27,9 @@ class Command(BaseCommand):
             )
             .search()
         )
-        print(valueset)
-        # TODO Valueset include and exclude validation
-        # TODO Valueset figure out how to get other properties of code concept
+        print(DISEASE_VALUESET.composition)
+        for i in DISEASE_VALUESET.search("Blood"):
+            print(i)
+        # TODO Valueset figure out how to get other properties of code concept | Wasted like 6-8 hours on this
         # TODO Create CareValueset
+        # TODO Create API's for everything

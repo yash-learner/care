@@ -2,10 +2,6 @@ from pydantic.main import BaseModel
 
 from care.emr.fhir.resources.base import ResourceManger
 from care.emr.fhir.utils import parse_fhir_parameter_output
-from care.emr.registries.codeconcepts.base import CodeConcept
-from care.facility.models import User
-
-User.objects.filter()
 
 
 class CodeConceptResource(ResourceManger):
@@ -25,7 +21,8 @@ class CodeConceptResource(ResourceManger):
 
     def get(self):
         if "system" not in self._filters or "code" not in self._filters:
-            raise ValueError("Both system and code are required")
+            err = "Both system and code are required"
+            raise ValueError(err)
         full_result = self.query("GET", "CodeSystem/$lookup", self._filters)
         return self.serialize_lookup(full_result["parameter"])
 

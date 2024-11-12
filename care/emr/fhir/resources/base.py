@@ -1,3 +1,4 @@
+# ruff : noqa : SLF001
 from copy import deepcopy
 
 import json_fingerprint
@@ -11,15 +12,15 @@ default_fhir_client = FHIRClient(server_url="http://165.22.211.144/fhir")
 
 
 class ResourceManger:
-    _filters = {}
-    _meta = {}
-    _executed = False
     _fhir_client = default_fhir_client
     resource = ""
     allowed_properties = []
     cache_prefix_key = "fhir_resource:"
 
     def __init__(self, fhir_client=None):
+        self._filters = {}
+        self._meta = {}
+        self._executed = False
         if fhir_client:
             self._fhir_client = fhir_client
 
@@ -35,15 +36,15 @@ class ResourceManger:
         cache.set(cache_key, results, 10)
         return results
 
-    def validate_filter(self, key, value):
+    def validate_filter(self):
         pass
 
     def filter(self, *args, **kwargs):
         if kwargs:
             for key in kwargs:
                 if key in self.allowed_properties:
-                    self.validate_filter(key, kwargs[key])
                     self._filters[key] = kwargs[key]
+            self.validate_filter()
         return self.clone()
 
     def clone(self):

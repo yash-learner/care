@@ -1,15 +1,27 @@
-import json
+from pydantic.main import BaseModel
 
 from care.emr.fhir.resources.base import ResourceManger
 from care.emr.fhir.resources.code_concept import MinimalCodeConcept
-from care.emr.fhir.resources.code_system import CodeSystem
+from care.emr.fhir.schema.valueset.valueset import ValueSetInclude
+
+
+class ValueSetFilterValidation(BaseModel):
+    include: list[ValueSetInclude] = None
+    exclude: list[ValueSetInclude] = None
+    search: str = None
+    count: int = None
 
 
 class ValueSetResource(ResourceManger):
     allowed_properties = ["include", "exclude", "search", "count"]
 
     def serialize(self, result):
-        return MinimalCodeConcept(system=result["system"], code=result["code"], display=result["display"])
+        return MinimalCodeConcept(
+            system=result["system"], code=result["code"], display=result["display"]
+        )
+
+    def validate_filter(self):
+        ValueSetFilterValidation(**self._filters)
 
     def search(self):
         parameters = []

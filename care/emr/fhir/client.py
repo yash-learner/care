@@ -21,5 +21,5 @@ class FHIRClient:
             request_kwargs["params"] = parameters
         else:
             request_kwargs["json"] = parameters
-        response = requests.request(method, url, **request_kwargs)
+        response = requests.request(method, url, **request_kwargs, timeout=60)
         return response.json()
