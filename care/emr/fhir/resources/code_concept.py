@@ -16,7 +16,7 @@ class CodeConceptResource(ResourceManger):
             code=self._filters["code"],
             system=structured_output["system"],
             property=structured_output.get("property", {}),
-            designation=structured_output.get("designation", {}),
+            designation=structured_output.get("designation", {}) or {},
         )
 
     def get(self):

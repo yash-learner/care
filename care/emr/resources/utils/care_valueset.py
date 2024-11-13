@@ -44,7 +44,7 @@ class CareValueset:
     def valueset(self):
         return ValueSet(name=self.name, status=self.status, compose=self.composition)
 
-    def search(self, filter=""):
+    def search(self, search=""):
         # Create a composition with the same system
         # Query each system
         # Combine and return
@@ -53,19 +53,19 @@ class CareValueset:
             system = include.system.root
             if system not in systems:
                 systems[system] = {"include": []}
-            systems[system]["include"].append(include.model_dump(exclude_defaults=True))
+            systems[system]["include"].append(include.dict(skip_defaults=True))
         for exclude in self.composition.exclude:
             system = exclude.system.root
             if system not in systems:
                 systems[system] = {"exclude": []}
-            systems[system]["exclude"].append(exclude.model_dump(exclude_defaults=True))
+            systems[system]["exclude"].append(exclude.dict(skip_defaults=True))
 
         results = []
 
         for system in systems:
             results.extend(
                 ValueSetResource()
-                .filter(search=filter, count=10, **systems[system])
+                .filter(search=search, count=10, **systems[system])
                 .search()
             )
         return results
