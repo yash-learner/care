@@ -1,0 +1,48 @@
+from django.db import transaction
+from pydantic import BaseModel, Field
+from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet
+
+from care.emr.api.viewsets.base import fhir_exception_handler
+from care.emr.utils.batch_requests import execute_batch_requests
+
+
+class Request(BaseModel):
+    url: str
+    method: str
+    body: dict = {}
+
+
+class BatchRequest(BaseModel):
+    requests: list[Request] = Field(..., min_length=1, max_length=20)
+
+
+class HandledError(Exception):
+    pass
+
+
+class BatchRequestView(GenericViewSet):
+    def get_exception_handler(self):
+        return fhir_exception_handler
+
+    def create(self, request, *args, **kwargs):
+        requests = BatchRequest(**request.data)
+        errored = False
+        try:
+            with transaction.atomic():
+                responses = execute_batch_requests(request, requests)
+                structured_responses = []
+                for response in responses:
+                    if response["status_code"] > 299:  # noqa PLR2004
+                        errored = True
+                    structured_responses.append(
+                        {
+                            "data": response["data"],
+                            "status_code": response["status_code"],
+                        }
+                    )
+                if errored:
+                    raise HandledError
+        except HandledError:
+            pass
+        return Response({"results": structured_responses})

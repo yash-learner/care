@@ -37,9 +37,9 @@ class CriticalityChoices(str, Enum):
 
 
 class AllergyIntoleranceOnSetSpec(BaseModel):
-    onsetDateTime: datetime.datetime = None
-    onsetAge: int = None
-    onsetString: str = None
+    onset_datetime: datetime.datetime = None
+    onset_age: int = None
+    onset_string: str = None
 
 
 class AllergyIntoleranceSpec(FHIRResource):
@@ -68,15 +68,17 @@ class AllergyIntoleranceSpec(FHIRResource):
             patient=obj.patient.external_id,
             encounter=obj.encounter.external_id,
             onset=obj.onset,
-            # recorded_date=obj.recorded_date,
+            # recorded_date=obj.recorded_date, # noqa ERA001
             last_occurance=obj.last_occurrence,
-            note=obj.note
+            note=obj.note,
         )
 
     def to_orm_object(self, obj=None):
         if not obj:
             obj = AllergyIntolerance()
-            obj.encounter = PatientConsultation.objects.get(external_id=self.encounter) # Needs more validation
+            obj.encounter = PatientConsultation.objects.get(
+                external_id=self.encounter
+            )  # Needs more validation
             obj.patient = obj.encounter.patient
         obj.clinical_status = self.clinical_status
         obj.verification_status = self.verification_status

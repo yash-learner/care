@@ -7,4 +7,4 @@ class EMRBaseModel(BaseModel):
     history = models.JSONField(default=dict)
 
     class Meta:
-        abstract=True
+        abstract = True

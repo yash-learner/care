@@ -4,6 +4,7 @@ from rest_framework.routers import DefaultRouter, SimpleRouter
 from rest_framework_nested.routers import NestedSimpleRouter
 
 from care.emr.api.viewsets.allergy_intolerance import AllergyIntoleranceViewset
+from care.emr.api.viewsets.batch_request import BatchRequestView
 from care.facility.api.viewsets.ambulance import AmbulanceViewSet
 from care.facility.api.viewsets.asset import (
     AssetLocationViewSet,
@@ -129,6 +130,8 @@ router.register("otp/token", PatientMobileOTPViewSet, basename="otp-token")
 router.register("otp/patient", OTPPatientDataViewSet, basename="otp-patient")
 
 router.register("notification", NotificationViewSet, basename="notification")
+
+router.register("batch_requests", BatchRequestView, basename="batch-requests")
 
 # Summarisation
 router.register(

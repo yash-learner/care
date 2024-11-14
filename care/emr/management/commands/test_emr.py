@@ -1,14 +1,12 @@
 # ruff : noqa : T201 F841
 
 from django.core.management.base import BaseCommand
-from rest_framework.viewsets import ModelViewSet
 
 from care.emr.fhir.resources.care_valueset import DISEASE_VALUESET
 from care.emr.fhir.resources.code_concept import CodeConceptResource
 from care.emr.fhir.resources.code_system import CodeSystemResource
 from care.emr.fhir.resources.valueset import ValueSetResource
 
-ModelViewSet
 
 class Command(BaseCommand):
     """ """
