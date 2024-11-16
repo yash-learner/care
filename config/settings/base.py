@@ -363,7 +363,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "DEFAULT_PAGINATION_CLASS": "care.utils.pagination.care_pagination.CareLimitOffsetPagination",
     "PAGE_SIZE": 14,
     "SEARCH_PARAM": "search_text",
     "DEFAULT_SCHEMA_CLASS": "care.utils.schema.AutoSchema",

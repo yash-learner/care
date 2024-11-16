@@ -4,7 +4,7 @@ from care.emr.fhir.schema.valueset.valueset import (
     ValueSetCompose,
     ValueSetInclude,
 )
-from care.emr.fhir.schema.valueset.valueset_enum import ValueSetStatusOptions
+from care.emr.resources.valueset.spec import ValueSetStatusOptions
 
 
 class CareValueset:
@@ -53,12 +53,12 @@ class CareValueset:
             system = include.system.root
             if system not in systems:
                 systems[system] = {"include": []}
-            systems[system]["include"].append(include.dict(skip_defaults=True))
+            systems[system]["include"].append(include.model_dump(exclude_defaults=True))
         for exclude in self.composition.exclude:
             system = exclude.system.root
             if system not in systems:
                 systems[system] = {"exclude": []}
-            systems[system]["exclude"].append(exclude.dict(skip_defaults=True))
+            systems[system]["exclude"].append(exclude.model_dump(exclude_defaults=True))
 
         results = []
 
@@ -83,7 +83,7 @@ class SystemValueset:
         return cls._valuesets
 
 
-DISEASE_VALUESET = CareValueset("Disease", ValueSetStatusOptions.ACTIVE.value)
+DISEASE_VALUESET = CareValueset("Disease", ValueSetStatusOptions.active.value)
 DISEASE_VALUESET.register_as_system()
 
 DISEASE_VALUESET.register_valueset(

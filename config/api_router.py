@@ -3,8 +3,9 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter, SimpleRouter
 from rest_framework_nested.routers import NestedSimpleRouter
 
-from care.emr.api.viewsets.allergy_intolerance import AllergyIntoleranceViewset
+from care.emr.api.viewsets.allergy_intolerance import AllergyIntoleranceViewSet
 from care.emr.api.viewsets.batch_request import BatchRequestView
+from care.emr.api.viewsets.valueset import ValueSetViewSet
 from care.facility.api.viewsets.ambulance import AmbulanceViewSet
 from care.facility.api.viewsets.asset import (
     AssetLocationViewSet,
@@ -140,6 +141,8 @@ router.register(
 router.register("patient_summary", PatientSummaryViewSet, basename="summary-patient")
 router.register("tests_summary", TestsSummaryViewSet, basename="summary-tests")
 router.register("triage_summary", TriageSummaryViewSet, basename="summary-triage")
+
+router.register("valueset", ValueSetViewSet, basename="value-set")
 
 # District Summary
 router.register(
@@ -283,7 +286,7 @@ consultation_nested_router = NestedSimpleRouter(
 )
 
 consultation_nested_router.register(
-    r"allergy_intolerance", AllergyIntoleranceViewset, basename="allergy-intolerance"
+    r"allergy_intolerance", AllergyIntoleranceViewSet, basename="allergy-intolerance"
 )
 
 consultation_nested_router.register(

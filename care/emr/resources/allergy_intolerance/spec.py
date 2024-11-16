@@ -43,49 +43,31 @@ class AllergyIntoleranceOnSetSpec(BaseModel):
 
 
 class AllergyIntoleranceSpec(FHIRResource):
+    __model__ = AllergyIntolerance
+    __exclude__ = ["patient", "encounter"]
+
     id: UUID4 = None
     clinical_status: ClinicalStatusChoices
     verification_status: VerificationStatusChoices
     category: CategoryChoices
     criticality: CriticalityChoices
-    code: CodeableConcept = None
+    code: CodeableConcept = {}
     patient: UUID4 = None
     encounter: UUID4
     onset: AllergyIntoleranceOnSetSpec = {}
-    recorded_date: datetime.datetime = None
-    last_occurrence: datetime.datetime = None
+    recorded_date: datetime.datetime | None = None
+    last_occurrence: datetime.datetime | None = None
     note: str
 
     @classmethod
-    def from_database(cls, obj: AllergyIntolerance):
-        return cls(
-            id=obj.external_id,
-            clinical_status=obj.clinical_status,
-            verification_status=obj.verification_status,
-            category=obj.category,
-            criticality=obj.criticality,
-            code=obj.code,
-            patient=obj.patient.external_id,
-            encounter=obj.encounter.external_id,
-            onset=obj.onset,
-            # recorded_date=obj.recorded_date, # noqa ERA001
-            last_occurance=obj.last_occurrence,
-            note=obj.note,
-        )
+    def perform_extra_serialization(cls, mapping, obj):
+        mapping["id"] = obj.external_id
+        mapping["patient"] = obj.patient.external_id
+        mapping["encounter"] = obj.encounter.external_id
 
-    def to_orm_object(self, obj=None):
-        if not obj:
-            obj = AllergyIntolerance()
+    def perform_extra_deserialization(self, is_update, obj):
+        if not is_update:
             obj.encounter = PatientConsultation.objects.get(
                 external_id=self.encounter
             )  # Needs more validation
             obj.patient = obj.encounter.patient
-        obj.clinical_status = self.clinical_status
-        obj.verification_status = self.verification_status
-        obj.category = self.category
-        obj.criticality = self.criticality
-        obj.onset = self.onset
-        obj.recorded_date = self.recorded_date
-        obj.last_occurrence = self.last_occurrence
-        obj.note = self.note
-        return obj

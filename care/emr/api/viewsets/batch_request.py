@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from care.emr.api.viewsets.base import fhir_exception_handler
+from care.emr.api.viewsets.base import emr_exception_handler
 from care.emr.utils.batch_requests import execute_batch_requests
 
 
@@ -23,7 +23,7 @@ class HandledError(Exception):
 
 class BatchRequestView(GenericViewSet):
     def get_exception_handler(self):
-        return fhir_exception_handler
+        return emr_exception_handler
 
     def create(self, request, *args, **kwargs):
         requests = BatchRequest(**request.data)
