@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema
 from pydantic import BaseModel, Field
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -18,6 +19,10 @@ class ValueSetViewSet(EMRBaseViewSet):
     pydantic_model = ValueSetSpec
     lookup_field = "slug"
 
+    def get_serializer_class(self):
+        return ValueSetSpec
+
+    @extend_schema(request=ExpandRequest, responses={200: None}, methods=["POST"])
     @action(detail=True, methods=["POST"])
     def expand(self, request, *args, **kwargs):
         request_params = ExpandRequest(**request.data)

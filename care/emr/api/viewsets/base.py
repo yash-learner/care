@@ -74,6 +74,7 @@ class EMRBaseViewSet(GenericViewSet):
         return Response({"delete": "working"})
 
 
+# Maybe use a different pydantic model for request and response, Response does not need validations or defined Types
 # Maybe switch to use custom mixins
 # Complete update and delete logic
 # Create valuesets for allergy intolerance and write the logic for validation
