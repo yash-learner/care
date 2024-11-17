@@ -2,9 +2,7 @@ from care.emr.fhir.resources.valueset import ValueSetResource
 from care.emr.fhir.schema.valueset.valueset import (
     ValueSet,
     ValueSetCompose,
-    ValueSetInclude,
 )
-from care.emr.fhir.schema.valueset.valueset_enum import ValueSetStatusOptions
 
 
 class CareValueset:
@@ -18,16 +16,18 @@ class CareValueset:
     These valuesets can then be edited to the admins requirements
     """
 
+    slug = None
     name = None
     status = None
 
-    def __init__(self, name, status):
+    def __init__(self, name, slug, status):
         self.name = name
+        self.slug = slug
         self.status = status
         self.composition = ValueSetCompose(include=[], exclude=[])
 
     def register_as_system(self):
-        SystemValueset.add_system_valueset(self)
+        SystemValueSet.add_system_valueset(self)
 
     def register_valueset(self, composition: ValueSetCompose):
         """
@@ -71,7 +71,7 @@ class CareValueset:
         return results
 
 
-class SystemValueset:
+class SystemValueSet:
     _valuesets = []
 
     @classmethod
@@ -81,21 +81,3 @@ class SystemValueset:
     @classmethod
     def get_all_valuesets(cls):
         return cls._valuesets
-
-
-DISEASE_VALUESET = CareValueset("Disease", ValueSetStatusOptions.ACTIVE.value)
-DISEASE_VALUESET.register_as_system()
-
-DISEASE_VALUESET.register_valueset(
-    ValueSetCompose(
-        include=[
-            ValueSetInclude(
-                system="http://snomed.info/sct",
-                filter=[{"property": "concept", "op": "is-a", "value": "105590001"}],
-            )
-        ]
-    )
-)
-DISEASE_VALUESET.register_valueset(
-    ValueSetCompose(include=[ValueSetInclude(system="http://loinc.org", filter=[])])
-)

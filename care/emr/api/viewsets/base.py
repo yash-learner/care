@@ -1,4 +1,5 @@
 from pydantic import ValidationError
+from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import exception_handler as drf_exception_handler
@@ -72,6 +73,12 @@ class EMRBaseViewSet(GenericViewSet):
 
     def delete(self, request, *args, **kwargs):
         return Response({"delete": "working"})
+
+    @action(detail=False, methods=["GET"])
+    def questionnaire_spec(self, request, *args, **kwargs):
+        return Response(
+            {"version": 1, "questions": self.pydantic_model.questionnaire()}
+        )
 
 
 # Maybe use a different pydantic model for request and response, Response does not need validations or defined Types

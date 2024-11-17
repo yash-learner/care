@@ -1,4 +1,11 @@
+import datetime
+import uuid
+from enum import Enum
+from types import UnionType
+
 from pydantic import BaseModel
+
+from care.emr.fhir.schema.base import CodeableConcept
 
 
 class FHIRResource(BaseModel):
@@ -6,6 +13,7 @@ class FHIRResource(BaseModel):
     __exclude__ = []
 
     meta: dict = {}
+    __questionnaire_cache__ = {}
 
     @classmethod
     def get_database_mapping(cls):
@@ -58,3 +66,36 @@ class FHIRResource(BaseModel):
         obj.meta = meta
         self.perform_extra_deserialization(is_update, obj)
         return obj
+
+    @classmethod
+    def questionnaire(cls):
+        if cls.__questionnaire_cache__:
+            return cls.__questionnaire_cache__
+        questionnire_obj = []
+        for field in cls.model_fields:
+            field_class = cls.model_fields[field]
+            field_obj = {"linkId": field}
+            if type(field_class.annotation) is UnionType:
+                continue
+            if issubclass(field_class.annotation, Enum):
+                field_obj["type"] = "string"
+                field_obj["answerOption"] = [
+                    {x.name: x.value} for x in field_class.annotation
+                ]
+            elif issubclass(field_class.annotation, datetime.datetime):
+                field_obj["type"] = "dateTime"
+            elif issubclass(field_class.annotation, str):
+                field_obj["type"] = "string"
+            elif issubclass(field_class.annotation, int):
+                field_obj["type"] = "integer"
+            elif issubclass(field_class.annotation, uuid.UUID):
+                field_obj["type"] = "string"
+            elif field_class.annotation is CodeableConcept:
+                field_obj["type"] = "coding"
+                field_obj["valueset"] = {"slug": field_class.json_schema_extra["slug"]}
+            elif issubclass(field_class.annotation, FHIRResource):
+                field_obj["type"] = "group"
+                field_obj["questions"] = field_class.annotation.questionnaire()
+            questionnire_obj.append(field_obj)
+        cls.__questionnaire_cache__ = questionnire_obj
+        return questionnire_obj

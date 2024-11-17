@@ -2,10 +2,10 @@
 
 from django.core.management.base import BaseCommand
 
-from care.emr.fhir.resources.care_valueset import DISEASE_VALUESET
 from care.emr.fhir.resources.code_concept import CodeConceptResource
 from care.emr.fhir.resources.code_system import CodeSystemResource
 from care.emr.fhir.resources.valueset import ValueSetResource
+from care.emr.resources.allergy_intolerance.valueset import CARE_ALLERGY_CODE_VALUESET
 
 
 class Command(BaseCommand):
@@ -27,6 +27,6 @@ class Command(BaseCommand):
             )
             .search()
         )
-        print(DISEASE_VALUESET.composition)
-        for i in DISEASE_VALUESET.search("Blood"):
+        print(CARE_ALLERGY_CODE_VALUESET.composition)
+        for i in CARE_ALLERGY_CODE_VALUESET.search("nut"):
             print(i)
