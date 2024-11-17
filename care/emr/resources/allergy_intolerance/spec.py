@@ -41,32 +41,27 @@ class AllergyIntoleranceOnSetSpec(FHIRResource):
     onset_datetime: datetime.datetime = None
     onset_age: int = None
     onset_string: str = None
+    recorded_date: datetime.datetime | None = None
+    last_occurrence: datetime.datetime | None = None
+    note: str
 
 
-class AllergyIntoleranceSpec(FHIRResource):
+class BaseAllergyIntoleranceSpec(FHIRResource):
     __model__ = AllergyIntolerance
     __exclude__ = ["patient", "encounter"]
-
     id: UUID4 = None
+
+
+class AllergyIntoleranceSpec(BaseAllergyIntoleranceSpec):
     clinical_status: ClinicalStatusChoices
     verification_status: VerificationStatusChoices
     category: CategoryChoices
     criticality: CriticalityChoices
     code: CodeableConcept = Field(
-        ..., json_schema_extra={"slug": CARE_ALLERGY_CODE_VALUESET.slug}
+        {}, json_schema_extra={"slug": CARE_ALLERGY_CODE_VALUESET.slug}
     )
-    patient: UUID4 = None
     encounter: UUID4
     onset: AllergyIntoleranceOnSetSpec = {}
-    recorded_date: datetime.datetime | None = None
-    last_occurrence: datetime.datetime | None = None
-    note: str
-
-    @classmethod
-    def perform_extra_serialization(cls, mapping, obj):
-        mapping["id"] = obj.external_id
-        mapping["patient"] = obj.patient.external_id
-        mapping["encounter"] = obj.encounter.external_id
 
     def perform_extra_deserialization(self, is_update, obj):
         if not is_update:
@@ -74,3 +69,20 @@ class AllergyIntoleranceSpec(FHIRResource):
                 external_id=self.encounter
             )  # Needs more validation
             obj.patient = obj.encounter.patient
+
+
+class AllergyIntrolanceSpecRead(BaseAllergyIntoleranceSpec):
+    """
+    Validation for deeper models may not be required on read, Just an extra optimisation
+    """
+
+    clinical_status: str
+    verification_status: str
+    category: str
+    criticality: str
+    code: dict
+    onset: dict
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        mapping["id"] = obj.external_id

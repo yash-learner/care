@@ -20,11 +20,14 @@ class CareValueset:
     name = None
     status = None
 
-    def __init__(self, name, slug, status):
+    def __init__(self, name, slug, status, compose=None):
         self.name = name
         self.slug = slug
         self.status = status
-        self.composition = ValueSetCompose(include=[], exclude=[])
+        if compose:
+            self.composition = compose
+        else:
+            self.composition = ValueSetCompose(include=[], exclude=[])
 
     def register_as_system(self):
         SystemValueSet.add_system_valueset(self)
@@ -44,10 +47,7 @@ class CareValueset:
     def valueset(self):
         return ValueSet(name=self.name, status=self.status, compose=self.composition)
 
-    def search(self, filter=""):
-        # Create a composition with the same system
-        # Query each system
-        # Combine and return
+    def create_composition(self):
         systems = {}
         for include in self.composition.include:
             system = include.system.root
@@ -59,6 +59,13 @@ class CareValueset:
             if system not in systems:
                 systems[system] = {"exclude": []}
             systems[system]["exclude"].append(exclude.model_dump(exclude_defaults=True))
+        return systems
+
+    def search(self, filter=""):
+        # Create a composition with the same system
+        # Query each system
+        # Combine and return
+        systems = self.create_composition()
 
         results = []
 
