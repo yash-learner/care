@@ -58,11 +58,12 @@ class FHIRResource(BaseModel):
             obj = self.__model__()
         database_fields = self.get_database_mapping()
         meta = {}
-        for field in self.model_dump():
+        dump = self.model_dump(exclude_defaults=True)
+        for field in dump:
             if field in database_fields and field not in self.__exclude__:
-                obj.__setattr__(field, self.__getattribute__(field))
+                obj.__setattr__(field, dump[field])
             elif field not in self.__exclude__:
-                meta[field] = self.__getattribute__(field)
+                meta[field] = dump[field]
         obj.meta = meta
         self.perform_extra_deserialization(is_update, obj)
         return obj

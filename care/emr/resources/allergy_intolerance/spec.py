@@ -1,12 +1,13 @@
 import datetime
 from enum import Enum
 
-from pydantic import UUID4, Field
+from pydantic import UUID4, Field, field_validator
 
-from care.emr.fhir.schema.base import CodeableConcept
+from care.emr.fhir.schema.base import Coding
 from care.emr.models.allergy_intolerance import AllergyIntolerance
 from care.emr.resources.allergy_intolerance.valueset import CARE_ALLERGY_CODE_VALUESET
 from care.emr.resources.base import FHIRResource
+from care.emr.resources.care_valueset.care_valueset import validate_valueset
 from care.facility.models import PatientConsultation
 
 
@@ -57,11 +58,18 @@ class AllergyIntoleranceSpec(BaseAllergyIntoleranceSpec):
     verification_status: VerificationStatusChoices
     category: CategoryChoices
     criticality: CriticalityChoices
-    code: CodeableConcept = Field(
+    code: Coding = Field(
         {}, json_schema_extra={"slug": CARE_ALLERGY_CODE_VALUESET.slug}
     )
     encounter: UUID4
     onset: AllergyIntoleranceOnSetSpec = {}
+
+    @field_validator("code")
+    @classmethod
+    def validate_code(cls, code: int) -> int:
+        return validate_valueset(
+            "code", cls.model_fields["code"].json_schema_extra["slug"], code
+        )
 
     def perform_extra_deserialization(self, is_update, obj):
         if not is_update:
@@ -76,6 +84,7 @@ class AllergyIntrolanceSpecRead(BaseAllergyIntoleranceSpec):
     Validation for deeper models may not be required on read, Just an extra optimisation
     """
 
+    # Maybe we can use model_construct() to be better at reads, need profiling to be absolutely sure
     clinical_status: str
     verification_status: str
     category: str

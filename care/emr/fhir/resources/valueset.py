@@ -71,6 +71,8 @@ class ValueSetResource(ResourceManger):
         request_json = {"resourceType": "Parameters", "parameter": parameters}
         full_result = self.query("POST", "ValueSet/$expand", request_json)
         # TODO Add Exception Handling
+        if "expansion" not in full_result:
+            return []
         results = full_result["expansion"]
         if "contains" not in results:
             return []

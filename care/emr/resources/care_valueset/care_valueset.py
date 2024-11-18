@@ -3,6 +3,7 @@ from care.emr.fhir.schema.valueset.valueset import (
     ValueSet,
     ValueSetCompose,
 )
+from care.emr.models.valueset import ValueSet as ValuesetDatabaseModel
 
 
 class CareValueset:
@@ -88,3 +89,15 @@ class SystemValueSet:
     @classmethod
     def get_all_valuesets(cls):
         return cls._valuesets
+
+
+def validate_valueset(field, slug, code):
+    valueset_obj = ValuesetDatabaseModel.objects.filter(slug=slug).first()
+    if not valueset_obj:
+        err = "Valueset does not exist in care, Resync valuesets"
+        raise ValueError(err)
+    exists = valueset_obj.lookup(code)
+    if not exists:
+        err = "Code does not exist in the valueset"
+        raise ValueError(err)
+    return code

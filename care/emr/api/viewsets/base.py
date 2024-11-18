@@ -1,3 +1,5 @@
+import json
+
 from pydantic import ValidationError
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
@@ -11,7 +13,7 @@ from care.emr.resources.base import FHIRResource
 
 def emr_exception_handler(exc, context):
     if isinstance(exc, ValidationError):
-        return Response({"errors": exc.errors()}, status=400)
+        return Response({"errors": json.loads(exc.json())}, status=400)
     return drf_exception_handler(exc, context)
 
 
@@ -97,6 +99,9 @@ class EMRBaseViewSet(GenericViewSet):
 # Create valuesets for allergy intolerance and write the logic for validation
 # Convert to questionnaire spec and store it somewhere and return on the questionnaire API
 # Write the history function based on the update.
+
+# Validate valueset data on create
+# Add option for extra validation being written in the model
 
 # Model the questionnaire object in pydantic
 # Create CRUD for questionnaire
