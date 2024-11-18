@@ -1,6 +1,6 @@
 from drf_spectacular.utils import extend_schema, extend_schema_view
 
-from care.emr.api.viewsets.base import EMRBaseViewSet
+from care.emr.api.viewsets.base import EMRModelViewSet
 from care.emr.models.allergy_intolerance import AllergyIntolerance
 from care.emr.resources.allergy_intolerance.spec import (
     AllergyIntoleranceSpec,
@@ -11,7 +11,7 @@ from care.emr.resources.allergy_intolerance.spec import (
 @extend_schema_view(
     create=extend_schema(request=AllergyIntoleranceSpec),
 )
-class AllergyIntoleranceViewSet(EMRBaseViewSet):
+class AllergyIntoleranceViewSet(EMRModelViewSet):
     database_model = AllergyIntolerance
     pydantic_model = AllergyIntoleranceSpec
     pydantic_read_model = AllergyIntrolanceSpecRead

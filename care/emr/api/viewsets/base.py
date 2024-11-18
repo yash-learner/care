@@ -17,6 +17,60 @@ def emr_exception_handler(exc, context):
     return drf_exception_handler(exc, context)
 
 
+class EMRQuestionnaireMixin:
+    @action(detail=False, methods=["GET"])
+    def questionnaire_spec(self, request, *args, **kwargs):
+        return Response(
+            {"version": 1, "questions": self.pydantic_model.questionnaire()}
+        )
+
+
+class EMRRetrieveMixin:
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = self.get_read_pydantic_model().serialize(instance)
+        return Response(data.model_dump(exclude=["meta"]))
+
+
+class EMRCreateMixin:
+    def perform_create(self, instance):
+        instance.save()
+
+    def clean_create_data(self, request, *args, **kwargs):
+        return request.data
+
+    def create(self, request, *args, **kwargs):
+        clean_data = self.clean_create_data(request, *args, **kwargs)
+        instance = self.pydantic_model(**clean_data)
+        model_instance = instance.de_serialize()
+        self.perform_create(model_instance)
+        return Response(
+            self.get_read_pydantic_model()
+            .serialize(model_instance)
+            .model_dump(exclude=["meta"])
+        )
+
+
+class EMRListMixin:
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(queryset, request)
+        if page is not None:
+            data = [
+                self.get_read_pydantic_model()
+                .serialize(obj)
+                .model_dump(exclude=["meta"])
+                for obj in page
+            ]
+            return paginator.get_paginated_response(data)
+        data = [
+            self.get_read_pydantic_model().serialize(obj).model_dump(exclude=["meta"])
+            for obj in queryset
+        ]
+        return Response(data)
+
+
 class EMRBaseViewSet(GenericViewSet):
     pydantic_model: FHIRResource = None
     pydantic_read_model: FHIRResource = None
@@ -40,57 +94,21 @@ class EMRBaseViewSet(GenericViewSet):
             queryset, **{self.lookup_field: self.kwargs[self.lookup_field]}
         )
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        paginator = self.pagination_class()
-        page = paginator.paginate_queryset(queryset, request)
-        if page is not None:
-            data = [
-                self.get_read_pydantic_model()
-                .serialize(obj)
-                .model_dump(exclude=["meta"])
-                for obj in page
-            ]
-            return paginator.get_paginated_response(data)
-        data = [
-            self.get_read_pydantic_model().serialize(obj).model_dump(exclude=["meta"])
-            for obj in queryset
-        ]
-        return Response(data)
-
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        data = self.get_read_pydantic_model().serialize(instance)
-        return Response(data.model_dump(exclude=["meta"]))
-
-    def perform_create(self, instance):
-        instance.save()
-
-    def clean_create_data(self, request, *args, **kwargs):
-        return request.data
-
-    def create(self, request, *args, **kwargs):
-        clean_data = self.clean_create_data(request, *args, **kwargs)
-        instance = self.pydantic_model(**clean_data)
-        model_instance = instance.de_serialize()
-        self.perform_create(model_instance)
-        return Response(
-            self.get_read_pydantic_model()
-            .serialize(model_instance)
-            .model_dump(exclude=["meta"])
-        )
-
     def update(self, request, *args, **kwargs):
         return Response({"update": "working"})
 
     def delete(self, request, *args, **kwargs):
         return Response({"delete": "working"})
 
-    @action(detail=False, methods=["GET"])
-    def questionnaire_spec(self, request, *args, **kwargs):
-        return Response(
-            {"version": 1, "questions": self.pydantic_model.questionnaire()}
-        )
+
+class EMRModelViewSet(
+    EMRCreateMixin,
+    EMRRetrieveMixin,
+    EMRListMixin,
+    EMRQuestionnaireMixin,
+    EMRBaseViewSet,
+):
+    pass
 
 
 # Maybe use a different pydantic model for request and response, Response does not need validations or defined Types

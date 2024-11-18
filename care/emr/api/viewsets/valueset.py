@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from care.emr.api.viewsets.base import EMRBaseViewSet
+from care.emr.api.viewsets.base import EMRModelViewSet
 from care.emr.fhir.schema.base import Coding
 from care.emr.models.valueset import ValueSet
 from care.emr.resources.valueset.spec import ValueSetSpec
@@ -18,7 +18,7 @@ class LookupRequest(BaseModel):
     code: Coding
 
 
-class ValueSetViewSet(EMRBaseViewSet):
+class ValueSetViewSet(EMRModelViewSet):
     database_model = ValueSet
     pydantic_model = ValueSetSpec
     lookup_field = "slug"
