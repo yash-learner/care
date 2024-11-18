@@ -43,7 +43,7 @@ class FHIRResource(BaseModel):
             if field in cls.model_fields:
                 constructed[field] = obj.meta[field]
         cls.perform_extra_serialization(constructed, obj)
-        return cls(**constructed)
+        return cls.model_construct(**constructed)
 
     def perform_extra_deserialization(self, is_update, obj):
         pass

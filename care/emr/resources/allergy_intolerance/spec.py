@@ -89,8 +89,8 @@ class AllergyIntrolanceSpecRead(BaseAllergyIntoleranceSpec):
     verification_status: str
     category: str
     criticality: str
-    code: dict
-    onset: dict
+    code: Coding
+    onset: AllergyIntoleranceOnSetSpec = {}
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
