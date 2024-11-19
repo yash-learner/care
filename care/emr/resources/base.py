@@ -2,13 +2,14 @@ import datetime
 import uuid
 from enum import Enum
 from types import UnionType
+from typing import get_origin
 
 from pydantic import BaseModel
 
 from care.emr.fhir.schema.base import CodeableConcept
 
 
-class FHIRResource(BaseModel):
+class EMRResource(BaseModel):
     __model__ = None
     __exclude__ = []
 
@@ -69,34 +70,51 @@ class FHIRResource(BaseModel):
         return obj
 
     @classmethod
-    def questionnaire(cls):
+    def questionnaire(cls, parent_classes=None):  # noqa PLR0912
+        """
+        Maybe we can speed up this process by starting with model's JSON Schema
+        Pydantic provides that by default for all models
+        """
+        if not parent_classes:
+            parent_classes = []
         if cls.__questionnaire_cache__:
             return cls.__questionnaire_cache__
         questionnire_obj = []
         for field in cls.model_fields:
             field_class = cls.model_fields[field]
             field_obj = {"linkId": field}
-            if type(field_class.annotation) is UnionType:
+            field_type = field_class.annotation
+
+            if type(field_type) is UnionType:
+                field_type = field_type.__args__[0]
+
+            if get_origin(field_type) is list:
+                field_obj["repeats"] = True
+                field_type = field_type.__args__[0]
+
+            if field_type in parent_classes:
+                # Avoiding circular references
                 continue
-            if issubclass(field_class.annotation, Enum):
+
+            if issubclass(field_type, Enum):
                 field_obj["type"] = "string"
-                field_obj["answerOption"] = [
-                    {x.name: x.value} for x in field_class.annotation
-                ]
-            elif issubclass(field_class.annotation, datetime.datetime):
+                field_obj["answer_options"] = [{x.name: x.value} for x in field_type]
+            elif issubclass(field_type, datetime.datetime):
                 field_obj["type"] = "dateTime"
-            elif issubclass(field_class.annotation, str):
+            elif issubclass(field_type, str):
                 field_obj["type"] = "string"
-            elif issubclass(field_class.annotation, int):
+            elif issubclass(field_type, int):
                 field_obj["type"] = "integer"
-            elif issubclass(field_class.annotation, uuid.UUID):
+            elif issubclass(field_type, uuid.UUID):
                 field_obj["type"] = "string"
-            elif field_class.annotation is CodeableConcept:
+            elif field_type is CodeableConcept:
                 field_obj["type"] = "coding"
                 field_obj["valueset"] = {"slug": field_class.json_schema_extra["slug"]}
-            elif issubclass(field_class.annotation, FHIRResource):
+            elif issubclass(field_type, EMRResource):
                 field_obj["type"] = "group"
-                field_obj["questions"] = field_class.annotation.questionnaire()
+                parent_classes = parent_classes[::]
+                parent_classes.append(cls)
+                field_obj["questions"] = field_type.questionnaire(parent_classes)
             questionnire_obj.append(field_obj)
         cls.__questionnaire_cache__ = questionnire_obj
         return questionnire_obj

@@ -6,7 +6,7 @@ from care.emr.fhir.schema.valueset.valueset import (
     ValueSetCompose,
 )
 from care.emr.models.valueset import ValueSet as ValuesetDatabaseModel
-from care.emr.resources.base import FHIRResource
+from care.emr.resources.base import EMRResource
 
 
 class ValueSetStatusOptions(str, Enum):
@@ -16,7 +16,7 @@ class ValueSetStatusOptions(str, Enum):
     unknown = "unknown"
 
 
-class ValueSetSpec(FHIRResource):
+class ValueSetSpec(EMRResource):
     __model__ = ValuesetDatabaseModel
 
     id: UUID4 = None

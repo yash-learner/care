@@ -6,7 +6,7 @@ from pydantic import UUID4, Field, field_validator
 from care.emr.fhir.schema.base import Coding
 from care.emr.models.allergy_intolerance import AllergyIntolerance
 from care.emr.resources.allergy_intolerance.valueset import CARE_ALLERGY_CODE_VALUESET
-from care.emr.resources.base import FHIRResource
+from care.emr.resources.base import EMRResource
 from care.emr.resources.care_valueset.care_valueset import validate_valueset
 from care.facility.models import PatientConsultation
 
@@ -38,7 +38,7 @@ class CriticalityChoices(str, Enum):
     unable_to_assess = "unable-to-assess"
 
 
-class AllergyIntoleranceOnSetSpec(FHIRResource):
+class AllergyIntoleranceOnSetSpec(EMRResource):
     onset_datetime: datetime.datetime = None
     onset_age: int = None
     onset_string: str = None
@@ -47,7 +47,7 @@ class AllergyIntoleranceOnSetSpec(FHIRResource):
     note: str
 
 
-class BaseAllergyIntoleranceSpec(FHIRResource):
+class BaseAllergyIntoleranceSpec(EMRResource):
     __model__ = AllergyIntolerance
     __exclude__ = ["patient", "encounter"]
     id: UUID4 = None

@@ -8,7 +8,7 @@ from rest_framework.views import exception_handler as drf_exception_handler
 from rest_framework.viewsets import GenericViewSet
 
 from care.emr.models.base import EMRBaseModel
-from care.emr.resources.base import FHIRResource
+from care.emr.resources.base import EMRResource
 
 
 def emr_exception_handler(exc, context):
@@ -19,9 +19,15 @@ def emr_exception_handler(exc, context):
 
 class EMRQuestionnaireMixin:
     @action(detail=False, methods=["GET"])
-    def questionnaire_spec(self, request, *args, **kwargs):
+    def questionnaire_spec(self, *args, **kwargs):
         return Response(
             {"version": 1, "questions": self.pydantic_model.questionnaire()}
+        )
+
+    @action(detail=False, methods=["GET"])
+    def json_schema_spec(self, *args, **kwargs):
+        return Response(
+            {"version": 1, "questions": self.pydantic_model.model_json_schema()}
         )
 
 
@@ -72,8 +78,8 @@ class EMRListMixin:
 
 
 class EMRBaseViewSet(GenericViewSet):
-    pydantic_model: FHIRResource = None
-    pydantic_read_model: FHIRResource = None
+    pydantic_model: EMRResource = None
+    pydantic_read_model: EMRResource = None
     database_model: EMRBaseModel = None
     lookup_field = "external_id"
 
@@ -111,15 +117,15 @@ class EMRModelViewSet(
     pass
 
 
-# Maybe use a different pydantic model for request and response, Response does not need validations or defined Types
-# Maybe switch to use custom mixins
+# DONE Maybe use a different pydantic model for request and response, Response does not need validations or defined Types
+# DONE Maybe switch to use custom mixins
 # Complete update and delete logic
-# Create valuesets for allergy intolerance and write the logic for validation
-# Convert to questionnaire spec and store it somewhere and return on the questionnaire API
+# DONE Create valuesets for allergy intolerance and write the logic for validation
+# DONE Convert to questionnaire spec and store it somewhere and return on the questionnaire API
 # Write the history function based on the update.
 
-# Validate valueset data on create
-# Add option for extra validation being written in the model
+# DONE Validate valueset data on create
+# DONEAdd option for extra validation being written in the model
 
 # Model the questionnaire object in pydantic
 # Create CRUD for questionnaire
