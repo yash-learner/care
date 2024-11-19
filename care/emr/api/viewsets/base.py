@@ -127,9 +127,9 @@ class EMRModelViewSet(
 # DONE Validate valueset data on create
 # DONEAdd option for extra validation being written in the model
 
-# Model the questionnaire object in pydantic
-# Create CRUD for questionnaire
-# Create definition returning API for questionnaire
+# DONE Model the questionnaire object in pydantic
+# DONE Create CRUD for questionnaire
+# DONE Create definition returning API for questionnaire
 # Submit API for Questionnaire -> Implicitly requires observations to be completed
 
 # Create API's for valuesets and code concepts ( integrations already built  )

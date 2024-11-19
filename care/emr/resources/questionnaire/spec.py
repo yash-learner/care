@@ -1,9 +1,10 @@
 from enum import Enum
 from typing import Any
 
-from pydantic import UUID4, BaseModel, ConfigDict, Field
+from pydantic import UUID4, ConfigDict, Field
 
 from care.emr.fhir.schema.base import Coding
+from care.emr.models import Questionnaire
 from care.emr.resources.base import EMRResource
 
 
@@ -49,9 +50,22 @@ class AnswerConstraint(str, Enum):
     optional = "optional"
 
 
-class Performer(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+class QuestionnaireStatus(str, Enum):
+    active = "active"
+    retired = "retired"
+    draft = "draft"
 
+
+class SubjectType(str, Enum):
+    patient = "patient"
+    encounter = "encounter"
+
+
+class QuestionnaireBaseSpec(EMRResource):
+    __model__ = Questionnaire
+
+
+class Performer(QuestionnaireBaseSpec):
     performer_type: str = Field(
         alias="performerType", description="Type of performer from FHIR specification"
     )
@@ -63,17 +77,13 @@ class Performer(BaseModel):
     )
 
 
-class EnableWhen(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-
+class EnableWhen(QuestionnaireBaseSpec):
     question: str = Field(description="Link ID of the question to check against")
     operator: EnableOperator
     answer: Any = Field(description="Value for operator, based on question type")
 
 
-class AnswerOption(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-
+class AnswerOption(QuestionnaireBaseSpec):
     value: Any = Field(description="Value based on question type")
     initial_selected: bool = Field(
         alias="initialSelected",
@@ -82,7 +92,7 @@ class AnswerOption(BaseModel):
     )
 
 
-class Question(EMRResource):
+class Question(QuestionnaireBaseSpec):
     model_config = ConfigDict(populate_by_name=True)
 
     link_id: str = Field(
@@ -120,15 +130,31 @@ class Question(EMRResource):
     formula: str | None = None
 
 
-class QuestionnaireSpec(EMRResource):
-    model_config = ConfigDict(populate_by_name=True)
-
-    version: str = Field(description="Semver version for schema changes")
-
+class QuestionnaireSpec(QuestionnaireBaseSpec):
+    version: str = Field("1.0", frozen=True, description="Version of the questionnaire")
+    title: str
+    description: str = ""
+    status: QuestionnaireStatus
+    subject_type: SubjectType
     styling_metadata: dict = Field(
-        alias="stylingMetadata", description="Styling requirements without validation"
+        {}, description="Styling requirements without validation"
     )
     questions: list[Question]
+
+
+class QuestionnaireReadSpec(QuestionnaireBaseSpec):
+    id: str
+    version: str
+    title: str
+    description: str = ""
+    status: QuestionnaireStatus
+    subject_type: SubjectType
+    styling_metadata: dict
+    questions: list
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        mapping["id"] = obj.external_id
 
 
 # Add this to handle recursive Question type

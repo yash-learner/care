@@ -1,10 +1,12 @@
 from care.emr.api.viewsets.base import EMRModelViewSet
-from care.emr.resources.questionnaire.spec import QuestionnaireSpec
+from care.emr.models import Questionnaire
+from care.emr.resources.questionnaire.spec import (
+    QuestionnaireReadSpec,
+    QuestionnaireSpec,
+)
 
 
 class QuestionnaireViewSet(EMRModelViewSet):
-    database_model = QuestionnaireSpec
+    database_model = Questionnaire
     pydantic_model = QuestionnaireSpec
-
-    def get_queryset(self):
-        return super().get_queryset().select_related("patient", "encounter")
+    pydantic_read_model = QuestionnaireReadSpec

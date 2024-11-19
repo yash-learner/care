@@ -72,6 +72,7 @@ class EMRResource(BaseModel):
     @classmethod
     def questionnaire(cls, parent_classes=None):  # noqa PLR0912
         """
+        This is created so that the FE has an idea about bound valuesets and other metadata about the form
         Maybe we can speed up this process by starting with model's JSON Schema
         Pydantic provides that by default for all models
         """
