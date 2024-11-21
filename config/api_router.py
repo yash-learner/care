@@ -276,6 +276,11 @@ patient_notes_nested_router.register(
     r"edits", PatientNotesEditViewSet, basename="patient-notes-edits"
 )
 
+patient_nested_router.register(
+    r"allergy_intolerance", AllergyIntoleranceViewSet, basename="allergy-intolerance"
+)
+
+
 router.register(
     "external_result", PatientExternalTestViewSet, basename="patient-external-result"
 )
@@ -287,11 +292,6 @@ router.register(
 consultation_nested_router = NestedSimpleRouter(
     router, r"consultation", lookup="consultation"
 )
-
-consultation_nested_router.register(
-    r"allergy_intolerance", AllergyIntoleranceViewSet, basename="allergy-intolerance"
-)
-
 consultation_nested_router.register(
     r"daily_rounds", DailyRoundsViewSet, basename="consultation-daily-rounds"
 )

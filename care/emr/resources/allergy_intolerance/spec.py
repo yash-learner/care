@@ -90,7 +90,7 @@ class AllergyIntrolanceSpecRead(BaseAllergyIntoleranceSpec):
     category: str
     criticality: str
     code: Coding
-    onset: AllergyIntoleranceOnSetSpec = {}
+    onset: AllergyIntoleranceOnSetSpec = dict
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):

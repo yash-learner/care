@@ -6,7 +6,7 @@ from typing import get_origin
 
 from pydantic import BaseModel
 
-from care.emr.fhir.schema.base import CodeableConcept
+from care.emr.fhir.schema.base import Coding
 
 
 class EMRResource(BaseModel):
@@ -59,7 +59,7 @@ class EMRResource(BaseModel):
             obj = self.__model__()
         database_fields = self.get_database_mapping()
         meta = {}
-        dump = self.model_dump(exclude_defaults=True)
+        dump = self.model_dump(mode="json", exclude_defaults=True)
         for field in dump:
             if field in database_fields and field not in self.__exclude__:
                 obj.__setattr__(field, dump[field])
@@ -108,7 +108,7 @@ class EMRResource(BaseModel):
                 field_obj["type"] = "integer"
             elif issubclass(field_type, uuid.UUID):
                 field_obj["type"] = "string"
-            elif field_type is CodeableConcept:
+            elif field_type is Coding:
                 field_obj["type"] = "coding"
                 field_obj["valueset"] = {"slug": field_class.json_schema_extra["slug"]}
             elif issubclass(field_type, EMRResource):

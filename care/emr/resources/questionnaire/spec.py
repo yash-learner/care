@@ -1,3 +1,4 @@
+import uuid
 from enum import Enum
 from typing import Any
 
@@ -6,6 +7,7 @@ from pydantic import UUID4, ConfigDict, Field
 from care.emr.fhir.schema.base import Coding
 from care.emr.models import Questionnaire
 from care.emr.resources.base import EMRResource
+from care.emr.resources.observation.valueset import CARE_OBSERVATION_VALUSET
 
 
 class EnableOperator(str, Enum):
@@ -98,8 +100,13 @@ class Question(QuestionnaireBaseSpec):
     link_id: str = Field(
         alias="link_id", description="Unique human readable ID for linking"
     )
-    id: UUID4 = Field(description="Unique machine provided UUID")
-    code: Coding | None = Field(description="Coding for observation creation")
+    id: UUID4 = Field(
+        description="Unique machine provided UUID", default_factory=uuid.uuid4
+    )
+    code: Coding | None = Field(
+        description="Coding for observation creation",
+        json_schema_extra={"slug": CARE_OBSERVATION_VALUSET.slug},
+    )
     collect_time: bool = Field(
         alias="collectTime", default=False, description="Whether to collect timestamp"
     )
