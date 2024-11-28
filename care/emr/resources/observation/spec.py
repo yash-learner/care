@@ -5,6 +5,10 @@ from pydantic import UUID4, BaseModel, Field
 
 from care.emr.fhir.schema.base import CodeableConcept
 from care.emr.resources.base import EMRResource
+from care.emr.resources.observation.valueset import (
+    CARE_BODY_SITE_VALUESET,
+    CARE_OBSERVATION_COLLECTION_METHOD,
+)
 from care.emr.resources.questionnaire.spec import SubjectType
 
 
@@ -81,12 +85,16 @@ class ObservationSpec(EMRResource):
     note: str | None = Field(None, description="Additional notes about the observation")
 
     body_site: Coding | None = Field(
-        None, description="Body site where observation was made"
-    )  # TODO Add Valueset
+        None,
+        description="Body site where observation was made",
+        json_schema_extra={"slug": CARE_BODY_SITE_VALUESET.slug},
+    )
 
     method: Coding | None = Field(
-        None, description="Method used for the observation"
-    )  # TODO Add Valueset
+        None,
+        description="Method used for the observation",
+        json_schema_extra={"slug": CARE_OBSERVATION_COLLECTION_METHOD.slug},
+    )
 
     reference_range: list[ReferenceRange] = Field(
         [], description="Reference ranges for interpretation"
