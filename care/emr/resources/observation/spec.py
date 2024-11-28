@@ -47,7 +47,7 @@ class ObservationSpec(EMRResource):
         description="Status of the observation (final or amended)"
     )
 
-    category: list[CodeableConcept] = Field(
+    category: Coding = Field(
         ..., description="List of codeable concepts derived from the questionnaire"
     )
 

@@ -2,7 +2,7 @@ import uuid
 from enum import Enum
 from typing import Any
 
-from pydantic import UUID4, ConfigDict, Field
+from pydantic import UUID4, ConfigDict, Field, model_validator
 
 from care.emr.fhir.schema.base import Coding
 from care.emr.models import Questionnaire
@@ -60,7 +60,6 @@ class QuestionnaireStatus(str, Enum):
 
 class SubjectType(str, Enum):
     patient = "patient"
-    encounter = "encounter"
 
 
 class QuestionnaireBaseSpec(EMRResource):
@@ -133,8 +132,16 @@ class Question(QuestionnaireBaseSpec):
     answer_option: list[AnswerOption] | None = Field(alias="answerOption", default=None)
     answer_value_set: str | None = None
     is_observation: bool | None = None
-    questions: list["Question"] | None = None
+    questions: list["Question"] = []
     formula: str | None = None
+
+    def get_all_ids(self):
+        ids = []
+        for question in self.questions:
+            ids.append({"id": question.id, "link_id": question.link_id})
+            if question.questions:
+                ids.extend(question.get_all_ids())
+        return ids
 
 
 class QuestionnaireSpec(QuestionnaireBaseSpec):
@@ -147,6 +154,28 @@ class QuestionnaireSpec(QuestionnaireBaseSpec):
         {}, description="Styling requirements without validation"
     )
     questions: list[Question]
+
+    def get_all_ids(self):
+        ids = []
+        for question in self.questions:
+            ids.append({"id": question.id, "link_id": question.link_id})
+            if question.questions:
+                ids.extend(question.get_all_ids())
+        return ids
+
+    @model_validator(mode="after")
+    def validate_unique_id(self):
+        # Get all link and question id's and check for uniqueness
+        ids = self.get_all_ids()
+        link_ids = [id["link_id"] for id in ids]
+        if len(link_ids) != len(set(link_ids)):
+            err = "Link IDs must be unique"
+            raise ValueError(err)
+        ids = [id["id"] for id in ids]
+        if len(ids) != len(set(ids)):
+            err = "Question IDs must be unique"
+            raise ValueError(err)
+        return self
 
 
 class QuestionnaireReadSpec(QuestionnaireBaseSpec):

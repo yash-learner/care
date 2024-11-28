@@ -11,3 +11,12 @@ class Questionnaire(EMRBaseModel):
     status = models.CharField(max_length=255)
     styling_metadata = models.JSONField(default=dict)
     questions = models.JSONField(default=dict)
+
+
+class QuestionnaireResponse(EMRBaseModel):
+    questionnaire = models.ForeignKey(Questionnaire, on_delete=models.CASCADE)
+    subject_id = models.UUIDField()
+    responses = models.JSONField(default=list)
+    encounter = models.UUIDField()
+
+    # TODO : Add index for subject_id and subject_type in descending order

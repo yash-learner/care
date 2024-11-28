@@ -44,5 +44,5 @@ class BatchRequestView(GenericViewSet):
                 if errored:
                     raise HandledError
         except HandledError:
-            pass
+            return Response({"results": structured_responses}, status=400)
         return Response({"results": structured_responses})
