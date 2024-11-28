@@ -37,11 +37,9 @@ RUN python -m venv /.venv
 COPY Pipfile Pipfile.lock $APP_HOME/
 RUN --mount=type=cache,target=/root/.cache/pip pipenv  install --system --categories "packages dev-packages docs"
 
-COPY plugs/ $APP_HOME/plugs/
-COPY install_plugins.py plug_config.py $APP_HOME/
-RUN --mount=type=cache,target=/root/.cache/pip python3 $APP_HOME/install_plugins.py
-
 COPY . $APP_HOME/
+
+RUN --mount=type=cache,target=/root/.cache/pip python3 $APP_HOME/install_plugins.py
 
 HEALTHCHECK \
   --interval=10s \
