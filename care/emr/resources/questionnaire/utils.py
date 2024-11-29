@@ -1,9 +1,12 @@
+import logging
+import uuid
 from datetime import datetime
 
 from dateutil import parser
 from rest_framework.exceptions import ValidationError
 
 from care.emr.models.questionnaire import Questionnaire, QuestionnaireResponse
+from care.emr.resources.observation.spec import ObservationStatus
 from care.emr.resources.questionnaire.spec import QuestionType
 
 
@@ -36,7 +39,6 @@ def validate_types(values, value_type):
                 parser.parse(value.value)
             elif value_type == QuestionType.time.value:
                 datetime.strptime(value.value, "%H:%M:%S")  # noqa DTZ007
-
         except ValueError:
             errors.append(f"Invalid {value_type} value: {value.value}")
         except Exception:
@@ -68,8 +70,48 @@ def validate_question_result(questionnaire, responses, errors):
             errors.append({"question_id": questionnaire["id"], "errors": type_errors})
 
 
-def convert_to_observation_spec(questionnaire_obj: Questionnaire):
-    pass
+def create_observation_spec(questionnaire, responses, parent_id=None):
+    spec = {}
+    spec["id"] = uuid.uuid4()
+    spec["status"] = ObservationStatus.final.value
+    if "category" in questionnaire:
+        spec["category"] = questionnaire["category"]
+    if "code" in questionnaire:
+        spec["main_code"] = questionnaire["code"]
+    if (
+        responses
+        and questionnaire["id"] in responses
+        and responses[questionnaire["id"]].value
+    ):
+        if responses[questionnaire["id"]].value.value:
+            spec["value"] = responses[questionnaire["id"]].value.value
+        if responses[questionnaire["id"]].value.value_code:
+            spec["value_code"] = responses[questionnaire["id"]].value_code
+        if responses[questionnaire["id"]].note:
+            spec["note"] = responses[questionnaire["id"]].note
+    if parent_id:
+        spec["parent"] = parent_id
+    return spec
+
+
+def convert_to_observation_spec(
+    questionnaire_obj: Questionnaire, responses, parent_id=None
+):
+    constructed_observation_mapping = []
+    for question in questionnaire_obj.get("questions", []):
+        if question["type"] == QuestionType.group.value:
+            observation = create_observation_spec(question, responses, parent_id)
+            sub_mapping = convert_to_observation_spec(
+                question, responses, observation["id"]
+            )
+            if sub_mapping:
+                constructed_observation_mapping.append(observation)
+                constructed_observation_mapping.extend(sub_mapping)
+        elif question["code"]:
+            constructed_observation_mapping.append(
+                create_observation_spec(question, responses, parent_id)
+            )
+    return constructed_observation_mapping
 
 
 def handle_response(questionnaire_obj: Questionnaire, results):
@@ -86,6 +128,10 @@ def handle_response(questionnaire_obj: Questionnaire, results):
     if errors:
         raise ValidationError(errors)
     # Validate and create observation objects
+    observations = convert_to_observation_spec(
+        {"questions": questionnaire_obj.questions}, responses
+    )
+    logging.info(observations)
     # Bulk create observations
     # Create questionnaire response
     json_results = results.model_dump(mode="json", exclude_defaults=True)

@@ -26,6 +26,7 @@ class QuestionnaireSubmitResult(BaseModel):
     method: Coding = None
     value: QuestionnaireSubmitResultValue
     values: list[QuestionnaireSubmitResultValue] = []
+    note: str = None
 
 
 class QuestionnaireSubmitRequest(BaseModel):
