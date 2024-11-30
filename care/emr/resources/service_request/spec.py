@@ -130,25 +130,25 @@ class ServiceRequestSpec(BaseServiceRequestSpec):
 
     @field_validator("category")
     @classmethod
-    def validate_category(cls, category: int) -> int:
+    def validate_category(cls, value: str):
         return validate_valueset(
-            "category", cls.model_fields["category"].json_schema_extra["slug"], category
+            "category", cls.model_fields["category"].json_schema_extra["slug"], value
         )
 
     @field_validator("code")
     @classmethod
-    def validate_code(cls, code: int) -> int:
+    def validate_code(cls, value: str):
         return validate_valueset(
-            "code", cls.model_fields["code"].json_schema_extra["slug"], code
+            "code", cls.model_fields["code"].json_schema_extra["slug"], value
         )
 
     @field_validator("as_needed_for")
     @classmethod
-    def validate_as_needed_for(cls, as_needed_for: int) -> int:
+    def validate_as_needed_for(cls, value: str):
         return validate_valueset(
             "as_needed_for",
             cls.model_fields["as_needed_for"].json_schema_extra["slug"],
-            as_needed_for,
+            value,
         )
 
     def perform_extra_deserialization(self, is_update, obj):

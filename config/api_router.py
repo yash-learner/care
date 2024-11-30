@@ -7,6 +7,7 @@ from care.emr.api.viewsets.allergy_intolerance import AllergyIntoleranceViewSet
 from care.emr.api.viewsets.batch_request import BatchRequestView
 from care.emr.api.viewsets.questionnaire import QuestionnaireViewSet
 from care.emr.api.viewsets.service_request import ServiceRequestViewSet
+from care.emr.api.viewsets.specimen import SpecimenViewSet
 from care.emr.api.viewsets.valueset import ValueSetViewSet
 from care.facility.api.viewsets.ambulance import AmbulanceViewSet
 from care.facility.api.viewsets.asset import (
@@ -149,6 +150,7 @@ router.register("valueset", ValueSetViewSet, basename="value-set")
 router.register("questionnaire", QuestionnaireViewSet, basename="questionnaire")
 
 router.register("service_request", ServiceRequestViewSet, basename="service-request")
+router.register("specimen", SpecimenViewSet, basename="specimen")
 
 # District Summary
 router.register(

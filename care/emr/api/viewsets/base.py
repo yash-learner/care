@@ -57,6 +57,22 @@ class EMRCreateMixin:
         )
 
 
+class EMRUpdateMixin:
+    def clean_update_data(self, request, *args, **kwargs):
+        return request.data
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        clean_data = self.clean_update_data(request, *args, **kwargs)
+        instance = self.pydantic_model(**clean_data).de_serialize(instance)
+        instance.save()
+        return Response(
+            self.get_read_pydantic_model()
+            .serialize(instance)
+            .model_dump(exclude=["meta"])
+        )
+
+
 class EMRListMixin:
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -100,9 +116,6 @@ class EMRBaseViewSet(GenericViewSet):
             queryset, **{self.lookup_field: self.kwargs[self.lookup_field]}
         )
 
-    def update(self, request, *args, **kwargs):
-        return Response({"update": "working"})
-
     def delete(self, request, *args, **kwargs):
         return Response({"delete": "working"})
 
@@ -111,6 +124,7 @@ class EMRModelViewSet(
     EMRCreateMixin,
     EMRRetrieveMixin,
     EMRListMixin,
+    EMRUpdateMixin,
     EMRQuestionnaireMixin,
     EMRBaseViewSet,
 ):

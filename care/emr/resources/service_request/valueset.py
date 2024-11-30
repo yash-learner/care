@@ -31,11 +31,11 @@ CARE_SERVICE_REQUEST_CATEGORY_VALUESET.register_valueset(
             ValueSetInclude(
                 system="http://snomed.info/sct",
                 concept=[
-                    {"code": "108252007", "display": "Laboratory procedure"},
-                    {"code": "363679005", "display": "Imaging"},
-                    {"code": "409063005", "display": "Counselling"},
-                    {"code": "409073007", "display": "Education"},
-                    {"code": "387713003", "display": "Surgical procedure"},
+                    {"code": "108252007"},
+                    {"code": "363679005"},
+                    {"code": "409063005"},
+                    {"code": "409073007"},
+                    {"code": "387713003"},
                 ],
             )
         ]
