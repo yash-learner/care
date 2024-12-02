@@ -148,6 +148,7 @@ class QuestionnaireSpec(QuestionnaireBaseSpec):
     version: str = Field("1.0", frozen=True, description="Version of the questionnaire")
     title: str
     description: str = ""
+    type: str = "custom"
     status: QuestionnaireStatus
     subject_type: SubjectType
     styling_metadata: dict = Field(

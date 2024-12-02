@@ -7,6 +7,9 @@ from care.emr.api.viewsets.base import EMRModelViewSet
 from care.emr.fhir.schema.base import Coding
 from care.emr.models import Questionnaire
 from care.emr.models.questionnaire import QuestionnaireResponse
+from care.emr.registries.system_questionnaire.system_questionnaire import (
+    InternalQuestionnaireRegistry,
+)
 from care.emr.resources.questionnaire.spec import (
     QuestionnaireReadSpec,
     QuestionnaireSpec,
@@ -40,12 +43,30 @@ class QuestionnaireViewSet(EMRModelViewSet):
     pydantic_model = QuestionnaireSpec
     pydantic_read_model = QuestionnaireReadSpec
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if "search" in self.request.GET:
+            queryset = queryset.filter(title__icontains=self.request.GET.get("search"))
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        data = [
+            self.get_read_pydantic_model().serialize(obj).model_dump(exclude=["meta"])
+            for obj in queryset
+        ]
+        response = InternalQuestionnaireRegistry.search_questionnaire(
+            request.GET.get("search", "")
+        )
+        response.extend(data)
+        return Response(response)
+
     @action(detail=True, methods=["POST"])
     def submit(self, request, *args, **kwargs):
         request_params = QuestionnaireSubmitRequest(**request.data)
         questionnaire = self.get_object()
         with transaction.atomic():
-            response = handle_response(questionnaire, request_params)
+            response = handle_response(questionnaire, request_params, request.user)
         return Response(response)
 
     @action(detail=True, methods=["POST"])

@@ -87,7 +87,7 @@ class EMRBaseViewSet(GenericViewSet):
         return emr_exception_handler
 
     def get_queryset(self):
-        return self.database_model.objects.all()
+        return self.filter_queryset(self.database_model.objects.all())
 
     def get_read_pydantic_model(self):
         if self.pydantic_read_model:
@@ -109,6 +109,15 @@ class EMRBaseViewSet(GenericViewSet):
 
 class EMRModelViewSet(
     EMRCreateMixin,
+    EMRRetrieveMixin,
+    EMRListMixin,
+    EMRQuestionnaireMixin,
+    EMRBaseViewSet,
+):
+    pass
+
+
+class EMRModelReadOnlyViewSet(
     EMRRetrieveMixin,
     EMRListMixin,
     EMRQuestionnaireMixin,

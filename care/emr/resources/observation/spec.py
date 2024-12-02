@@ -4,6 +4,7 @@ from enum import Enum
 from pydantic import UUID4, BaseModel, Field
 
 from care.emr.fhir.schema.base import CodeableConcept
+from care.emr.models.observation import Observation
 from care.emr.resources.base import EMRResource
 from care.emr.resources.observation.valueset import (
     CARE_BODY_SITE_VALUESET,
@@ -41,32 +42,34 @@ class ReferenceRange(BaseModel):
 
 
 class ObservationSpec(EMRResource):
-    id: str = Field(description="Unique ID in the system")
+    __model__ = Observation
+
+    id: str = Field("", description="Unique ID in the system")
 
     status: ObservationStatus = Field(
         description="Status of the observation (final or amended)"
     )
 
-    category: Coding = Field(
-        ..., description="List of codeable concepts derived from the questionnaire"
+    category: Coding | None = Field(
+        None, description="List of codeable concepts derived from the questionnaire"
     )
 
-    main_code: Coding = Field(
-        ..., description="Code for the observation (LOINC binding)"
+    main_code: Coding | None = Field(
+        None, description="Code for the observation (LOINC binding)"
     )
 
     alternate_coding: CodeableConcept = dict
 
     subject_type: SubjectType
 
-    encounter: UUID4
+    encounter: UUID4 | None = None
 
     effective_datetime: datetime = Field(
         ...,
         description="Datetime when observation was recorded",
     )
 
-    data_entered_by: int
+    data_entered_by_id: int
 
     performer: Performer | None = Field(
         None,
@@ -105,3 +108,20 @@ class ObservationSpec(EMRResource):
     )
 
     parent: UUID4 | None = Field(None, description="ID reference to parent observation")
+
+    questionnaire_response: UUID4 | None = None
+
+    def perform_extra_deserialization(self, is_update, obj):
+        obj.external_id = self.id
+        obj.data_entered_by_id = self.data_entered_by_id
+        self.meta.pop("data_entered_by_id", None)
+        if not is_update:
+            obj.id = None
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        mapping["id"] = obj.external_id
+        # Avoiding extra queries
+        mapping["encounter"] = None
+        mapping["patient"] = None
+        mapping["questionnaire_response"] = None

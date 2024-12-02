@@ -5,9 +5,9 @@ from pydantic import UUID4, Field, field_validator
 
 from care.emr.fhir.schema.base import Coding
 from care.emr.models.allergy_intolerance import AllergyIntolerance
+from care.emr.registries.care_valueset.care_valueset import validate_valueset
 from care.emr.resources.allergy_intolerance.valueset import CARE_ALLERGY_CODE_VALUESET
 from care.emr.resources.base import EMRResource
-from care.emr.resources.care_valueset.care_valueset import validate_valueset
 from care.facility.models import PatientConsultation
 
 

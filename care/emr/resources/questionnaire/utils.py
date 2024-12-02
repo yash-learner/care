@@ -1,13 +1,15 @@
-import logging
 import uuid
 from datetime import datetime
 
 from dateutil import parser
+from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
+from care.emr.models.observation import Observation
 from care.emr.models.questionnaire import Questionnaire, QuestionnaireResponse
-from care.emr.resources.observation.spec import ObservationStatus
+from care.emr.resources.observation.spec import ObservationSpec, ObservationStatus
 from care.emr.resources.questionnaire.spec import QuestionType
+from care.facility.models.patient_consultation import PatientConsultation
 
 
 def validate_types(values, value_type):
@@ -72,7 +74,7 @@ def validate_question_result(questionnaire, responses, errors):
 
 def create_observation_spec(questionnaire, responses, parent_id=None):
     spec = {}
-    spec["id"] = uuid.uuid4()
+    spec["id"] = str(uuid.uuid4())
     spec["status"] = ObservationStatus.final.value
     if "category" in questionnaire:
         spec["category"] = questionnaire["category"]
@@ -91,6 +93,7 @@ def create_observation_spec(questionnaire, responses, parent_id=None):
             spec["note"] = responses[questionnaire["id"]].note
     if parent_id:
         spec["parent"] = parent_id
+    spec["effective_datetime"] = timezone.now()
     return spec
 
 
@@ -114,11 +117,14 @@ def convert_to_observation_spec(
     return constructed_observation_mapping
 
 
-def handle_response(questionnaire_obj: Questionnaire, results):
+def handle_response(questionnaire_obj: Questionnaire, results, user):
     """
     Generate observations and questionnaire responses after validation
     """
     # Construct questionnaire response
+
+    encounter = PatientConsultation.objects.get(external_id=results.encounter)
+
     responses = {}
     errors = []
     for result in results.results:
@@ -131,15 +137,35 @@ def handle_response(questionnaire_obj: Questionnaire, results):
     observations = convert_to_observation_spec(
         {"questions": questionnaire_obj.questions}, responses
     )
-    logging.info(observations)
     # Bulk create observations
+    observations_objects = [
+        ObservationSpec(
+            **observation,
+            subject_type=questionnaire_obj.subject_type,
+            data_entered_by_id=user.id,
+        )
+        for observation in observations
+    ]
+
     # Create questionnaire response
     json_results = results.model_dump(mode="json", exclude_defaults=True)
-    QuestionnaireResponse.objects.create(
+    questionnaire_response = QuestionnaireResponse.objects.create(
         questionnaire=questionnaire_obj,
         subject_id=results.resource_id,
         encounter=results.encounter,
         responses=json_results["results"],
     )
     # Serialize and return questionnaire response
+
+    bulk = []
+    for observation in observations_objects:
+        temp = observation.de_serialize()
+        temp.questionnaire_response = questionnaire_response
+        temp.subject_id = results.resource_id
+        temp.patient = encounter.patient
+        temp.encounter = encounter
+        bulk.append(temp)
+
+    Observation.objects.bulk_create(bulk)
+
     return json_results
