@@ -143,6 +143,13 @@ class Question(QuestionnaireBaseSpec):
                 ids.extend(question.get_all_ids())
         return ids
 
+    @model_validator(mode="after")
+    def validate_options_not_empty(self):
+        if self.type == QuestionType.choice and not self.answer_option:
+            err = "Answer options are required for choice type questions"
+            raise ValueError(err)
+        return self
+
 
 class QuestionnaireSpec(QuestionnaireBaseSpec):
     version: str = Field("1.0", frozen=True, description="Version of the questionnaire")
