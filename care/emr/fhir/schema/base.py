@@ -1055,8 +1055,7 @@ class Coding(BaseModel):
     field_version: Element | None = Field(
         None, alias="_version", description="Extensions for version"
     )
-    code: Code | None = Field(
-        None,
+    code: Code = Field(
         description="A symbol in syntax defined by the system. The symbol may be a predefined code or an expression in a syntax defined by the coding system (e.g. post-coordination).",
     )
     field_code: Element | None = Field(
