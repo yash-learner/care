@@ -59,7 +59,7 @@ class QuestionnaireViewSet(EMRModelViewSet):
             request.GET.get("search", "")
         )
         response.extend(data)
-        return Response(response)
+        return Response({"results": response})
 
     @action(detail=True, methods=["POST"])
     def submit(self, request, *args, **kwargs):
@@ -69,10 +69,18 @@ class QuestionnaireViewSet(EMRModelViewSet):
             response = handle_response(questionnaire, request_params, request.user)
         return Response(response)
 
-    @action(detail=True, methods=["POST"])
+    @action(detail=True, methods=["GET"])
     def past_responses(self, request, *args, **kwargs):
         obj = self.get_object()
-        queryset = QuestionnaireResponse.objects.filter(questionnaire=obj)
+        queryset = QuestionnaireResponse.objects.filter(questionnaire=obj).order_by(
+            "-created_date"
+        )
+        if "encounter" in self.request.GET:
+            queryset = queryset.filter(encounter=self.request.GET["encounter"])
+        elif "patient" in self.request.GET:
+            queryset = queryset.filter(patient=self.request.GET["patient"])
+        else:
+            pass
         paginator = self.pagination_class()
         page = paginator.paginate_queryset(queryset, request)
         data = [

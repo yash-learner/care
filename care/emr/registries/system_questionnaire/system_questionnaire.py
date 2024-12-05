@@ -1,3 +1,5 @@
+import uuid
+
 from care.emr.resources.questionnaire.spec import QuestionnaireStatus
 
 
@@ -11,9 +13,10 @@ class InternalQuestionnaireRegistry:
     @classmethod
     def serialize(cls, view):
         return {
-            "version": 1,
-            "title": "",
-            "description": "",
+            "version": "1.0",
+            "id": str(uuid.uuid4()),
+            "title": view.questionnaire_title,
+            "description": view.questionnaire_description,
             "type": view.questionnaire_type,
             "status": QuestionnaireStatus.active.value,
             "subject_type": view.questionnaire_subject_type,

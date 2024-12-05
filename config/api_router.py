@@ -6,6 +6,7 @@ from rest_framework_nested.routers import NestedSimpleRouter
 from care.emr.api.viewsets.allergy_intolerance import AllergyIntoleranceViewSet
 from care.emr.api.viewsets.batch_request import BatchRequestView
 from care.emr.api.viewsets.codition import CoditionViewSet
+from care.emr.api.viewsets.medication_request import MedicationRequestViewSet
 from care.emr.api.viewsets.observation import ObservationViewSet
 from care.emr.api.viewsets.questionnaire import QuestionnaireViewSet
 from care.emr.api.viewsets.valueset import ValueSetViewSet
@@ -300,6 +301,14 @@ router.register(
 consultation_nested_router = NestedSimpleRouter(
     router, r"consultation", lookup="consultation"
 )
+
+consultation_nested_router.register(
+    r"medication/request",
+    MedicationRequestViewSet,
+    basename="medication-request",
+)
+
+
 consultation_nested_router.register(
     r"daily_rounds", DailyRoundsViewSet, basename="consultation-daily-rounds"
 )

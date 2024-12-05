@@ -18,5 +18,5 @@ class QuestionnaireResponse(EMRBaseModel):
     subject_id = models.UUIDField()
     responses = models.JSONField(default=list)
     encounter = models.UUIDField()
-
+    patient = models.UUIDField(null=True, blank=True)
     # TODO : Add index for subject_id and subject_type in descending order

@@ -3,8 +3,9 @@ from care.emr.resources.base import EMRResource
 
 
 class QuestionnaireResponseReadSpec(EMRResource):
-    __model__ = QuestionnaireResponse()
+    __model__ = QuestionnaireResponse
 
     subject_id: str
     responses: list
     encounter: str
+    patient: str

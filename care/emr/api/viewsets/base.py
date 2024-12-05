@@ -21,13 +21,13 @@ class EMRQuestionnaireMixin:
     @action(detail=False, methods=["GET"])
     def questionnaire_spec(self, *args, **kwargs):
         return Response(
-            {"version": 1, "questions": self.pydantic_model.questionnaire()}
+            {"version": "1.0", "questions": self.pydantic_model.questionnaire()}
         )
 
     @action(detail=False, methods=["GET"])
     def json_schema_spec(self, *args, **kwargs):
         return Response(
-            {"version": 1, "questions": self.pydantic_model.model_json_schema()}
+            {"version": "1.0", "questions": self.pydantic_model.model_json_schema()}
         )
 
 

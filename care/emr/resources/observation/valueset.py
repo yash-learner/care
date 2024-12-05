@@ -15,7 +15,7 @@ CARE_OBSERVATION_VALUSET.register_as_system()
 
 
 CARE_BODY_SITE_VALUESET = CareValueset(
-    "Body Site", "system-body-site", ValueSetStatusOptions.active.value
+    "Body Site", "system-body-site-observation", ValueSetStatusOptions.active.value
 )
 
 
