@@ -106,6 +106,7 @@ class Question(QuestionnaireBaseSpec):
         description="Unique machine provided UUID", default_factory=uuid.uuid4
     )
     code: Coding | None = Field(
+        None,
         description="Coding for observation creation",
         json_schema_extra={"slug": CARE_OBSERVATION_VALUSET.slug},
     )
