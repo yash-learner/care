@@ -62,9 +62,11 @@ def validate_question_result(questionnaire, responses, errors):
                 {"question_id": questionnaire["id"], "error": "Question not answered"}
             )
             return
-        value = responses[questionnaire["id"]].value
+        values = responses[questionnaire["id"]].values
+        if not values:
+            err = "No value provided for question"
+            raise ValueError(err)
         value_type = questionnaire["type"]
-        values = [value]
         if questionnaire.get("repeats", False):
             values = responses[questionnaire["id"]].values
         type_errors = validate_types(values, value_type)
@@ -83,11 +85,11 @@ def create_observation_spec(questionnaire, responses, parent_id=None):
     if (
         responses
         and questionnaire["id"] in responses
-        and responses[questionnaire["id"]].value
+        and responses[questionnaire["id"]].values[0]
     ):
-        if responses[questionnaire["id"]].value.value:
-            spec["value"] = responses[questionnaire["id"]].value.value
-        if responses[questionnaire["id"]].value.value_code:
+        if responses[questionnaire["id"]].values[0].value:
+            spec["value"] = responses[questionnaire["id"]].values[0].value
+        if responses[questionnaire["id"]].values[0].value_code:
             spec["value_code"] = responses[questionnaire["id"]].value_code
         if responses[questionnaire["id"]].note:
             spec["note"] = responses[questionnaire["id"]].note
