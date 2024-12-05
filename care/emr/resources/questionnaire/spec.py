@@ -37,14 +37,16 @@ class QuestionType(str, Enum):
     integer = "integer"
     string = "string"
     text = "text"
+    display = "display"
     date = "date"
     datetime = "dateTime"
     time = "time"
     choice = "choice"
-    open_choice = "open_choice"
-    attachment = "attachment"
-    reference = "reference"
-    quantity = "quantity"
+    # open_choice = "open_choice" # noqa ERA001
+    url = "url"
+    # attachment = "attachment" # noqa ERA001
+    # reference = "reference" # noqa ERA001
+    # quantity = "quantity" # noqa ERA001
     structured = "structured"
 
 
