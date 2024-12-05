@@ -45,6 +45,7 @@ class QuestionType(str, Enum):
     attachment = "attachment"
     reference = "reference"
     quantity = "quantity"
+    structured = "structured"
 
 
 class AnswerConstraint(str, Enum):
@@ -115,6 +116,7 @@ class Question(QuestionnaireBaseSpec):
     )
     text: str = Field(description="Question text")
     type: QuestionType
+    structured_type: str | None = None  # TODO : Add validation later
     enable_when: list[EnableWhen] | None = Field(alias="enableWhen", default=None)
     enable_behavior: EnableBehavior | None = Field(alias="enableBehavior", default=None)
     disabled_display: DisabledDisplay | None = Field(
