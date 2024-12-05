@@ -134,6 +134,7 @@ class Question(QuestionnaireBaseSpec):
     is_observation: bool | None = None
     questions: list["Question"] = []
     formula: str | None = None
+    styling_metadata: dict = {}
 
     def get_all_ids(self):
         ids = []
