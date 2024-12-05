@@ -7,7 +7,7 @@ from care.emr.resources.condition.spec import ConditionSpec, ConditionSpecRead
 from care.emr.resources.questionnaire.spec import SubjectType
 
 
-class CoditionViewSet(EMRModelViewSet):
+class ConditionViewSet(EMRModelViewSet):
     database_model = Condition
     pydantic_model = ConditionSpec
     pydantic_read_model = ConditionSpecRead
@@ -25,4 +25,4 @@ class CoditionViewSet(EMRModelViewSet):
         )
 
 
-InternalQuestionnaireRegistry.register(CoditionViewSet)
+InternalQuestionnaireRegistry.register(ConditionViewSet)

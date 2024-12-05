@@ -5,6 +5,7 @@ from rest_framework_nested.routers import NestedSimpleRouter
 
 from care.emr.api.viewsets.allergy_intolerance import AllergyIntoleranceViewSet
 from care.emr.api.viewsets.batch_request import BatchRequestView
+from care.emr.api.viewsets.codition import ConditionViewSet
 from care.emr.api.viewsets.encounter import EncounterViewSet
 from care.emr.api.viewsets.medication_request import MedicationRequestViewSet
 from care.emr.api.viewsets.observation import ObservationViewSet
@@ -286,6 +287,9 @@ patient_notes_nested_router.register(
 patient_nested_router.register(
     r"allergy_intolerance", AllergyIntoleranceViewSet, basename="allergy-intolerance"
 )
+
+patient_nested_router.register(r"condition", ConditionViewSet, basename="condition")
+
 
 patient_nested_router.register(r"encounter", EncounterViewSet, basename="encounter")
 
