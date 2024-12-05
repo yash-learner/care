@@ -118,6 +118,7 @@ class Question(QuestionnaireBaseSpec):
         description="Whether to collect performer",
     )
     text: str = Field(description="Question text")
+    description: str | None = Field(None, description="Question description")
     type: QuestionType
     structured_type: str | None = None  # TODO : Add validation later
     enable_when: list[EnableWhen] | None = Field(alias="enableWhen", default=None)
