@@ -17,6 +17,7 @@ class InternalQuestionnaireRegistry:
             "id": str(uuid.uuid4()),
             "title": view.questionnaire_title,
             "description": view.questionnaire_description,
+            "slug": view.questionnaire_type,
             "type": view.questionnaire_type,
             "status": QuestionnaireStatus.active.value,
             "subject_type": view.questionnaire_subject_type,

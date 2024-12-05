@@ -156,6 +156,7 @@ class Question(QuestionnaireBaseSpec):
 
 class QuestionnaireSpec(QuestionnaireBaseSpec):
     version: str = Field("1.0", frozen=True, description="Version of the questionnaire")
+    slug: str | None = None
     title: str
     description: str = ""
     type: str = "custom"
@@ -191,6 +192,7 @@ class QuestionnaireSpec(QuestionnaireBaseSpec):
 
 class QuestionnaireReadSpec(QuestionnaireBaseSpec):
     id: str
+    slug: str | None = None
     version: str
     title: str
     description: str = ""

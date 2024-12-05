@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 
 from care.emr.models import EMRBaseModel
@@ -5,6 +7,7 @@ from care.emr.models import EMRBaseModel
 
 class Questionnaire(EMRBaseModel):
     version = models.CharField(max_length=255)
+    slug = models.CharField(max_length=255, default=uuid.uuid4, unique=True)
     title = models.CharField(max_length=255)
     description = models.TextField(default="")
     subject_type = models.CharField(max_length=255)
