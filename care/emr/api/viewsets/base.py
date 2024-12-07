@@ -90,6 +90,44 @@ class EMRListMixin:
         return Response(data)
 
 
+class EMRUpdateMixin:
+    def perform_update(self, instance):
+        instance.save()
+
+    def clean_update_data(self, request, *args, **kwargs):
+        data = request.data
+        data.pop("id", None)
+        data.pop("external_id", None)
+        data.pop("patient", None)
+        data.pop("encounter", None)
+        return request.data
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        clean_data = self.clean_update_data(request, *args, **kwargs)  # From Create
+        serializer_obj = self.pydantic_model.model_validate(
+            clean_data, context={"is_update": True, "object": instance}
+        )
+        model_instance = serializer_obj.de_serialize(obj=instance)
+        self.perform_update(model_instance)
+        return Response(
+            self.get_read_pydantic_model()
+            .serialize(model_instance)
+            .model_dump(exclude=["meta"])
+        )
+
+
+class EMRDeleteMixin:
+    def perform_delete(self, instance):
+        instance.deleted = True
+        instance.save(update_fields=["deleted"])
+
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_delete(instance)
+        return Response(status=204)
+
+
 class EMRBaseViewSet(GenericViewSet):
     pydantic_model: EMRResource = None
     pydantic_read_model: EMRResource = None
@@ -113,17 +151,13 @@ class EMRBaseViewSet(GenericViewSet):
             queryset, **{self.lookup_field: self.kwargs[self.lookup_field]}
         )
 
-    def update(self, request, *args, **kwargs):
-        return Response({"update": "working"})
-
-    def delete(self, request, *args, **kwargs):
-        return Response({"delete": "working"})
-
 
 class EMRModelViewSet(
     EMRCreateMixin,
     EMRRetrieveMixin,
+    EMRUpdateMixin,
     EMRListMixin,
+    EMRDeleteMixin,
     EMRQuestionnaireMixin,
     EMRBaseViewSet,
 ):

@@ -2,7 +2,7 @@ import uuid
 from enum import Enum
 from typing import Any
 
-from pydantic import UUID4, ConfigDict, Field, model_validator
+from pydantic import UUID4, ConfigDict, Field, field_validator, model_validator
 
 from care.emr.fhir.schema.base import Coding
 from care.emr.models import Questionnaire
@@ -177,6 +177,18 @@ class QuestionnaireSpec(QuestionnaireBaseSpec):
         {}, description="Styling requirements without validation"
     )
     questions: list[Question]
+
+    @field_validator("slug")
+    @classmethod
+    def validate_slug(cls, slug: str, info):
+        queryset = Questionnaire.objects.filter(slug=slug)
+        context = cls.get_serializer_context(info)
+        if context.get("is_update", False):
+            queryset = queryset.exclude(id=info.context["object"].id)
+        if queryset.exists():
+            err = "Slug must be unique"
+            raise ValueError(err)
+        return slug
 
     def get_all_ids(self):
         ids = []
