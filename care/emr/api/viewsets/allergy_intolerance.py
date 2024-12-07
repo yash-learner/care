@@ -1,4 +1,5 @@
 from drf_spectacular.utils import extend_schema, extend_schema_view
+from rest_framework.exceptions import PermissionDenied
 
 from care.emr.api.viewsets.base import EMRModelViewSet
 from care.emr.models.allergy_intolerance import AllergyIntolerance
@@ -10,6 +11,7 @@ from care.emr.resources.allergy_intolerance.spec import (
     AllergyIntrolanceSpecRead,
 )
 from care.emr.resources.questionnaire.spec import SubjectType
+from care.facility.models.patient_consultation import PatientConsultation
 
 
 @extend_schema_view(
@@ -23,6 +25,13 @@ class AllergyIntoleranceViewSet(EMRModelViewSet):
     questionnaire_title = "Allergy Intolerance"
     questionnaire_description = "Allergy Intolerance"
     questionnaire_subject_type = SubjectType.patient.value
+
+    def authorize_create(self, request, request_model: AllergyIntoleranceSpec):
+        encounter = PatientConsultation.objects.get(external_id=request_model.encounter)
+        if str(encounter.patient.external_id) != self.kwargs["patient_external_id"]:
+            err = "Malformed request"
+            raise PermissionDenied(err)
+        # Check if the user has access to the patient and write access to the encounter
 
     def get_queryset(self):
         return (
