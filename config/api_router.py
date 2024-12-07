@@ -10,6 +10,7 @@ from care.emr.api.viewsets.encounter import EncounterViewSet
 from care.emr.api.viewsets.medication_request import MedicationRequestViewSet
 from care.emr.api.viewsets.observation import ObservationViewSet
 from care.emr.api.viewsets.questionnaire import QuestionnaireViewSet
+from care.emr.api.viewsets.units import UnitsView
 from care.emr.api.viewsets.valueset import ValueSetViewSet
 from care.facility.api.viewsets.ambulance import AmbulanceViewSet
 from care.facility.api.viewsets.asset import (
@@ -138,6 +139,8 @@ router.register("otp/patient", OTPPatientDataViewSet, basename="otp-patient")
 router.register("notification", NotificationViewSet, basename="notification")
 
 router.register("batch_requests", BatchRequestView, basename="batch-requests")
+
+router.register("units", UnitsView, basename="units")
 
 router.register("valueset", ValueSetViewSet, basename="value-set")
 
