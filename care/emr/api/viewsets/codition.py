@@ -29,10 +29,6 @@ class ConditionViewSet(EMRModelViewSet):
 
     def authorize_create(self, request, request_model: ConditionSpec):
         encounter = PatientConsultation.objects.get(external_id=request_model.encounter)
-        import logging
-
-        logging.info("Hi")
-        logging.info(encounter.patient.external_id)
         if str(encounter.patient.external_id) != self.kwargs["patient_external_id"]:
             err = "Malformed request"
             raise PermissionDenied(err)

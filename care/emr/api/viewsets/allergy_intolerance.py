@@ -1,3 +1,5 @@
+from django_filters import FilterSet, UUIDFilter
+from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework.exceptions import PermissionDenied
 
@@ -14,6 +16,10 @@ from care.emr.resources.questionnaire.spec import SubjectType
 from care.facility.models.patient_consultation import PatientConsultation
 
 
+class AllergyIntoleranceFilters(FilterSet):
+    encounter = UUIDFilter(field_name="encounter__external_id")
+
+
 @extend_schema_view(
     create=extend_schema(request=AllergyIntoleranceSpec),
 )
@@ -25,6 +31,8 @@ class AllergyIntoleranceViewSet(EMRModelViewSet):
     questionnaire_title = "Allergy Intolerance"
     questionnaire_description = "Allergy Intolerance"
     questionnaire_subject_type = SubjectType.patient.value
+    filterset_class = AllergyIntoleranceFilters
+    filter_backends = [DjangoFilterBackend]
 
     def authorize_create(self, request, request_model: AllergyIntoleranceSpec):
         encounter = PatientConsultation.objects.get(external_id=request_model.encounter)

@@ -96,6 +96,7 @@ class AllergyIntrolanceSpecRead(BaseAllergyIntoleranceSpec):
     category: str
     criticality: str
     code: Coding
+    encounter: UUID4
     onset: AllergyIntoleranceOnSetSpec = dict
 
     @classmethod
