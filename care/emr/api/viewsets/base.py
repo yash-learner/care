@@ -1,5 +1,6 @@
 import json
 
+from django.http.response import Http404
 from pydantic import ValidationError
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
@@ -14,6 +15,18 @@ from care.emr.resources.base import EMRResource
 def emr_exception_handler(exc, context):
     if isinstance(exc, ValidationError):
         return Response({"errors": json.loads(exc.json())}, status=400)
+    if isinstance(exc, Http404):
+        return Response(
+            {
+                "errors": [
+                    {
+                        "type": "object_not_found",
+                        "msg": "Object not found",
+                    }
+                ]
+            },
+            status=404,
+        )
     return drf_exception_handler(exc, context)
 
 

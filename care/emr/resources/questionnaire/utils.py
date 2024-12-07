@@ -71,7 +71,16 @@ def validate_question_result(questionnaire, responses, errors):
             values = responses[questionnaire["id"]].values
         type_errors = validate_types(values, value_type)
         if type_errors:
-            errors.append({"question_id": questionnaire["id"], "errors": type_errors})
+            errors.extend(
+                [
+                    {
+                        "type": "type_error",
+                        "question_id": questionnaire["id"],
+                        "msg": error,
+                    }
+                    for error in type_errors
+                ]
+            )
 
 
 def create_observation_spec(questionnaire, responses, parent_id=None):
@@ -134,7 +143,7 @@ def handle_response(questionnaire_obj: Questionnaire, results, user):
     for question in questionnaire_obj.questions:
         validate_question_result(question, responses, errors)
     if errors:
-        raise ValidationError(errors)
+        raise ValidationError({"errors": errors})
     # Validate and create observation objects
     observations = convert_to_observation_spec(
         {"questions": questionnaire_obj.questions}, responses

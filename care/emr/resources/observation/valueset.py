@@ -132,3 +132,14 @@ CARE_OBSERVATION_COLLECTION_METHOD.register_valueset(
 )
 
 CARE_OBSERVATION_COLLECTION_METHOD.register_as_system()
+
+
+CARE_UCUM_UNITS = CareValueset(
+    "UCUM Units", "system-ucum-units", ValueSetStatusOptions.active.value
+)
+
+CARE_UCUM_UNITS.register_valueset(
+    ValueSetCompose(include=[{"system": "http://unitsofmeasure.org"}])
+)
+
+CARE_UCUM_UNITS.register_as_system()

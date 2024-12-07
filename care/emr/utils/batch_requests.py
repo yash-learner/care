@@ -1,5 +1,6 @@
 import logging
 
+from django.db import transaction
 from django.test.client import RequestFactory
 from django.urls import Resolver404, resolve
 
@@ -9,12 +10,13 @@ DEFAULT_CONTENT_TYPE = "application/json"
 
 def get_response(wsgi_request):
     try:
-        view, args, kwargs = resolve(wsgi_request.path_info)
-        kwargs.update({"request": wsgi_request})
-        resp = view(*args, **kwargs)
-        data = resp.data
-        headers = resp.headers.values()
-        status_code = resp.status_code
+        with transaction.atomic():
+            view, args, kwargs = resolve(wsgi_request.path_info)
+            kwargs.update({"request": wsgi_request})
+            resp = view(*args, **kwargs)
+            data = resp.data
+            headers = resp.headers.values()
+            status_code = resp.status_code
     except Resolver404:
         data = {"detail": "Route not found"}
         headers = {}
@@ -59,9 +61,7 @@ def headers_to_include_from_request(curr_request):
 
 
 def get_wsgi_request_object(curr_request, method, url, headers, body):
-    logging.info(curr_request)
     x_headers = headers_to_include_from_request(curr_request)
-    logging.info(x_headers)
     method, t_headers = pre_process_method_headers(method, headers)
 
     if "CONTENT_TYPE" not in t_headers:
