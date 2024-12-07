@@ -151,6 +151,13 @@ class Question(QuestionnaireBaseSpec):
         return ids
 
     @model_validator(mode="after")
+    def validate_group_does_not_repeat(self):
+        if self.type == QuestionType.group and self.repeats:
+            err = "Group type questions cannot be repeated"
+            raise ValueError(err)
+        return self
+
+    @model_validator(mode="after")
     def validate_options_not_empty(self):
         if self.type == QuestionType.choice and not self.answer_option:
             err = "Answer options are required for choice type questions"

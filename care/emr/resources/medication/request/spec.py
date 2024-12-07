@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 
-from pydantic import UUID4, BaseModel, Field
+from pydantic import UUID4, BaseModel, Field, field_validator
 
 from care.emr.fhir.schema.base import Coding
 from care.emr.models.medication_request import MedicationRequest
@@ -189,6 +189,14 @@ class MedicationRequestSpec(BaseMedicationRequestSpec):
     )
 
     note: str | None = Field(None, description="Additional notes about the request")
+
+    @field_validator("encounter")
+    @classmethod
+    def validate_encounter_exists(cls, encounter):
+        if not PatientConsultation.objects.filter(external_id=encounter).exists():
+            err = "Encounter not found"
+            raise ValueError(err)
+        return encounter
 
     def perform_extra_deserialization(self, is_update, obj):
         if not is_update:
