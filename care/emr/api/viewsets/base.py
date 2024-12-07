@@ -58,9 +58,13 @@ class EMRCreateMixin:
     def clean_create_data(self, request, *args, **kwargs):
         return request.data
 
+    def authorize_create(self, request, request_model):
+        pass
+
     def create(self, request, *args, **kwargs):
         clean_data = self.clean_create_data(request, *args, **kwargs)
         instance = self.pydantic_model(**clean_data)
+        self.authorize_create(request, instance)
         model_instance = instance.de_serialize()
         self.perform_create(model_instance)
         return Response(
