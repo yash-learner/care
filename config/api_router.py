@@ -6,6 +6,7 @@ from rest_framework_nested.routers import NestedSimpleRouter
 from care.emr.api.viewsets.allergy_intolerance import AllergyIntoleranceViewSet
 from care.emr.api.viewsets.batch_request import BatchRequestView
 from care.emr.api.viewsets.codition import ConditionViewSet
+from care.emr.api.viewsets.diagnostic_report import DiagnosticReportViewSet
 from care.emr.api.viewsets.encounter import EncounterViewSet
 from care.emr.api.viewsets.medication_request import MedicationRequestViewSet
 from care.emr.api.viewsets.observation import ObservationViewSet
@@ -162,6 +163,9 @@ router.register("triage_summary", TriageSummaryViewSet, basename="summary-triage
 
 router.register("service_request", ServiceRequestViewSet, basename="service-request")
 router.register("specimen", SpecimenViewSet, basename="specimen")
+router.register(
+    "diagnostic_report", DiagnosticReportViewSet, basename="diagnostic-report"
+)
 
 # District Summary
 router.register(
