@@ -5,8 +5,8 @@ from pydantic import UUID4, Field, field_validator
 
 from care.emr.fhir.schema.base import Annotation, Coding, Timing
 from care.emr.models.service_request import ServiceRequest
+from care.emr.registries.care_valueset.care_valueset import validate_valueset
 from care.emr.resources.base import EMRResource
-from care.emr.resources.care_valueset.care_valueset import validate_valueset
 from care.emr.resources.service_request.valueset import (
     CARE_LAB_ORDER_CODE_VALUESET,
     CARE_MEDICATION_AS_NEEDED_REASON_VALUESET,
