@@ -27,8 +27,17 @@ class EMRResource(BaseModel):
         return database_fields
 
     @classmethod
+    def get_serializer_context(cls, info):
+        if info and info.context:
+            return info.context
+        return {}
+
+    @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
+
+    def is_update(self):
+        return getattr("_is_update", False)
 
     @classmethod
     def serialize(cls, obj: __model__):

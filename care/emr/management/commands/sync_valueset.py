@@ -3,7 +3,7 @@
 from django.core.management.base import BaseCommand
 
 from care.emr.models import ValueSet
-from care.emr.resources.care_valueset.care_valueset import SystemValueSet
+from care.emr.registries.care_valueset.care_valueset import SystemValueSet
 
 
 class Command(BaseCommand):

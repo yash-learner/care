@@ -5,9 +5,9 @@ from pydantic import UUID4, Field, field_validator
 
 from care.emr.fhir.schema.base import Coding
 from care.emr.models.allergy_intolerance import AllergyIntolerance
+from care.emr.registries.care_valueset.care_valueset import validate_valueset
 from care.emr.resources.allergy_intolerance.valueset import CARE_ALLERGY_CODE_VALUESET
 from care.emr.resources.base import EMRResource
-from care.emr.resources.care_valueset.care_valueset import validate_valueset
 from care.facility.models import PatientConsultation
 
 
@@ -64,18 +64,24 @@ class AllergyIntoleranceSpec(BaseAllergyIntoleranceSpec):
     encounter: UUID4
     onset: AllergyIntoleranceOnSetSpec = {}
 
+    @field_validator("encounter")
+    @classmethod
+    def validate_encounter_exists(cls, encounter):
+        if not PatientConsultation.objects.filter(external_id=encounter).exists():
+            err = "Encounter not found"
+            raise ValueError(err)
+        return encounter
+
     @field_validator("code")
     @classmethod
-    def validate_code(cls, code: int) -> int:
+    def validate_code(cls, code: int):
         return validate_valueset(
             "code", cls.model_fields["code"].json_schema_extra["slug"], code
         )
 
     def perform_extra_deserialization(self, is_update, obj):
         if not is_update:
-            obj.encounter = PatientConsultation.objects.get(
-                external_id=self.encounter
-            )  # Needs more validation
+            obj.encounter = PatientConsultation.objects.get(external_id=self.encounter)
             obj.patient = obj.encounter.patient
 
 
@@ -90,6 +96,7 @@ class AllergyIntrolanceSpecRead(BaseAllergyIntoleranceSpec):
     category: str
     criticality: str
     code: Coding
+    encounter: UUID4
     onset: AllergyIntoleranceOnSetSpec = dict
 
     @classmethod

@@ -1,5 +1,6 @@
 import json
 
+from django.http.response import Http404
 from pydantic import ValidationError
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
@@ -14,6 +15,18 @@ from care.emr.resources.base import EMRResource
 def emr_exception_handler(exc, context):
     if isinstance(exc, ValidationError):
         return Response({"errors": json.loads(exc.json())}, status=400)
+    if isinstance(exc, Http404):
+        return Response(
+            {
+                "errors": [
+                    {
+                        "type": "object_not_found",
+                        "msg": "Object not found",
+                    }
+                ]
+            },
+            status=404,
+        )
     return drf_exception_handler(exc, context)
 
 
@@ -21,13 +34,13 @@ class EMRQuestionnaireMixin:
     @action(detail=False, methods=["GET"])
     def questionnaire_spec(self, *args, **kwargs):
         return Response(
-            {"version": 1, "questions": self.pydantic_model.questionnaire()}
+            {"version": "1.0", "questions": self.pydantic_model.questionnaire()}
         )
 
     @action(detail=False, methods=["GET"])
     def json_schema_spec(self, *args, **kwargs):
         return Response(
-            {"version": 1, "questions": self.pydantic_model.model_json_schema()}
+            {"version": "1.0", "questions": self.pydantic_model.model_json_schema()}
         )
 
 
@@ -45,30 +58,18 @@ class EMRCreateMixin:
     def clean_create_data(self, request, *args, **kwargs):
         return request.data
 
+    def authorize_create(self, request, request_model):
+        pass
+
     def create(self, request, *args, **kwargs):
         clean_data = self.clean_create_data(request, *args, **kwargs)
         instance = self.pydantic_model(**clean_data)
+        self.authorize_create(request, instance)
         model_instance = instance.de_serialize()
         self.perform_create(model_instance)
         return Response(
             self.get_read_pydantic_model()
             .serialize(model_instance)
-            .model_dump(exclude=["meta"])
-        )
-
-
-class EMRUpdateMixin:
-    def clean_update_data(self, request, *args, **kwargs):
-        return request.data
-
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        clean_data = self.clean_update_data(request, *args, **kwargs)
-        instance = self.pydantic_model(**clean_data).de_serialize(instance)
-        instance.save()
-        return Response(
-            self.get_read_pydantic_model()
-            .serialize(instance)
             .model_dump(exclude=["meta"])
         )
 
@@ -93,6 +94,44 @@ class EMRListMixin:
         return Response(data)
 
 
+class EMRUpdateMixin:
+    def perform_update(self, instance):
+        instance.save()
+
+    def clean_update_data(self, request, *args, **kwargs):
+        data = request.data
+        data.pop("id", None)
+        data.pop("external_id", None)
+        data.pop("patient", None)
+        data.pop("encounter", None)
+        return request.data
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        clean_data = self.clean_update_data(request, *args, **kwargs)  # From Create
+        serializer_obj = self.pydantic_model.model_validate(
+            clean_data, context={"is_update": True, "object": instance}
+        )
+        model_instance = serializer_obj.de_serialize(obj=instance)
+        self.perform_update(model_instance)
+        return Response(
+            self.get_read_pydantic_model()
+            .serialize(model_instance)
+            .model_dump(exclude=["meta"])
+        )
+
+
+class EMRDeleteMixin:
+    def perform_delete(self, instance):
+        instance.deleted = True
+        instance.save(update_fields=["deleted"])
+
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_delete(instance)
+        return Response(status=204)
+
+
 class EMRBaseViewSet(GenericViewSet):
     pydantic_model: EMRResource = None
     pydantic_read_model: EMRResource = None
@@ -103,7 +142,7 @@ class EMRBaseViewSet(GenericViewSet):
         return emr_exception_handler
 
     def get_queryset(self):
-        return self.database_model.objects.all()
+        return self.filter_queryset(self.database_model.objects.all())
 
     def get_read_pydantic_model(self):
         if self.pydantic_read_model:
@@ -116,15 +155,22 @@ class EMRBaseViewSet(GenericViewSet):
             queryset, **{self.lookup_field: self.kwargs[self.lookup_field]}
         )
 
-    def delete(self, request, *args, **kwargs):
-        return Response({"delete": "working"})
-
 
 class EMRModelViewSet(
     EMRCreateMixin,
     EMRRetrieveMixin,
-    EMRListMixin,
     EMRUpdateMixin,
+    EMRListMixin,
+    EMRDeleteMixin,
+    EMRQuestionnaireMixin,
+    EMRBaseViewSet,
+):
+    pass
+
+
+class EMRModelReadOnlyViewSet(
+    EMRRetrieveMixin,
+    EMRListMixin,
     EMRQuestionnaireMixin,
     EMRBaseViewSet,
 ):

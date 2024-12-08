@@ -1,5 +1,5 @@
 from care.emr.fhir.schema.valueset.valueset import ValueSetCompose
-from care.emr.resources.care_valueset.care_valueset import CareValueset
+from care.emr.registries.care_valueset.care_valueset import CareValueset
 from care.emr.resources.valueset.spec import ValueSetStatusOptions
 
 CARE_OBSERVATION_VALUSET = CareValueset(
@@ -15,7 +15,7 @@ CARE_OBSERVATION_VALUSET.register_as_system()
 
 
 CARE_BODY_SITE_VALUESET = CareValueset(
-    "Body Site", "system-body-site", ValueSetStatusOptions.active.value
+    "Body Site", "system-body-site-observation", ValueSetStatusOptions.active.value
 )
 
 
@@ -132,3 +132,14 @@ CARE_OBSERVATION_COLLECTION_METHOD.register_valueset(
 )
 
 CARE_OBSERVATION_COLLECTION_METHOD.register_as_system()
+
+
+CARE_UCUM_UNITS = CareValueset(
+    "UCUM Units", "system-ucum-units", ValueSetStatusOptions.active.value
+)
+
+CARE_UCUM_UNITS.register_valueset(
+    ValueSetCompose(include=[{"system": "http://unitsofmeasure.org"}])
+)
+
+CARE_UCUM_UNITS.register_as_system()

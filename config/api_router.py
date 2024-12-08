@@ -5,9 +5,14 @@ from rest_framework_nested.routers import NestedSimpleRouter
 
 from care.emr.api.viewsets.allergy_intolerance import AllergyIntoleranceViewSet
 from care.emr.api.viewsets.batch_request import BatchRequestView
+from care.emr.api.viewsets.codition import ConditionViewSet
+from care.emr.api.viewsets.encounter import EncounterViewSet
+from care.emr.api.viewsets.medication_request import MedicationRequestViewSet
+from care.emr.api.viewsets.observation import ObservationViewSet
 from care.emr.api.viewsets.questionnaire import QuestionnaireViewSet
 from care.emr.api.viewsets.service_request import ServiceRequestViewSet
 from care.emr.api.viewsets.specimen import SpecimenViewSet
+from care.emr.api.viewsets.units import UnitsView
 from care.emr.api.viewsets.valueset import ValueSetViewSet
 from care.facility.api.viewsets.ambulance import AmbulanceViewSet
 from care.facility.api.viewsets.asset import (
@@ -137,6 +142,15 @@ router.register("notification", NotificationViewSet, basename="notification")
 
 router.register("batch_requests", BatchRequestView, basename="batch-requests")
 
+router.register("units", UnitsView, basename="units")
+
+router.register("valueset", ValueSetViewSet, basename="value-set")
+
+router.register("questionnaire", QuestionnaireViewSet, basename="questionnaire")
+
+router.register("observation", ObservationViewSet, basename="observation")
+
+
 # Summarisation
 router.register(
     "facility_summary", FacilityCapacitySummaryViewSet, basename="summary-facility"
@@ -145,9 +159,6 @@ router.register("patient_summary", PatientSummaryViewSet, basename="summary-pati
 router.register("tests_summary", TestsSummaryViewSet, basename="summary-tests")
 router.register("triage_summary", TriageSummaryViewSet, basename="summary-triage")
 
-router.register("valueset", ValueSetViewSet, basename="value-set")
-
-router.register("questionnaire", QuestionnaireViewSet, basename="questionnaire")
 
 router.register("service_request", ServiceRequestViewSet, basename="service-request")
 router.register("specimen", SpecimenViewSet, basename="specimen")
@@ -285,6 +296,11 @@ patient_nested_router.register(
     r"allergy_intolerance", AllergyIntoleranceViewSet, basename="allergy-intolerance"
 )
 
+patient_nested_router.register(r"condition", ConditionViewSet, basename="condition")
+
+
+patient_nested_router.register(r"encounter", EncounterViewSet, basename="encounter")
+
 
 router.register(
     "external_result", PatientExternalTestViewSet, basename="patient-external-result"
@@ -297,6 +313,14 @@ router.register(
 consultation_nested_router = NestedSimpleRouter(
     router, r"consultation", lookup="consultation"
 )
+
+consultation_nested_router.register(
+    r"medication/request",
+    MedicationRequestViewSet,
+    basename="medication-request",
+)
+
+
 consultation_nested_router.register(
     r"daily_rounds", DailyRoundsViewSet, basename="consultation-daily-rounds"
 )
