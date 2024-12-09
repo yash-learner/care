@@ -8,6 +8,7 @@ from care.emr.fhir.schema.base import Coding
 from care.emr.models import Questionnaire
 from care.emr.resources.base import EMRResource
 from care.emr.resources.observation.valueset import CARE_OBSERVATION_VALUSET
+from care.emr.units.units_client import units_client
 
 
 class EnableOperator(str, Enum):
@@ -138,9 +139,18 @@ class Question(QuestionnaireBaseSpec):
     answer_option: list[AnswerOption] | None = Field(alias="answerOption", default=None)
     answer_value_set: str | None = None
     is_observation: bool | None = None
+    unit: str | None = None
     questions: list["Question"] = []
     formula: str | None = None
     styling_metadata: dict = {}
+
+    @field_validator("unit")
+    @classmethod
+    def validate_unit(cls, unit: str):
+        if units_client.validate(unit):
+            return unit
+        err = "Invalid Unit"
+        raise ValueError(err)
 
     def get_all_ids(self):
         ids = []
