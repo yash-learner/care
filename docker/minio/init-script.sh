@@ -14,7 +14,7 @@ RETRY_DELAY=5  # 5 seconds delay between retries
 
 # Function to retry a command
 retry_command() {
-    local cmd=$1
+    cmd=$1
     until $cmd; do
         RETRY_COUNT=$((RETRY_COUNT + 1))
         if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
@@ -41,6 +41,8 @@ create_bucket_if_not_exists() {
 # Function to set a bucket public
 set_bucket_public() {
     BUCKET_NAME=$1
+	# WARNING: This bucket is intentionally set to public access as MinIO doesn't support ACLs
+    # Ensure only non-sensitive data is stored in this bucket
     echo "Setting bucket $BUCKET_NAME as public..."
     mc anonymous set public local/$BUCKET_NAME
 }
