@@ -167,7 +167,7 @@ class Question(QuestionnaireBaseSpec):
 
 class QuestionnaireSpec(QuestionnaireBaseSpec):
     version: str = Field("1.0", frozen=True, description="Version of the questionnaire")
-    slug: str | None = None
+    slug: str | None = Field(None, min_length=5, max_length=25, pattern=r"^[-\w]+$")
     title: str
     description: str = ""
     type: str = "custom"

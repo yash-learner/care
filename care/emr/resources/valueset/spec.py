@@ -1,7 +1,7 @@
 from enum import Enum
 
 from django.core.validators import slug_re
-from pydantic import UUID4, field_validator, model_validator
+from pydantic import UUID4, Field, field_validator, model_validator
 
 from care.emr.fhir.schema.valueset.valueset import ValueSetCompose
 from care.emr.models.valueset import ValueSet as ValuesetDatabaseModel
@@ -19,7 +19,7 @@ class ValueSetSpec(EMRResource):
     __model__ = ValuesetDatabaseModel
 
     id: UUID4 = None
-    slug: str
+    slug: str | None = Field(None, min_length=5, max_length=25, pattern=r"^[-\w]+$")
     name: str
     description: str
     compose: ValueSetCompose
