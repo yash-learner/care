@@ -37,3 +37,21 @@ CARE_SPECIMEN_PROCESSING_METHOD_VALUESET.register_valueset(
 )
 
 CARE_SPECIMEN_PROCESSING_METHOD_VALUESET.register_as_system()
+
+CARE_SPECIMEN_CONDITION_VALUESET = CareValueset(
+    "Specimen Condition",
+    "system-specimen-condition",
+    ValueSetStatusOptions.active,
+)
+
+CARE_SPECIMEN_CONDITION_VALUESET.register_valueset(
+    ValueSetCompose(
+        include=[
+            ValueSetInclude(
+                system="http://terminology.hl7.org/CodeSystem/v2-0493",
+            )
+        ]
+    )
+)
+
+CARE_SPECIMEN_CONDITION_VALUESET.register_as_system()

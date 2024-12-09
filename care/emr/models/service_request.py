@@ -1,6 +1,9 @@
 from django.db import models
 
 from care.emr.models.base import EMRBaseModel
+from care.facility.models.patient import PatientRegistration
+from care.facility.models.patient_consultation import PatientConsultation
+from care.users.models import User
 
 
 class ServiceRequest(EMRBaseModel):
@@ -14,10 +17,14 @@ class ServiceRequest(EMRBaseModel):
     do_not_perform = models.BooleanField(default=False)
 
     subject = models.ForeignKey(
-        "facility.PatientRegistration", on_delete=models.CASCADE
+        PatientRegistration,
+        on_delete=models.CASCADE,
+        related_name="service_request",
     )
     encounter = models.ForeignKey(
-        "facility.PatientConsultation", on_delete=models.CASCADE
+        PatientConsultation,
+        on_delete=models.CASCADE,
+        related_name="service_request",
     )
 
     occurrence_datetime = models.DateTimeField(null=True, blank=True)
@@ -26,7 +33,13 @@ class ServiceRequest(EMRBaseModel):
     as_needed_for = models.JSONField(null=True, blank=True)
 
     authored_on = models.DateTimeField(null=True, blank=True)
-    requester = models.ForeignKey("users.User", on_delete=models.CASCADE)
+    requester = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="requested_service_request"
+    )
+
+    location = models.UUIDField(
+        null=True, blank=True
+    )  # TODO: Make this a foreign key of emr.Organization once it is created
 
     note = models.JSONField(default=list, null=True, blank=True)
     patient_instruction = models.TextField(null=True, blank=True)

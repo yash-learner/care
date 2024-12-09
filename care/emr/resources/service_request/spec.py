@@ -12,8 +12,13 @@ from care.emr.resources.service_request.valueset import (
     CARE_MEDICATION_AS_NEEDED_REASON_VALUESET,
     CARE_SERVICE_REQUEST_CATEGORY_VALUESET,
 )
+from care.facility.api.serializers.patient import PatientDetailSerializer
+from care.facility.api.serializers.patient_consultation import (
+    PatientConsultationSerializer,
+)
 from care.facility.models.ambulance import User
 from care.facility.models.patient_consultation import PatientConsultation
+from care.users.api.serializers.user import UserBaseMinimumSerializer
 
 
 class BaseServiceRequestSpec(EMRResource):
@@ -114,6 +119,11 @@ class ServiceRequestSpec(BaseServiceRequestSpec):
         description="The individual who initiated the request and has responsibility for its activation",
     )
 
+    location: UUID4 | None = Field(
+        default=None,
+        description="The location where the service will be performed",
+    )
+
     note: list[Annotation] = Field(
         default=[],
         description="Comments made about the service request by the requester, performer, subject, or other participants",
@@ -159,6 +169,8 @@ class ServiceRequestSpec(BaseServiceRequestSpec):
 
 
 class ServiceRequestReadSpec(BaseServiceRequestSpec):
+    __exclude__ = []
+
     status: str
     intent: str
     priority: str
@@ -168,15 +180,35 @@ class ServiceRequestReadSpec(BaseServiceRequestSpec):
 
     do_not_perform: bool
 
+    subject: dict
+    encounter: dict
+
     occurrence_datetime: datetime | None
     occurrence_timing: Timing | None
     as_needed: bool
     as_needed_for: Coding | None
 
     authored_on: datetime
-    requester: UUID4
+    requester: dict
+
+    location: dict | None
 
     note: list[Annotation]
     patient_instruction: str
 
-    replaces: UUID4 | None
+    replaces: dict | None
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        mapping["id"] = obj.external_id
+
+        mapping["subject"] = PatientDetailSerializer(obj.subject).data
+        mapping["encounter"] = PatientConsultationSerializer(obj.encounter).data
+
+        mapping["requester"] = UserBaseMinimumSerializer(obj.requester).data
+
+        mapping["replaces"] = (
+            ServiceRequestReadSpec.serialize(obj.replaces).model_dump(exclude=["meta"])
+            if obj.replaces
+            else None
+        )
