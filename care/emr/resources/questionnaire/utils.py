@@ -51,6 +51,8 @@ def validate_types(values, value_type):
 
 def validate_question_result(questionnaire, responses, errors):
     # Validate question responses
+    if questionnaire["type"] == QuestionType.structured.value:
+        return
     if questionnaire["type"] == QuestionType.group.value:
         # Iterate and call all child questions
         if questionnaire["questions"]:
