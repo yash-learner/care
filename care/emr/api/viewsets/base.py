@@ -1,5 +1,6 @@
 import json
 
+from django.db import transaction
 from django.http.response import Http404
 from pydantic import ValidationError
 from rest_framework.decorators import action
@@ -55,19 +56,22 @@ class EMRCreateMixin:
     def perform_create(self, instance):
         instance.save()
 
-    def clean_create_data(self, request, *args, **kwargs):
-        return request.data
+    def clean_create_data(self, request_data):
+        return request_data
 
-    def authorize_create(self, request, request_model):
+    def authorize_create(self, request_user, request_instance):
         pass
 
     def create(self, request, *args, **kwargs):
-        clean_data = self.clean_create_data(request, *args, **kwargs)
+        return Response(self.handle_create(request.data, request.user))
+
+    def handle_create(self, request_data, request_user):
+        clean_data = self.clean_create_data(request_data)
         instance = self.pydantic_model(**clean_data)
-        self.authorize_create(request, instance)
+        self.authorize_create(request_user, instance)
         model_instance = instance.de_serialize()
         self.perform_create(model_instance)
-        return Response(
+        return (
             self.get_read_pydantic_model()
             .serialize(model_instance)
             .model_dump(exclude=["meta"])
@@ -98,23 +102,26 @@ class EMRUpdateMixin:
     def perform_update(self, instance):
         instance.save()
 
-    def clean_update_data(self, request, *args, **kwargs):
-        data = request.data
-        data.pop("id", None)
-        data.pop("external_id", None)
-        data.pop("patient", None)
-        data.pop("encounter", None)
-        return request.data
+    def clean_update_data(self, request_data):
+        request_data.pop("id", None)
+        request_data.pop("external_id", None)
+        request_data.pop("patient", None)
+        request_data.pop("encounter", None)
+        return request_data
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
-        clean_data = self.clean_update_data(request, *args, **kwargs)  # From Create
-        serializer_obj = self.pydantic_model.model_validate(
+        return Response(self.handle_update(instance, request.data, request.user))
+
+    def handle_update(self, instance, request_data, request_user):
+        clean_data = self.clean_update_data(request_data)  # From Create
+        pydantic_model = self.get_update_pydantic_model()
+        serializer_obj = pydantic_model.model_validate(
             clean_data, context={"is_update": True, "object": instance}
         )
         model_instance = serializer_obj.de_serialize(obj=instance)
         self.perform_update(model_instance)
-        return Response(
+        return (
             self.get_read_pydantic_model()
             .serialize(model_instance)
             .model_dump(exclude=["meta"])
@@ -132,9 +139,40 @@ class EMRDeleteMixin:
         return Response(status=204)
 
 
+class EMRUpsertMixin:
+    @action(detail=False, methods=["POST"])
+    def upsert(self, request, *args, **kwargs):
+        datapoints = request.data.get("datapoints", [])
+        results = []
+        errored = False
+        try:
+            with transaction.atomic():
+                for datapoint in datapoints:
+                    try:
+                        if "id" in datapoint:
+                            instance = get_object_or_404(
+                                self.database_model, external_id=datapoint["id"]
+                            )
+                            result = self.handle_update(
+                                instance, datapoint, request.user
+                            )
+                        else:
+                            result = self.handle_create(datapoint, request.user)
+                        results.append(result)
+                    except Exception as e:
+                        errored = True
+                        results.append(emr_exception_handler(e, {}).data)
+                if errored:
+                    raise Exception
+        except Exception:
+            return Response(results, status=400)
+        return Response(results)
+
+
 class EMRBaseViewSet(GenericViewSet):
     pydantic_model: EMRResource = None
     pydantic_read_model: EMRResource = None
+    pydantic_update_model: EMRResource = None
     database_model: EMRBaseModel = None
     lookup_field = "external_id"
 
@@ -147,6 +185,11 @@ class EMRBaseViewSet(GenericViewSet):
     def get_read_pydantic_model(self):
         if self.pydantic_read_model:
             return self.pydantic_read_model
+        return self.pydantic_model
+
+    def get_update_pydantic_model(self):
+        if self.pydantic_update_model:
+            return self.pydantic_update_model
         return self.pydantic_model
 
     def get_object(self):
@@ -164,6 +207,7 @@ class EMRModelViewSet(
     EMRDeleteMixin,
     EMRQuestionnaireMixin,
     EMRBaseViewSet,
+    EMRUpsertMixin,
 ):
     pass
 

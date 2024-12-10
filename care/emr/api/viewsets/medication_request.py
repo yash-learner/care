@@ -24,11 +24,10 @@ class MedicationRequestViewSet(EMRModelViewSet):
             .select_related("patient", "encounter")
         )
 
-    def clean_create_data(self, request, *args, **kwargs):
-        data = request.data
-        data["encounter"] = self.kwargs["consultation_external_id"]
-        data["patient"] = None
-        return data
+    def clean_create_data(self, request_data):
+        request_data["encounter"] = self.kwargs["consultation_external_id"]
+        request_data["patient"] = None
+        return request_data
 
 
 InternalQuestionnaireRegistry.register(MedicationRequestViewSet)

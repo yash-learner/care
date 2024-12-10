@@ -10,6 +10,7 @@ from care.emr.registries.system_questionnaire.system_questionnaire import (
 )
 from care.emr.resources.allergy_intolerance.spec import (
     AllergyIntoleranceSpec,
+    AllergyIntoleranceWriteSpec,
     AllergyIntrolanceSpecRead,
 )
 from care.emr.resources.questionnaire.spec import SubjectType
@@ -27,6 +28,7 @@ class AllergyIntoleranceViewSet(EMRModelViewSet):
     database_model = AllergyIntolerance
     pydantic_model = AllergyIntoleranceSpec
     pydantic_read_model = AllergyIntrolanceSpecRead
+    pydantic_update_model = AllergyIntoleranceWriteSpec
     questionnaire_type = "allergy_intolerance"
     questionnaire_title = "Allergy Intolerance"
     questionnaire_description = "Allergy Intolerance"
