@@ -47,7 +47,7 @@ class QuestionType(str, Enum):
     url = "url"
     # attachment = "attachment" # noqa ERA001
     # reference = "reference" # noqa ERA001
-    # quantity = "quantity" # noqa ERA001
+    quantity = "quantity"
     structured = "structured"
 
 
