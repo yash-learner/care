@@ -39,6 +39,9 @@ class ValueSetResource(ResourceManger):
             {"name": "coding", "valueCoding": code.model_dump(exclude_defaults=True)},
         ]
         request_json = {"resourceType": "Parameters", "parameter": parameters}
+        import logging
+
+        logging.info(request_json)
         full_result = self.query("POST", "ValueSet/$validate-code", request_json)
         try:
             results = full_result["parameter"]
