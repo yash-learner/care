@@ -146,8 +146,6 @@ router.register("valueset", ValueSetViewSet, basename="value-set")
 
 router.register("questionnaire", QuestionnaireViewSet, basename="questionnaire")
 
-router.register("observation", ObservationViewSet, basename="observation")
-
 
 # Summarisation
 router.register(
@@ -296,6 +294,9 @@ patient_nested_router.register(r"condition", ConditionViewSet, basename="conditi
 
 patient_nested_router.register(r"encounter", EncounterViewSet, basename="encounter")
 
+patient_nested_router.register(
+    "observation", ObservationViewSet, basename="observation"
+)
 
 router.register(
     "external_result", PatientExternalTestViewSet, basename="patient-external-result"
