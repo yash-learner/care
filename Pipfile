@@ -39,8 +39,8 @@ redis = { extras = ["hiredis"], version = "==5.2.0" }
 redis-om = "==0.3.3"
 requests = "==2.32.3"
 simplejson = "==3.19.3"
-sentry-sdk = "==2.14.0"
-whitenoise = "==6.7.0"
+sentry-sdk = "==2.18.0"
+whitenoise = "==6.8.2"
 
 [dev-packages]
 boto3-stubs = { extras = ["s3", "boto3"], version = "*" }
