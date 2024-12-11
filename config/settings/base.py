@@ -123,7 +123,13 @@ THIRD_PARTY_APPS = [
     "django_rest_passwordreset",
     "healthy_django",
 ]
-LOCAL_APPS = ["care.facility", "care.users", "care.audit_log", "care.emr"]
+LOCAL_APPS = [
+    "care.security",
+    "care.facility",
+    "care.users",
+    "care.audit_log",
+    "care.emr",
+]
 
 PLUGIN_APPS = manager.get_apps()
 
@@ -525,6 +531,7 @@ VAPID_PRIVATE_KEY = env(
     "VAPID_PRIVATE_KEY", default="7mf3OFreFsgFF4jd8A71ZGdVaj8kpJdOto4cFbfAS-s"
 )
 SEND_SMS_NOTIFICATION = False
+NOTIFICATION_RETENTION_DAYS = env.int("NOTIFICATION_RETENTION_DAYS", default=30)
 
 # Cloud and Buckets
 # ------------------------------------------------------------------------------

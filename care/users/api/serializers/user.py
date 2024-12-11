@@ -335,6 +335,7 @@ class UserSerializer(SignUpSerializer):
             "pf_auth",
             "read_profile_picture_url",
             "user_flags",
+            "last_login",
         )
         read_only_fields = (
             "is_superuser",
@@ -347,6 +348,7 @@ class UserSerializer(SignUpSerializer):
             "pf_endpoint",
             "pf_p256dh",
             "pf_auth",
+            "last_login",
         )
 
     extra_kwargs = {"url": {"lookup_field": "username"}}
@@ -375,6 +377,7 @@ class UserSerializer(SignUpSerializer):
 
 class UserBaseMinimumSerializer(serializers.ModelSerializer):
     user_type = ChoiceField(choices=User.TYPE_CHOICES, read_only=True)
+    read_profile_picture_url = serializers.URLField(read_only=True)
 
     class Meta:
         model = User
@@ -386,6 +389,7 @@ class UserBaseMinimumSerializer(serializers.ModelSerializer):
             "last_name",
             "user_type",
             "last_login",
+            "read_profile_picture_url",
         )
 
 

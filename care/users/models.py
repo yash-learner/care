@@ -364,7 +364,7 @@ class User(AbstractUser):
         return True
 
     def has_object_read_permission(self, request):
-        return request.user.is_superuser or self == request.user
+        return True
 
     @staticmethod
     def has_write_permission(request):
@@ -441,6 +441,14 @@ class UserFacilityAllocation(models.Model):
 
     def __str__(self):
         return self.facility.name
+
+
+class PlugConfig(models.Model):
+    slug = models.CharField(max_length=255, unique=True)
+    meta = models.JSONField(default=dict)
+
+    def __str__(self):
+        return self.slug
 
 
 class UserFlag(BaseFlag):

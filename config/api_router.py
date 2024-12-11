@@ -108,6 +108,7 @@ from care.users.api.viewsets.lsg import (
     StateViewSet,
     WardViewSet,
 )
+from care.users.api.viewsets.plug_config import PlugConfigViewset
 from care.users.api.viewsets.skill import SkillViewSet
 from care.users.api.viewsets.users import UserViewSet
 from care.users.api.viewsets.userskill import UserSkillViewSet
@@ -115,6 +116,9 @@ from care.users.api.viewsets.userskill import UserSkillViewSet
 router = DefaultRouter() if settings.DEBUG else SimpleRouter()
 
 router.register("users", UserViewSet, basename="users")
+
+router.register("plug_config", PlugConfigViewset, basename="plug_configs")
+
 user_nested_router = NestedSimpleRouter(router, r"users", lookup="users")
 user_nested_router.register("skill", UserSkillViewSet, basename="users-skill")
 
