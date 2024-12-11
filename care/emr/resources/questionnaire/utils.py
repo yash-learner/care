@@ -257,7 +257,14 @@ def handle_response(questionnaire_obj: Questionnaire, results, user):
     """
     # Construct questionnaire response
 
-    encounter = PatientConsultation.objects.get(external_id=results.encounter)
+    encounter = PatientConsultation.objects.filter(
+        external_id=results.encounter
+    ).first()
+    if not encounter:
+        raise ValidationError(
+            {"errors": [{"type": "object_not_found", "msg": "Encounter not found"}]}
+        )
+
     questionnaire_mapping = {}
     responses = {}
     errors = []
