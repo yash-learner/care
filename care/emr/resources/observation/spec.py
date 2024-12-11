@@ -6,11 +6,15 @@ from pydantic import UUID4, BaseModel, Field
 from care.emr.fhir.schema.base import CodeableConcept
 from care.emr.models.observation import Observation
 from care.emr.resources.base import EMRResource
+from care.emr.resources.common import Coding
 from care.emr.resources.observation.valueset import (
     CARE_BODY_SITE_VALUESET,
     CARE_OBSERVATION_COLLECTION_METHOD,
 )
-from care.emr.resources.questionnaire.spec import SubjectType
+from care.emr.resources.questionnaire.spec import QuestionType, SubjectType
+from care.emr.resources.questionnaire_response.spec import (
+    QuestionnaireSubmitResultValue,
+)
 
 
 class ObservationStatus(str, Enum):
@@ -21,12 +25,6 @@ class ObservationStatus(str, Enum):
 class PerformerType(str, Enum):
     related_person = "related_person"
     user = "user"
-
-
-class Coding(BaseModel):
-    system: str
-    code: str
-    text: str | None = None
 
 
 class Performer(BaseModel):
@@ -76,13 +74,12 @@ class ObservationSpec(EMRResource):
         description="Who performed the observation (currently supports RelatedPerson)",
     )  # If none the observation is captured by the data entering person
 
-    value: str | None = Field(
-        None,
-        description="Value of the observation if not code. For codes, contains display text",
+    value_type: QuestionType = Field(
+        description="Type of value",
     )
 
-    value_code: Coding | None = Field(
-        None, description="Value as code part of a system"
+    value: QuestionnaireSubmitResultValue = Field(
+        description="Value of the observation if not code. For codes, contains display text",
     )
 
     note: str | None = Field(None, description="Additional notes about the observation")

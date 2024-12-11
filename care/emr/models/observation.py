@@ -22,8 +22,8 @@ class Observation(EMRBaseModel):
         "users.User", on_delete=models.CASCADE, related_name="observations_entered"
     )
     performer = models.JSONField(default=dict)
-    value = models.TextField()
-    value_code = models.JSONField(default=dict)
+    value_type = models.CharField(max_length=255)
+    value = models.JSONField()
     note = models.TextField()
     body_site = models.JSONField(default=dict)
     method = models.JSONField(default=dict)

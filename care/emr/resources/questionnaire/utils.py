@@ -7,12 +7,26 @@ from rest_framework.exceptions import ValidationError
 
 from care.emr.models.observation import Observation
 from care.emr.models.questionnaire import Questionnaire, QuestionnaireResponse
+from care.emr.registries.care_valueset.care_valueset import validate_valueset
 from care.emr.resources.observation.spec import ObservationSpec, ObservationStatus
 from care.emr.resources.questionnaire.spec import QuestionType
 from care.facility.models.patient_consultation import PatientConsultation
 
 
-def validate_types(values, value_type):
+def check_required(questionnaire, questionnaire_ref):
+    """
+    Recursively check if the question is marked as required anywhere in its parents
+    """
+    if questionnaire.get("required", False):
+        return True
+    if questionnaire.get("parent"):
+        return check_required(
+            questionnaire_ref[questionnaire.get("parent")], questionnaire_ref
+        )
+    return False
+
+
+def validate_data(values, value_type, questionnaire_ref):
     """
     Validate the type of the value based on the question type.
     Args:
@@ -42,30 +56,42 @@ def validate_types(values, value_type):
             elif value_type == QuestionType.time.value:
                 datetime.strptime(value.value, "%H:%M:%S")  # noqa DTZ007
         except ValueError:
-            errors.append(f"Invalid {value_type} value: {value.value}")
+            errors.append(f"Invalid {value_type}")
         except Exception:
-            errors.append(f"Error validating {value_type} value: {value.value}")
+            errors.append(f"Error validating {value_type}")
 
     return errors
 
 
-def validate_question_result(questionnaire, responses, errors):
+def validate_question_result(  # noqa : PLR0912
+    questionnaire, responses, errors, parent, questionnaire_mapping
+):
+    questionnaire["parent"] = parent
     # Validate question responses
     if questionnaire["type"] == QuestionType.structured.value:
         return
     if questionnaire["type"] == QuestionType.group.value:
         # Iterate and call all child questions
+        questionnaire_mapping[questionnaire["id"]] = questionnaire
         if questionnaire["questions"]:
             for question in questionnaire["questions"]:
-                validate_question_result(question, responses, errors)
+                validate_question_result(
+                    question,
+                    responses,
+                    errors,
+                    questionnaire["id"],
+                    questionnaire_mapping,
+                )
     else:
+        # Case when question is not answered ( Not in response )
         if questionnaire["id"] not in responses:
             errors.append(
                 {"question_id": questionnaire["id"], "error": "Question not answered"}
             )
             return
         values = responses[questionnaire["id"]].values
-        if not values and questionnaire.get("required", False):
+        # Case when the question is answered but is empty
+        if not values and check_required(questionnaire, questionnaire_mapping):
             err = "No value provided for question"
             errors.append(
                 {
@@ -75,10 +101,11 @@ def validate_question_result(questionnaire, responses, errors):
                 }
             )
             return
+        # Check for type errors
         value_type = questionnaire["type"]
         if questionnaire.get("repeats", False):
-            values = responses[questionnaire["id"]].values
-        type_errors = validate_types(values, value_type)
+            values = responses[questionnaire["id"]].values[0:1]
+        type_errors = validate_data(values, value_type, questionnaire)
         if type_errors:
             errors.extend(
                 [
@@ -90,32 +117,117 @@ def validate_question_result(questionnaire, responses, errors):
                     for error in type_errors
                 ]
             )
+        # Validate for code and quantity
+        if questionnaire["type"] == QuestionType.choice.value:
+            for value in values:
+                if not value.value_code:
+                    errors.append(
+                        {
+                            "type": "type_error",
+                            "question_id": questionnaire["id"],
+                            "msg": "Coding is required",
+                        }
+                    )
+                    return
+                # Validate code
+                # TODO : Validate for options created by user as well
+                if "answer_value_set" in questionnaire:
+                    try:
+                        validate_valueset(
+                            "unit", questionnaire["answer_value_set"], value.value_code
+                        )
+                    except ValueError:
+                        errors.append(
+                            {
+                                "type": "valueset_error",
+                                "question_id": questionnaire["id"],
+                                "msg": "Coding does not belong to the valueset",
+                            }
+                        )
+        if questionnaire["type"] == QuestionType.quantity.value:
+            for value in values:
+                if not value.value_quantity:
+                    errors.append(
+                        {
+                            "type": "type_error",
+                            "question_id": questionnaire["id"],
+                            "msg": "Quantity is required",
+                        }
+                    )
+                    return
+                # Validate code
+                # TODO : Validate for options created by user as well
+                if "answer_value_set" in questionnaire:
+                    try:
+                        validate_valueset(
+                            "unit",
+                            questionnaire["answer_value_set"],
+                            value.value_quantity.code,
+                        )
+                    except ValueError:
+                        errors.append(
+                            {
+                                "type": "valueset_error",
+                                "question_id": questionnaire["id"],
+                                "msg": "Coding does not belong to the valueset",
+                            }
+                        )
+        # ( check if the code belongs to the valueset or options list)
 
 
 def create_observation_spec(questionnaire, responses, parent_id=None):
     spec = {}
-    spec["id"] = str(uuid.uuid4())
     spec["status"] = ObservationStatus.final.value
+    spec["value_type"] = questionnaire["type"]
     if "category" in questionnaire:
         spec["category"] = questionnaire["category"]
     if "code" in questionnaire:
         spec["main_code"] = questionnaire["code"]
+    if questionnaire["type"] == QuestionType.group.value:
+        spec["id"] = str(uuid.uuid4())
+        spec["effective_datetime"] = timezone.now()
+        spec["value"] = {}
+        return [spec]
+    observations = []
     if (
         responses
         and questionnaire["id"] in responses
         and responses[questionnaire["id"]].values
         and responses[questionnaire["id"]].values[0]
     ):
-        if responses[questionnaire["id"]].values[0].value:
-            spec["value"] = responses[questionnaire["id"]].values[0].value
-        if responses[questionnaire["id"]].values[0].value_code:
-            spec["value_code"] = responses[questionnaire["id"]].value_code
-        if responses[questionnaire["id"]].note:
-            spec["note"] = responses[questionnaire["id"]].note
-    if parent_id:
-        spec["parent"] = parent_id
-    spec["effective_datetime"] = timezone.now()
-    return spec
+        for value in responses[questionnaire["id"]].values:
+            observation = spec.copy()
+            observation["id"] = str(uuid.uuid4())
+            if questionnaire["type"] == QuestionType.choice.value and value.value_code:
+                observation["value"] = {
+                    "value_code": (
+                        responses[questionnaire["id"]]
+                        .values[0]
+                        .value_code.model_dump(exclude_defaults=True)
+                    )
+                }
+            elif (
+                questionnaire["type"] == QuestionType.quantity.value
+                and value.value_quantity
+            ):
+                observation["value"] = {
+                    "value_quantity": (
+                        responses[questionnaire["id"]]
+                        .values[0]
+                        .value_quantity.model_dump(exclude_defaults=True)
+                    )
+                }
+            elif value:
+                observation["value"] = {
+                    "value": responses[questionnaire["id"]].values[0].value
+                }
+            if responses[questionnaire["id"]].note:
+                observation["note"] = responses[questionnaire["id"]].note
+        if parent_id:
+            observation["parent"] = parent_id
+        observation["effective_datetime"] = timezone.now()
+        observations.append(observation)
+    return observations
 
 
 def convert_to_observation_spec(
@@ -126,15 +238,16 @@ def convert_to_observation_spec(
         if question["type"] == QuestionType.group.value:
             observation = create_observation_spec(question, responses, parent_id)
             sub_mapping = convert_to_observation_spec(
-                question, responses, observation["id"]
+                question, responses, observation[0]["id"]
             )
             if sub_mapping:
-                constructed_observation_mapping.append(observation)
+                constructed_observation_mapping.extend(observation)
                 constructed_observation_mapping.extend(sub_mapping)
-        elif question["code"]:
-            constructed_observation_mapping.append(
+        elif question.get("code"):
+            constructed_observation_mapping.extend(
                 create_observation_spec(question, responses, parent_id)
             )
+
     return constructed_observation_mapping
 
 
@@ -145,13 +258,19 @@ def handle_response(questionnaire_obj: Questionnaire, results, user):
     # Construct questionnaire response
 
     encounter = PatientConsultation.objects.get(external_id=results.encounter)
-
+    questionnaire_mapping = {}
     responses = {}
     errors = []
     for result in results.results:
         responses[str(result.question_id)] = result
     for question in questionnaire_obj.questions:
-        validate_question_result(question, responses, errors)
+        validate_question_result(
+            question,
+            responses,
+            errors,
+            parent=None,
+            questionnaire_mapping=questionnaire_mapping,
+        )
     if errors:
         raise ValidationError({"errors": errors})
     # Validate and create observation objects
@@ -190,4 +309,5 @@ def handle_response(questionnaire_obj: Questionnaire, results, user):
 
     Observation.objects.bulk_create(bulk)
 
+    return json_results
     return json_results

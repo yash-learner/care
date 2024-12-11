@@ -2,13 +2,13 @@ from datetime import datetime
 
 from pydantic import UUID4, BaseModel
 
-from care.emr.fhir.schema.base import Coding, Quantity
 from care.emr.models.questionnaire import QuestionnaireResponse
 from care.emr.resources.base import EMRResource
+from care.emr.resources.common import Coding, Quantity
 
 
 class QuestionnaireSubmitResultValue(BaseModel):
-    value: str
+    value: str | None = None
     value_code: Coding | None = None
     value_quantity: Quantity | None = None
 
