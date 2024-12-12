@@ -425,10 +425,8 @@ class AssetBedCameraPresetViewSetTestCase(TestUtils, APITestCase):
     def get_base_url(self, asset_bed_id=None):
         return f"/api/v1/assetbed/{asset_bed_id or self.asset_bed1.external_id}/camera_presets/"
 
-
     def test_list_bed_with_deleted_assetbed(self):
-        # self.asset_bed1.update(deleted=)
-        res=self.client.post(
+        res = self.client.post(
             self.get_base_url(self.asset_bed1.external_id),
             {
                 "name": "Preset with proper position",
@@ -441,7 +439,7 @@ class AssetBedCameraPresetViewSetTestCase(TestUtils, APITestCase):
             format="json",
         )
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-        res=self.client.post(
+        res = self.client.post(
             self.get_base_url(self.asset_bed2.external_id),
             {
                 "name": "Preset with proper position 2",
@@ -455,18 +453,13 @@ class AssetBedCameraPresetViewSetTestCase(TestUtils, APITestCase):
         )
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
-        res = self.client.get(
-            f"/api/v1/bed/{self.bed.external_id}/camera_presets/"
-        )
-        self.assertEqual(len(res.json()["results"]),2)
+        res = self.client.get(f"/api/v1/bed/{self.bed.external_id}/camera_presets/")
+        self.assertEqual(len(res.json()["results"]), 2)
 
         self.asset_bed1.delete()
         self.asset_bed1.refresh_from_db()
-        res = self.client.get(
-            f"/api/v1/bed/{self.bed.external_id}/camera_presets/"
-        )
-        self.assertEqual(len(res.json()["results"]),1)
-
+        res = self.client.get(f"/api/v1/bed/{self.bed.external_id}/camera_presets/")
+        self.assertEqual(len(res.json()["results"]), 1)
 
     def test_create_camera_preset_without_position(self):
         res = self.client.post(
