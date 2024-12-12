@@ -5,6 +5,7 @@ from pydantic import UUID4, BaseModel
 from care.emr.models.questionnaire import QuestionnaireResponse
 from care.emr.resources.base import EMRResource
 from care.emr.resources.common import Coding, Quantity
+from care.emr.resources.questionnaire.spec import QuestionnaireReadSpec
 
 
 class QuestionnaireSubmitResultValue(BaseModel):
@@ -31,7 +32,14 @@ class QuestionnaireSubmitRequest(BaseModel):
 class QuestionnaireResponseReadSpec(EMRResource):
     __model__ = QuestionnaireResponse
 
+    id: UUID4
+    questionnaire: QuestionnaireReadSpec
     subject_id: str
     responses: list
     encounter: str
     patient: str
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        mapping["id"] = obj.external_id
+        mapping["questionnaire"] = QuestionnaireReadSpec.serialize(obj.questionnaire)
