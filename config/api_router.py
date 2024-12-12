@@ -10,6 +10,7 @@ from care.emr.api.viewsets.encounter import EncounterViewSet
 from care.emr.api.viewsets.medication_request import MedicationRequestViewSet
 from care.emr.api.viewsets.observation import ObservationViewSet
 from care.emr.api.viewsets.questionnaire import QuestionnaireViewSet
+from care.emr.api.viewsets.questionnaire_response import QuestionnaireResponseViewSet
 from care.emr.api.viewsets.units import UnitsView
 from care.emr.api.viewsets.valueset import ValueSetViewSet
 from care.facility.api.viewsets.ambulance import AmbulanceViewSet
@@ -301,6 +302,13 @@ patient_nested_router.register(r"encounter", EncounterViewSet, basename="encount
 patient_nested_router.register(
     "observation", ObservationViewSet, basename="observation"
 )
+
+patient_nested_router.register(
+    "questionnaire_response",
+    QuestionnaireResponseViewSet,
+    basename="questionnaire-response",
+)
+
 
 patient_nested_router.register(
     r"medication/request",
