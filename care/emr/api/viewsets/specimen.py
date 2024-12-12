@@ -1,6 +1,9 @@
 from datetime import UTC, datetime
+from enum import Enum
 
-from django.db.models import Q
+from django.db.models import Case, CharField, Q, Value, When
+from django_filters import CharFilter, FilterSet, UUIDFilter
+from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import status
 from rest_framework.decorators import action
@@ -21,6 +24,34 @@ from care.emr.resources.specimen.spec import (
 )
 
 
+class FlowStatusChoices(str, Enum):
+    ordered = "ordered"
+    collected = "collected"
+    sent = "sent"
+    received = "received"
+    in_process = "in_process"
+
+
+class SpecimenFilters(FilterSet):
+    request = UUIDFilter(field_name="request__external_id")
+    encounter = UUIDFilter(field_name="request__encounter__external_id")
+    flow_status = CharFilter(
+        method="filter_flow_status"
+    )  # TODO: make this a choice filter
+
+    def filter_flow_status(self, queryset, name, value):
+        return queryset.annotate(
+            flow_status=Case(
+                When(processing__gt=[], then=Value("in_process")),
+                When(received_at__isnull=False, then=Value("received")),
+                When(dispatched_at__isnull=False, then=Value("sent")),
+                When(collected_at__isnull=False, then=Value("collected")),
+                default=Value("ordered"),
+                output_field=CharField(),
+            )
+        ).filter(flow_status=value)
+
+
 @extend_schema_view(
     create=extend_schema(request=SpecimenSpec),
 )
@@ -28,6 +59,8 @@ class SpecimenViewSet(EMRModelViewSet):
     database_model = Specimen
     pydantic_model = SpecimenSpec
     pydantic_read_model = SpecimenReadSpec
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = SpecimenFilters
 
     def get_object(self) -> Specimen:
         return get_object_or_404(

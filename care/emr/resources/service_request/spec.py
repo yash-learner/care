@@ -170,6 +170,9 @@ class ServiceRequestSpec(BaseServiceRequestSpec):
 
 class ServiceRequestReadSpec(BaseServiceRequestSpec):
     __exclude__ = []
+    external_id: (
+        UUID4  # TODO: remove this field and do a model dump when accessing any models
+    )
 
     status: str
     intent: str
