@@ -176,8 +176,6 @@ class MedicationRequestSpec(BaseMedicationRequestSpec):
         json_schema_extra={"slug": CARE_MEDICATION_VALUESET.slug},
     )
 
-    patient: UUID4 | None = Field(None, description="Patient ID")
-
     encounter: UUID4 = Field(description="Encounter during which request was created")
 
     authored_on: datetime = Field(

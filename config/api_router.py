@@ -302,6 +302,12 @@ patient_nested_router.register(
     "observation", ObservationViewSet, basename="observation"
 )
 
+patient_nested_router.register(
+    r"medication/request",
+    MedicationRequestViewSet,
+    basename="medication-request",
+)
+
 router.register(
     "external_result", PatientExternalTestViewSet, basename="patient-external-result"
 )
@@ -312,12 +318,6 @@ router.register(
 )
 consultation_nested_router = NestedSimpleRouter(
     router, r"consultation", lookup="consultation"
-)
-
-consultation_nested_router.register(
-    r"medication/request",
-    MedicationRequestViewSet,
-    basename="medication-request",
 )
 
 
