@@ -201,6 +201,13 @@ class QuestionnaireSpec(QuestionnaireBaseSpec):
         if queryset.exists():
             err = "Slug must be unique"
             raise ValueError(err)
+        from care.emr.registries.system_questionnaire.system_questionnaire import (
+            InternalQuestionnaireRegistry,
+        )
+
+        if InternalQuestionnaireRegistry.check_type_exists(slug):
+            err = "Slug cannot shadow internal question types"
+            raise ValueError(err)
         return slug
 
     def get_all_ids(self):
