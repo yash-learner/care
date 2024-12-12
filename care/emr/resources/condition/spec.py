@@ -103,3 +103,4 @@ class ConditionSpecRead(BaseAllergyIntoleranceSpec):
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
+        mapping["encounter"] = obj.encounter.external_id

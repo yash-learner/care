@@ -1,4 +1,4 @@
-from django_filters import FilterSet, UUIDFilter
+from django_filters import CharFilter, FilterSet, UUIDFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.exceptions import PermissionDenied
 
@@ -14,6 +14,12 @@ from care.facility.models.patient_consultation import PatientConsultation
 
 class ConditionFilters(FilterSet):
     encounter = UUIDFilter(field_name="encounter__external_id")
+    clinical_status = CharFilter(field_name="clinical_status", lookup_expr="iexact")
+    verification_status = CharFilter(
+        field_name="verification_status", lookup_expr="iexact"
+    )
+    category = CharFilter(field_name="category", lookup_expr="iexact")
+    severity = CharFilter(field_name="severity", lookup_expr="iexact")
 
 
 class ConditionViewSet(EMRModelViewSet):
