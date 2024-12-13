@@ -35,5 +35,5 @@ class OrganizationViewSet(EMRModelViewSet):
             super()
             .get_queryset()
             .filter(facility__external_id=self.kwargs["facility_external_id"])
-            .select_related("facility", "parent")
+            .select_related("facility", "parent", "created_by", "updated_by")
         )

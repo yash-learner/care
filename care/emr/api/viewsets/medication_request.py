@@ -32,7 +32,7 @@ class MedicationRequestViewSet(EMRModelViewSet):
             super()
             .get_queryset()
             .filter(patient__external_id=self.kwargs["patient_external_id"])
-            .select_related("patient", "encounter")
+            .select_related("patient", "encounter", "created_by", "updated_by")
         )
 
 

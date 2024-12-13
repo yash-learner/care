@@ -25,7 +25,7 @@ class QuestionnaireViewSet(EMRModelViewSet):
         queryset = super().get_queryset()
         if "search" in self.request.GET:
             queryset = queryset.filter(title__icontains=self.request.GET.get("search"))
-        return queryset
+        return queryset.select_related("created_by", "updated_by")
 
     @action(detail=True, methods=["POST"])
     def submit(self, request, *args, **kwargs):

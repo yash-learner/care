@@ -22,7 +22,7 @@ class QuestionnaireResponseViewSet(EMRModelReadOnlyViewSet):
                 patient__external_id=self.kwargs["patient_external_id"],
             )
             .order_by("-created_date")
-            .select_related("questionnaire", "encounter")
+            .select_related("questionnaire", "encounter", "created_by", "updated_by")
         )
         if "questionnaire_slugs" in self.request.GET:
             questionnaire_slugs = self.request.GET.get("questionnaire_slugs").split(",")

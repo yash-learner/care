@@ -7,7 +7,7 @@ from care.emr.api.viewsets.base import EMRModelViewSet
 from care.emr.fhir.resources.code_concept import CodeConceptResource
 from care.emr.fhir.schema.base import Coding
 from care.emr.models.valueset import ValueSet
-from care.emr.resources.valueset.spec import ValueSetSpec
+from care.emr.resources.valueset.spec import ValueSetReadSpec, ValueSetSpec
 
 
 class ExpandRequest(BaseModel):
@@ -18,7 +18,11 @@ class ExpandRequest(BaseModel):
 class ValueSetViewSet(EMRModelViewSet):
     database_model = ValueSet
     pydantic_model = ValueSetSpec
+    pydantic_read_model = ValueSetReadSpec
     lookup_field = "slug"
+
+    def get_queryset(self):
+        return ValueSet.objects.all().select_related("created_by", "updated_by")
 
     def get_serializer_class(self):
         return ValueSetSpec

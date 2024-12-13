@@ -47,6 +47,7 @@ class ObservationViewSet(EMRModelReadOnlyViewSet):
             super()
             .get_queryset()
             .filter(patient__external_id=self.kwargs["patient_external_id"])
+            .select_related("created_by", "updated_by", "data_entered_by")
         )
 
         return queryset.order_by("-modified_date")
