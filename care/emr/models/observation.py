@@ -33,3 +33,5 @@ class Observation(EMRBaseModel):
     questionnaire_response = models.ForeignKey(
         "emr.QuestionnaireResponse", on_delete=models.CASCADE, null=True
     )
+
+    # TODO Add index for patient -> encounter -> system -> code

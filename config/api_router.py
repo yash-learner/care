@@ -9,6 +9,7 @@ from care.emr.api.viewsets.condition import ConditionViewSet
 from care.emr.api.viewsets.encounter import EncounterViewSet
 from care.emr.api.viewsets.medication_request import MedicationRequestViewSet
 from care.emr.api.viewsets.observation import ObservationViewSet
+from care.emr.api.viewsets.organization import OrganizationViewSet
 from care.emr.api.viewsets.questionnaire import QuestionnaireViewSet
 from care.emr.api.viewsets.questionnaire_response import QuestionnaireResponseViewSet
 from care.emr.api.viewsets.units import UnitsView
@@ -242,6 +243,8 @@ facility_nested_router.register(
     r"spokes", FacilitySpokesViewSet, basename="facility-spokes"
 )
 facility_nested_router.register(r"hubs", FacilityHubsViewSet, basename="facility-hubs")
+
+facility_nested_router.register(r"organizations", OrganizationViewSet, basename="organization")
 
 router.register("asset", AssetViewSet, basename="asset")
 asset_nested_router = NestedSimpleRouter(router, r"asset", lookup="asset")
