@@ -84,10 +84,14 @@ def validate_question_result(  # noqa : PLR0912
                 )
     else:
         # Case when question is not answered ( Not in response )
-        if questionnaire["id"] not in responses:
+        if questionnaire["id"] not in responses and questionnaire.get(
+            "required", False
+        ):
             errors.append(
                 {"question_id": questionnaire["id"], "error": "Question not answered"}
             )
+            return
+        if questionnaire["id"] not in responses:
             return
         values = responses[questionnaire["id"]].values
         # Case when the question is answered but is empty
