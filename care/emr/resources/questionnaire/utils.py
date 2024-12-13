@@ -120,7 +120,7 @@ def validate_question_result(  # noqa : PLR0912
         # Validate for code and quantity
         if questionnaire["type"] == QuestionType.choice.value:
             for value in values:
-                if not value.value_code:
+                if not (value.value_code or value.value):
                     errors.append(
                         {
                             "type": "type_error",
