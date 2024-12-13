@@ -37,9 +37,9 @@ class QuestionnaireResponseReadSpec(EMRResource):
     subject_id: str
     responses: list
     encounter: str
-    patient: str
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
         mapping["questionnaire"] = QuestionnaireReadSpec.serialize(obj.questionnaire)
+        mapping["encounter"] = obj.encounter.external_id

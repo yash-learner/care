@@ -20,6 +20,11 @@ class QuestionnaireResponse(EMRBaseModel):
     questionnaire = models.ForeignKey(Questionnaire, on_delete=models.CASCADE)
     subject_id = models.UUIDField()
     responses = models.JSONField(default=list)
-    encounter = models.UUIDField()
-    patient = models.UUIDField(null=True, blank=True)
+    patient = models.ForeignKey(
+        "facility.PatientRegistration", on_delete=models.CASCADE
+    )
+    encounter = models.ForeignKey(
+        "facility.PatientConsultation", on_delete=models.CASCADE
+    )
+
     # TODO : Add index for subject_id and subject_type in descending order

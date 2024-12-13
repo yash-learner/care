@@ -6,7 +6,7 @@ from django_filters import rest_framework as filters
 
 
 class QuestionnaireResponseFilters(filters.FilterSet):
-    encounter = filters.CharFilter()
+    encounter = filters.CharFilter(field_name="encounter__external_id")
 
 
 class QuestionnaireResponseViewSet(EMRModelReadOnlyViewSet):
@@ -17,13 +17,12 @@ class QuestionnaireResponseViewSet(EMRModelReadOnlyViewSet):
     filter_backends = [filters.DjangoFilterBackend]
 
     def get_queryset(self):
-        print("fdgdf")
         queryset = (
             QuestionnaireResponse.objects.filter(
-                patient=self.kwargs["patient_external_id"],
+                patient__external_id=self.kwargs["patient_external_id"],
             )
             .order_by("-created_date")
-            .select_related("questionnaire")
+            .select_related("questionnaire","encounter")
         )
         if "questionnaire_slugs" in self.request.GET:
             questionnaire_slugs = self.request.GET.get(

@@ -299,8 +299,8 @@ def handle_response(questionnaire_obj: Questionnaire, results, user):
     questionnaire_response = QuestionnaireResponse.objects.create(
         questionnaire=questionnaire_obj,
         subject_id=results.resource_id,
-        encounter=encounter.external_id,
-        patient=encounter.patient.external_id,
+        encounter=encounter,
+        patient=encounter.patient,
         responses=json_results["results"],
     )
     # Serialize and return questionnaire response
