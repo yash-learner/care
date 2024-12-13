@@ -7,12 +7,13 @@ from care.facility.models import (
     RESOURCE_CATEGORY_CHOICES,
     RESOURCE_STATUS_CHOICES,
     Facility,
+    PatientRegistration,
     ResourceRequest,
     ResourceRequestComment,
     User,
 )
-from care.facility.models.resources import RESOURCE_SUB_CATEGORY_CHOICES
 from care.users.api.serializers.user import UserBaseMinimumSerializer
+from care.utils.queryset.patient import get_patient_queryset
 from care.utils.serializers.fields import ChoiceField, ExternalIdSerializerField
 
 
@@ -59,7 +60,6 @@ class ResourceRequestSerializer(serializers.ModelSerializer):
     )
 
     category = ChoiceField(choices=RESOURCE_CATEGORY_CHOICES)
-    sub_category = ChoiceField(choices=RESOURCE_SUB_CATEGORY_CHOICES)
 
     origin_facility = ExternalIdSerializerField(
         queryset=Facility.objects.all(), required=True
@@ -71,6 +71,10 @@ class ResourceRequestSerializer(serializers.ModelSerializer):
 
     assigned_facility = ExternalIdSerializerField(
         queryset=Facility.objects.all(), required=False
+    )
+
+    related_patient = ExternalIdSerializerField(
+        queryset=PatientRegistration.objects.all(), required=False
     )
 
     assigned_to_object = UserBaseMinimumSerializer(source="assigned_to", read_only=True)
@@ -86,7 +90,14 @@ class ResourceRequestSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         # ruff: noqa: N806 better to refactor this
-        LIMITED_RECIEVING_STATUS_ = []
+        LIMITED_RECIEVING_STATUS_ = [
+            "ON HOLD",
+            "APPROVED",
+            "REJECTED",
+            "TRANSPORTATION TO BE ARRANGED",
+            "TRANSFER IN PROGRESS",
+            "COMPLETED",
+        ]
         LIMITED_RECIEVING_STATUS = [
             REVERSE_REQUEST_STATUS_CHOICES[x] for x in LIMITED_RECIEVING_STATUS_
         ]
@@ -105,21 +116,23 @@ class ResourceRequestSerializer(serializers.ModelSerializer):
         user = self.context["request"].user
 
         if "status" in validated_data:
+            validated = False
             if validated_data["status"] in LIMITED_RECIEVING_STATUS:
+                validated = True
                 if instance.assigned_facility and not has_facility_permission(
                     user, instance.assigned_facility
                 ):
                     raise ValidationError({"status": ["Permission Denied"]})
-            elif validated_data[
-                "status"
-            ] in LIMITED_REQUEST_STATUS and not has_facility_permission(
-                user, instance.approving_facility
+            if (
+                not validated
+                and validated_data["status"] in LIMITED_REQUEST_STATUS
+                and not has_facility_permission(user, instance.approving_facility)
             ):
                 raise ValidationError({"status": ["Permission Denied"]})
 
         # Dont allow editing origin or patient
-        if "origin_facility" in validated_data:
-            validated_data.pop("origin_facility")
+        validated_data.pop("origin_facility", None)
+        validated_data.pop("related_patient", None)
 
         instance.last_edited_by = self.context["request"].user
 
@@ -130,8 +143,16 @@ class ResourceRequestSerializer(serializers.ModelSerializer):
         if "status" in validated_data:
             validated_data.pop("status")
 
-        validated_data["created_by"] = self.context["request"].user
-        validated_data["last_edited_by"] = self.context["request"].user
+        user = self.context["request"].user
+
+        if "related_patient" in validated_data:
+            allowed_patients = get_patient_queryset(user)
+            if not allowed_patients.filter(
+                external_id=validated_data["related_patient"].external_id
+            ).exists():
+                raise ValidationError({"related_patient": ["Permission Denied"]})
+        validated_data["created_by"] = user
+        validated_data["last_edited_by"] = user
 
         return super().create(validated_data)
 
