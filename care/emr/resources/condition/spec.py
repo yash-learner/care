@@ -8,6 +8,7 @@ from care.emr.models.condition import Condition
 from care.emr.registries.care_valueset.care_valueset import validate_valueset
 from care.emr.resources.base import EMRResource
 from care.emr.resources.condition.valueset import CARE_CODITION_CODE_VALUESET
+from care.emr.resources.user.spec import UserSpec
 from care.facility.models import PatientConsultation
 
 
@@ -48,13 +49,13 @@ class ConditionOnSetSpec(EMRResource):
     note: str
 
 
-class BaseAllergyIntoleranceSpec(EMRResource):
+class BaseConditionSpec(EMRResource):
     __model__ = Condition
     __exclude__ = ["patient", "encounter"]
     id: UUID4 = None
 
 
-class ConditionSpec(BaseAllergyIntoleranceSpec):
+class ConditionSpec(BaseConditionSpec):
     clinical_status: ClinicalStatusChoices
     verification_status: VerificationStatusChoices
     category: CategoryChoices
@@ -86,12 +87,13 @@ class ConditionSpec(BaseAllergyIntoleranceSpec):
             obj.patient = obj.encounter.patient
 
 
-class ConditionSpecRead(BaseAllergyIntoleranceSpec):
+class ConditionSpecRead(BaseConditionSpec):
     """
     Validation for deeper models may not be required on read, Just an extra optimisation
     """
 
     # Maybe we can use model_construct() to be better at reads, need profiling to be absolutely sure
+
     clinical_status: str
     verification_status: str
     category: str
@@ -99,8 +101,15 @@ class ConditionSpecRead(BaseAllergyIntoleranceSpec):
     code: Coding
     encounter: UUID4
     onset: ConditionOnSetSpec = dict
+    created_by: UserSpec = dict
+    updated_by: UserSpec = dict
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
         mapping["encounter"] = obj.encounter.external_id
+
+        if obj.created_by:
+            mapping["created_by"] = UserSpec.serialize(obj.created_by)
+        if obj.updated_by:
+            mapping["updated_by"] = UserSpec.serialize(obj.created_by)

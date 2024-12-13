@@ -12,6 +12,7 @@ from care.emr.resources.observation.valueset import (
     CARE_OBSERVATION_VALUSET,
     CARE_UCUM_UNITS,
 )
+from care.emr.resources.user.spec import UserSpec
 
 
 class EnableOperator(str, Enum):
@@ -243,10 +244,17 @@ class QuestionnaireReadSpec(QuestionnaireBaseSpec):
     subject_type: SubjectType
     styling_metadata: dict
     questions: list
+    created_by: UserSpec = dict
+    updated_by: UserSpec = dict
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
+
+        if obj.created_by:
+            mapping["created_by"] = UserSpec.serialize(obj.created_by)
+        if obj.updated_by:
+            mapping["updated_by"] = UserSpec.serialize(obj.created_by)
 
 
 # Add this to handle recursive Question type

@@ -8,6 +8,7 @@ from care.emr.models.allergy_intolerance import AllergyIntolerance
 from care.emr.registries.care_valueset.care_valueset import validate_valueset
 from care.emr.resources.allergy_intolerance.valueset import CARE_ALLERGY_CODE_VALUESET
 from care.emr.resources.base import EMRResource
+from care.emr.resources.user.spec import UserSpec
 from care.facility.models import PatientConsultation
 
 
@@ -102,7 +103,13 @@ class AllergyIntrolanceSpecRead(BaseAllergyIntoleranceSpec):
     code: Coding
     encounter: UUID4
     onset: AllergyIntoleranceOnSetSpec = dict
+    created_by: dict = {}
+    updated_by: dict = {}
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
+        if obj.created_by:
+            mapping["created_by"] = UserSpec.serialize(obj.created_by)
+        if obj.updated_by:
+            mapping["updated_by"] = UserSpec.serialize(obj.created_by)

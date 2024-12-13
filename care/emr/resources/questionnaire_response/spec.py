@@ -6,6 +6,7 @@ from care.emr.models.questionnaire import QuestionnaireResponse
 from care.emr.resources.base import EMRResource
 from care.emr.resources.common import Coding, Quantity
 from care.emr.resources.questionnaire.spec import QuestionnaireReadSpec
+from care.emr.resources.user.spec import UserSpec
 
 
 class QuestionnaireSubmitResultValue(BaseModel):
@@ -37,9 +38,15 @@ class QuestionnaireResponseReadSpec(EMRResource):
     subject_id: str
     responses: list
     encounter: str
+    created_by: UserSpec = dict
+    updated_by: UserSpec = dict
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
         mapping["questionnaire"] = QuestionnaireReadSpec.serialize(obj.questionnaire)
         mapping["encounter"] = obj.encounter.external_id
+        if obj.created_by:
+            mapping["created_by"] = UserSpec.serialize(obj.created_by)
+        if obj.updated_by:
+            mapping["updated_by"] = UserSpec.serialize(obj.created_by)

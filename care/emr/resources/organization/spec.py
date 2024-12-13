@@ -4,6 +4,7 @@ from pydantic import UUID4, field_validator, model_validator
 
 from care.emr.models.organziation import FacilityOrganization
 from care.emr.resources.base import EMRResource
+from care.emr.resources.user.spec import UserSpec
 from care.facility.models import Facility
 
 
@@ -63,7 +64,15 @@ class FacilityOrganizationWriteSpec(FacilityOrganizationBaseSpec):
 
 
 class FacilityOrganizationReadSpec(FacilityOrganizationBaseSpec):
+    created_by: UserSpec = dict
+    updated_by: UserSpec = dict
+
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
         mapping["parent"] = obj.parent.external_id if obj.parent else None
+
+        if obj.created_by:
+            mapping["created_by"] = UserSpec.serialize(obj.created_by)
+        if obj.updated_by:
+            mapping["updated_by"] = UserSpec.serialize(obj.created_by)

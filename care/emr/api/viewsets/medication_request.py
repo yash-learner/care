@@ -5,7 +5,10 @@ from care.emr.models.medication_request import MedicationRequest
 from care.emr.registries.system_questionnaire.system_questionnaire import (
     InternalQuestionnaireRegistry,
 )
-from care.emr.resources.medication.request.spec import MedicationRequestSpec
+from care.emr.resources.medication.request.spec import (
+    MedicationRequestReadSpec,
+    MedicationRequestSpec,
+)
 from care.emr.resources.questionnaire.spec import SubjectType
 
 
@@ -16,7 +19,7 @@ class MedicationRequestFilter(filters.FilterSet):
 class MedicationRequestViewSet(EMRModelViewSet):
     database_model = MedicationRequest
     pydantic_model = MedicationRequestSpec
-    pydantic_read_model = MedicationRequestSpec
+    pydantic_read_model = MedicationRequestReadSpec
     questionnaire_type = "medication_request"
     questionnaire_title = "Medication Request"
     questionnaire_description = "Medication Request"

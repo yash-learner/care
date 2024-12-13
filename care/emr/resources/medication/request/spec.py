@@ -18,6 +18,7 @@ from care.emr.resources.medication.valueset.as_needed_reason import (
 from care.emr.resources.medication.valueset.body_site import CARE_BODY_SITE_VALUESET
 from care.emr.resources.medication.valueset.medication import CARE_MEDICATION_VALUESET
 from care.emr.resources.medication.valueset.route import CARE_ROUTE_VALUESET
+from care.emr.resources.user.spec import UserSpec
 from care.facility.models.patient_consultation import PatientConsultation
 
 
@@ -144,8 +145,6 @@ class BaseMedicationRequestSpec(EMRResource):
     __exclude__ = ["patient", "encounter"]
     id: UUID4 = None
 
-
-class MedicationRequestSpec(BaseMedicationRequestSpec):
     status: MedicationRequestStatus = Field(
         description="Status of the medication request",
     )
@@ -188,6 +187,8 @@ class MedicationRequestSpec(BaseMedicationRequestSpec):
 
     note: str | None = Field(None, description="Additional notes about the request")
 
+
+class MedicationRequestSpec(BaseMedicationRequestSpec):
     @field_validator("encounter")
     @classmethod
     def validate_encounter_exists(cls, encounter):
@@ -203,6 +204,17 @@ class MedicationRequestSpec(BaseMedicationRequestSpec):
             )  # Needs more validation
             obj.patient = obj.encounter.patient
 
+
+class MedicationRequestReadSpec(BaseMedicationRequestSpec):
+    created_by: UserSpec = dict
+    updated_by: UserSpec = dict
+
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
+        mapping["encounter"] = obj.encounter.external_id
+
+        if obj.created_by:
+            mapping["created_by"] = UserSpec.serialize(obj.created_by)
+        if obj.updated_by:
+            mapping["updated_by"] = UserSpec.serialize(obj.created_by)

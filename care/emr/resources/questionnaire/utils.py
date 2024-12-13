@@ -118,7 +118,9 @@ def validate_question_result(  # noqa : PLR0912
                 ]
             )
         # Validate for code and quantity
-        if questionnaire["type"] == QuestionType.choice.value and questionnaire.get("answer_value_set"):
+        if questionnaire["type"] == QuestionType.choice.value and questionnaire.get(
+            "answer_value_set"
+        ):
             for value in values:
                 if not value.value_code:
                     errors.append(
@@ -200,9 +202,7 @@ def create_observation_spec(questionnaire, responses, parent_id=None):
             observation["id"] = str(uuid.uuid4())
             if questionnaire["type"] == QuestionType.choice.value and value.value_code:
                 observation["value"] = {
-                    "value_code": (
-                        value.value_code.model_dump(exclude_defaults=True)
-                    )
+                    "value_code": (value.value_code.model_dump(exclude_defaults=True))
                 }
             elif (
                 questionnaire["type"] == QuestionType.quantity.value
@@ -214,9 +214,7 @@ def create_observation_spec(questionnaire, responses, parent_id=None):
                     )
                 }
             elif value:
-                observation["value"] = {
-                    "value": value.value
-                }
+                observation["value"] = {"value": value.value}
             if responses[questionnaire["id"]].note:
                 observation["note"] = responses[questionnaire["id"]].note
         if parent_id:
@@ -286,6 +284,8 @@ def handle_response(questionnaire_obj: Questionnaire, results, user):
             **observation,
             subject_type=questionnaire_obj.subject_type,
             data_entered_by_id=user.id,
+            created_by_id=user.id,
+            updated_by_id=user.id,
         )
         for observation in observations
     ]
@@ -298,6 +298,8 @@ def handle_response(questionnaire_obj: Questionnaire, results, user):
         encounter=encounter,
         patient=encounter.patient,
         responses=json_results["results"],
+        created_by=user,
+        updated_by=user,
     )
     # Serialize and return questionnaire response
 
@@ -312,5 +314,4 @@ def handle_response(questionnaire_obj: Questionnaire, results, user):
 
     Observation.objects.bulk_create(bulk)
 
-    return json_results
-    return json_results
+    return questionnaire_response

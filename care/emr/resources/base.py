@@ -49,7 +49,7 @@ class EMRResource(BaseModel):
         for mapping in mappings:
             if mapping in cls.model_fields and mapping not in cls.__exclude__:
                 constructed[mapping] = getattr(obj, mapping)
-        for field in obj.meta:
+        for field in getattr(obj, "meta", {}):
             if field in cls.model_fields:
                 constructed[field] = obj.meta[field]
         cls.perform_extra_serialization(constructed, obj)

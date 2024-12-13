@@ -54,6 +54,8 @@ class EMRRetrieveMixin:
 
 class EMRCreateMixin:
     def perform_create(self, instance):
+        instance.created_by = self.request.user
+        instance.updated_by = self.request.user
         instance.save()
 
     def clean_create_data(self, request_data):
@@ -100,6 +102,8 @@ class EMRListMixin:
 
 class EMRUpdateMixin:
     def perform_update(self, instance):
+        instance.updated_by = self.request.user
+        # TODO Handle hisorical data by taking a dump from current model and appending to history object
         instance.save()
 
     def clean_update_data(self, request_data):

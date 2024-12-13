@@ -9,7 +9,10 @@ from care.emr.resources.questionnaire.spec import (
     QuestionnaireSpec,
 )
 from care.emr.resources.questionnaire.utils import handle_response
-from care.emr.resources.questionnaire_response.spec import QuestionnaireSubmitRequest
+from care.emr.resources.questionnaire_response.spec import (
+    QuestionnaireResponseReadSpec,
+    QuestionnaireSubmitRequest,
+)
 
 
 class QuestionnaireViewSet(EMRModelViewSet):
@@ -30,4 +33,6 @@ class QuestionnaireViewSet(EMRModelViewSet):
         questionnaire = self.get_object()
         with transaction.atomic():
             response = handle_response(questionnaire, request_params, request.user)
-        return Response(response)
+        return Response(
+            QuestionnaireResponseReadSpec.serialize(response).model_dump(mode="json")
+        )

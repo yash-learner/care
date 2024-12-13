@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from care.emr.api.viewsets.base import EMRModelReadOnlyViewSet
 from care.emr.models.observation import Observation
 from care.emr.resources.common.coding import Coding
-from care.emr.resources.observation.spec import ObservationSpec
+from care.emr.resources.observation.spec import ObservationReadSpec
 from care.emr.resources.questionnaire.spec import QuestionType
 
 
@@ -16,6 +16,7 @@ class MultipleCodeFilter(filters.CharFilter):
         if value:
             queryset = queryset.filter(main_code__code__in=value.split(","))
         return queryset
+
 
 class IgnoreGroupFilter(filters.BooleanFilter):
     def filter(self, qs, value):
@@ -29,6 +30,7 @@ class ObservationFilter(filters.FilterSet):
     codes = MultipleCodeFilter()
     ignore_group = IgnoreGroupFilter()
 
+
 class ObservationAnalyseRequest(BaseModel):
     codes: list[Coding] = Field(min_length=1, max_length=20)
     page_size: int = Field(10, le=30)
@@ -36,7 +38,7 @@ class ObservationAnalyseRequest(BaseModel):
 
 class ObservationViewSet(EMRModelReadOnlyViewSet):
     database_model = Observation
-    pydantic_model = ObservationSpec
+    pydantic_model = ObservationReadSpec
     filterset_class = ObservationFilter
     filter_backends = [filters.DjangoFilterBackend]
 

@@ -15,6 +15,7 @@ from care.emr.resources.questionnaire.spec import QuestionType, SubjectType
 from care.emr.resources.questionnaire_response.spec import (
     QuestionnaireSubmitResultValue,
 )
+from care.emr.resources.user.spec import UserSpec
 
 
 class ObservationStatus(str, Enum):
@@ -39,7 +40,7 @@ class ReferenceRange(BaseModel):
     text: str | None = None
 
 
-class ObservationSpec(EMRResource):
+class BaseObservationSpec(EMRResource):
     __model__ = Observation
 
     id: str = Field("", description="Unique ID in the system")
@@ -66,8 +67,6 @@ class ObservationSpec(EMRResource):
         ...,
         description="Datetime when observation was recorded",
     )
-
-    data_entered_by_id: int
 
     performer: Performer | None = Field(
         None,
@@ -108,12 +107,27 @@ class ObservationSpec(EMRResource):
 
     questionnaire_response: UUID4 | None = None
 
+
+class ObservationSpec(BaseObservationSpec):
+    data_entered_by_id: int
+    created_by_id: int
+    updated_by_id: int
+
     def perform_extra_deserialization(self, is_update, obj):
         obj.external_id = self.id
         obj.data_entered_by_id = self.data_entered_by_id
+        obj.created_by_id = self.created_by_id
+        obj.updated_by_id = self.updated_by_id
+
         self.meta.pop("data_entered_by_id", None)
         if not is_update:
             obj.id = None
+
+
+class ObservationReadSpec(BaseObservationSpec):
+    created_by: UserSpec = dict
+    updated_by: UserSpec = dict
+    data_entered_by: UserSpec = dict
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -122,3 +136,10 @@ class ObservationSpec(EMRResource):
         mapping["encounter"] = None
         mapping["patient"] = None
         mapping["questionnaire_response"] = None
+
+        if obj.created_by:
+            mapping["created_by"] = UserSpec.serialize(obj.created_by)
+        if obj.updated_by:
+            mapping["updated_by"] = UserSpec.serialize(obj.created_by)
+        if obj.data_entered_by:
+            mapping["data_entered_by"] = UserSpec.serialize(obj.data_entered_by)
