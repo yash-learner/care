@@ -118,9 +118,9 @@ def validate_question_result(  # noqa : PLR0912
                 ]
             )
         # Validate for code and quantity
-        if questionnaire["type"] == QuestionType.choice.value:
+        if questionnaire["type"] == QuestionType.choice.value and questionnaire.get("answer_value_set"):
             for value in values:
-                if not (value.value_code or value.value):
+                if not value.value_code:
                     errors.append(
                         {
                             "type": "type_error",
@@ -130,7 +130,6 @@ def validate_question_result(  # noqa : PLR0912
                     )
                     return
                 # Validate code
-                # TODO : Validate for options created by user as well
                 if "answer_value_set" in questionnaire:
                     try:
                         validate_valueset(
@@ -144,6 +143,7 @@ def validate_question_result(  # noqa : PLR0912
                                 "msg": "Coding does not belong to the valueset",
                             }
                         )
+        # TODO : Validate for options created by user as well
         if questionnaire["type"] == QuestionType.quantity.value:
             for value in values:
                 if not value.value_quantity:
@@ -201,9 +201,7 @@ def create_observation_spec(questionnaire, responses, parent_id=None):
             if questionnaire["type"] == QuestionType.choice.value and value.value_code:
                 observation["value"] = {
                     "value_code": (
-                        responses[questionnaire["id"]]
-                        .values[0]
-                        .value_code.model_dump(exclude_defaults=True)
+                        value.value_code.model_dump(exclude_defaults=True)
                     )
                 }
             elif (
@@ -212,14 +210,12 @@ def create_observation_spec(questionnaire, responses, parent_id=None):
             ):
                 observation["value"] = {
                     "value_quantity": (
-                        responses[questionnaire["id"]]
-                        .values[0]
-                        .value_quantity.model_dump(exclude_defaults=True)
+                        value.value_quantity.model_dump(exclude_defaults=True)
                     )
                 }
             elif value:
                 observation["value"] = {
-                    "value": responses[questionnaire["id"]].values[0].value
+                    "value": value.value
                 }
             if responses[questionnaire["id"]].note:
                 observation["note"] = responses[questionnaire["id"]].note
