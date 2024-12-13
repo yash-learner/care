@@ -66,11 +66,11 @@ class ResourceRequestSerializer(serializers.ModelSerializer):
     )
 
     approving_facility = ExternalIdSerializerField(
-        queryset=Facility.objects.all(), required=True
+        queryset=Facility.objects.all(), required=False
     )
 
     assigned_facility = ExternalIdSerializerField(
-        queryset=Facility.objects.all(), required=False
+        queryset=Facility.objects.all(), required=True
     )
 
     related_patient = ExternalIdSerializerField(
@@ -125,6 +125,7 @@ class ResourceRequestSerializer(serializers.ModelSerializer):
                     raise ValidationError({"status": ["Permission Denied"]})
             if (
                 not validated
+                and instance.approving_facility
                 and validated_data["status"] in LIMITED_REQUEST_STATUS
                 and not has_facility_permission(user, instance.approving_facility)
             ):

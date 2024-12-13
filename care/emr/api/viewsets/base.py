@@ -57,6 +57,8 @@ class EMRCreateMixin:
         instance.save()
 
     def clean_create_data(self, request_data):
+        request_data["created_by"] = self.request.user
+        request_data["updated_by"] = self.request.user
         return request_data
 
     def authorize_create(self, request_user, request_instance):
