@@ -7,6 +7,7 @@ from care.emr.api.viewsets.base import EMRModelReadOnlyViewSet
 from care.emr.models.observation import Observation
 from care.emr.resources.common.coding import Coding
 from care.emr.resources.observation.spec import ObservationSpec
+from care.emr.resources.questionnaire.spec import QuestionType
 
 
 class MultipleCodeFilter(filters.CharFilter):
@@ -16,11 +17,17 @@ class MultipleCodeFilter(filters.CharFilter):
             queryset = queryset.filter(main_code__code__in=value.split(","))
         return queryset
 
+class IgnoreGroupFilter(filters.BooleanFilter):
+    def filter(self, qs, value):
+        if value:
+            qs = qs.exclude(value_type=QuestionType.group.value)
+        return qs
+
 
 class ObservationFilter(filters.FilterSet):
     encounter = filters.UUIDFilter(field_name="encounter__external_id")
     codes = MultipleCodeFilter()
-
+    ignore_group = IgnoreGroupFilter()
 
 class ObservationAnalyseRequest(BaseModel):
     codes: list[Coding] = Field(min_length=1, max_length=20)
