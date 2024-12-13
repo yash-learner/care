@@ -244,7 +244,9 @@ facility_nested_router.register(
 )
 facility_nested_router.register(r"hubs", FacilityHubsViewSet, basename="facility-hubs")
 
-facility_nested_router.register(r"organizations", OrganizationViewSet, basename="organization")
+facility_nested_router.register(
+    r"organizations", OrganizationViewSet, basename="organization"
+)
 
 router.register("asset", AssetViewSet, basename="asset")
 asset_nested_router = NestedSimpleRouter(router, r"asset", lookup="asset")

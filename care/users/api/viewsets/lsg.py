@@ -131,6 +131,7 @@ class LocalBodyViewSet(
     authentication_classes = []
     permission_classes = []
 
+
 class WardFilterSet(filters.FilterSet):
     state = filters.NumberFilter(field_name="local_body__district__state_id")
     state_name = filters.CharFilter(

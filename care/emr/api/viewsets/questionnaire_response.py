@@ -1,8 +1,8 @@
+from django_filters import rest_framework as filters
 
 from care.emr.api.viewsets.base import EMRModelReadOnlyViewSet
 from care.emr.models.questionnaire import QuestionnaireResponse
 from care.emr.resources.questionnaire_response.spec import QuestionnaireResponseReadSpec
-from django_filters import rest_framework as filters
 
 
 class QuestionnaireResponseFilters(filters.FilterSet):
@@ -22,11 +22,9 @@ class QuestionnaireResponseViewSet(EMRModelReadOnlyViewSet):
                 patient__external_id=self.kwargs["patient_external_id"],
             )
             .order_by("-created_date")
-            .select_related("questionnaire","encounter")
+            .select_related("questionnaire", "encounter")
         )
         if "questionnaire_slugs" in self.request.GET:
-            questionnaire_slugs = self.request.GET.get(
-                "questionnaire_slugs"
-            ).split(",")
+            questionnaire_slugs = self.request.GET.get("questionnaire_slugs").split(",")
             queryset = queryset.filter(questionnaire__slug__in=questionnaire_slugs)
         return queryset

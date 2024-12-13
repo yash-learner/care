@@ -33,15 +33,15 @@ class ClassChoices(str, Enum):
     hh = "hh"
 
 
-
-
 class PeriodSpec(BaseModel):
     start: datetime.datetime
     end: datetime.datetime
 
     # TODO Add validation
 
+
 class HospitalizationSpec(BaseModel):
+    pass
 
 
 class EncounterSpec(EncounterSpecBase):
