@@ -4,6 +4,7 @@ from rest_framework.routers import DefaultRouter, SimpleRouter
 from rest_framework_nested.routers import NestedSimpleRouter
 
 from care.emr.api.otp_viewsets.login import OTPLoginView
+from care.emr.api.otp_viewsets.patient import PatientOTPView
 from care.emr.api.viewsets.allergy_intolerance import AllergyIntoleranceViewSet
 from care.emr.api.viewsets.batch_request import BatchRequestView
 from care.emr.api.viewsets.condition import DiagnosisViewSet, SymptomViewSet
@@ -82,8 +83,6 @@ from care.facility.api.viewsets.patient_investigation import (
     PatientInvestigationSummaryViewSet,
     PatientInvestigationViewSet,
 )
-from care.facility.api.viewsets.patient_otp import PatientMobileOTPViewSet
-from care.facility.api.viewsets.patient_otp_data import OTPPatientDataViewSet
 from care.facility.api.viewsets.patient_sample import PatientSampleViewSet
 from care.facility.api.viewsets.prescription import (
     ConsultationPrescriptionViewSet,
@@ -139,11 +138,13 @@ router.register("ambulance", AmbulanceViewSet, basename="ambulance")
 
 router.register("icd", ICDViewSet, basename="icd")
 
-router.register("otp/token", PatientMobileOTPViewSet, basename="otp-token")
+# router.register("otp/token", PatientMobileOTPViewSet, basename="otp-token")
 
-router.register("otp/patient", OTPPatientDataViewSet, basename="otp-patient")
+# router.register("otp/patient", OTPPatientDataViewSet, basename="otp-patient")
 
 router.register("otp", OTPLoginView, basename="otp-login")
+
+router.register("otp/patient", PatientOTPView, basename="otp-patient")
 
 
 router.register("notification", NotificationViewSet, basename="notification")

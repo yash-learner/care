@@ -1,4 +1,5 @@
 from django.utils.translation import gettext_lazy as _
+from rest_framework.permissions import BasePermission
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
@@ -68,3 +69,8 @@ class JWTTokenPatientAuthentication(CustomJWTAuthentication):
         obj = PatientOtpObject()
         obj.phone_number = validated_token["phone_number"]
         return obj
+
+class OTPAuthenticatedPermission(BasePermission):
+
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.is_alternative_login and request.user.phone_number

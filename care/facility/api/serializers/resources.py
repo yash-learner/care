@@ -121,7 +121,7 @@ class ResourceRequestSerializer(serializers.ModelSerializer):
                 validated = True
                 if (
                     instance.assigned_facility
-                    and not User.TYPE_VALUE_MAP[user.user_type]
+                    and not User.REVERSE_TYPE_MAP[user.user_type]
                     < User.TYPE_VALUE_MAP["Volunteer"]
                     and not has_facility_permission(user, instance.assigned_facility)
                 ):
