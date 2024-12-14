@@ -17,9 +17,13 @@ class Questionnaire(EMRBaseModel):
 
 
 class QuestionnaireResponse(EMRBaseModel):
-    questionnaire = models.ForeignKey(Questionnaire, on_delete=models.CASCADE)
+    questionnaire = models.ForeignKey(
+        Questionnaire, on_delete=models.CASCADE, null=True, blank=True
+    )
     subject_id = models.UUIDField()
     responses = models.JSONField(default=list)
+    structured_responses = models.JSONField(default=dict)
+    structured_response_type = models.CharField(default=None, blank=True, null=True)
     patient = models.ForeignKey(
         "facility.PatientRegistration", on_delete=models.CASCADE
     )

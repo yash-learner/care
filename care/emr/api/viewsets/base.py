@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import exception_handler as drf_exception_handler
 from rest_framework.viewsets import GenericViewSet
 
+from care.emr.models import QuestionnaireResponse
 from care.emr.models.base import EMRBaseModel
 from care.emr.resources.base import EMRResource
 
@@ -53,10 +54,28 @@ class EMRRetrieveMixin:
 
 
 class EMRCreateMixin:
+    CREATE_QUESTIONNAIRE_RESPONSE = True
+
     def perform_create(self, instance):
         instance.created_by = self.request.user
         instance.updated_by = self.request.user
-        instance.save()
+        with transaction.atomic():
+            instance.save()
+            if self.CREATE_QUESTIONNAIRE_RESPONSE:
+                QuestionnaireResponse.objects.create(
+                    subject_id=self.fetch_patient_from_instance(instance).external_id,
+                    patient=self.fetch_patient_from_instance(instance),
+                    encounter=self.fetch_encounter_from_instance(instance),
+                    structured_responses={
+                        self.questionnaire_type: {
+                            "submit_type": "CREATE",
+                            "id": str(instance.external_id),
+                        }
+                    },
+                    structured_response_type=self.questionnaire_type,
+                    created_by=self.request.user,
+                    updated_by=self.request.user,
+                )
 
     def clean_create_data(self, request_data):
         return request_data
@@ -104,7 +123,23 @@ class EMRUpdateMixin:
     def perform_update(self, instance):
         instance.updated_by = self.request.user
         # TODO Handle hisorical data by taking a dump from current model and appending to history object
-        instance.save()
+        with transaction.atomic():
+            instance.save()
+            if self.CREATE_QUESTIONNAIRE_RESPONSE:
+                QuestionnaireResponse.objects.create(
+                    subject_id=self.fetch_patient_from_instance(instance),
+                    patient=self.fetch_patient_from_instance(instance),
+                    encounter=self.fetch_encounter_from_instance(instance),
+                    structured_responses={
+                        self.questionnaire_type: {
+                            "submit_type": "UPDATE",
+                            "id": str(instance.external_id),
+                        }
+                    },
+                    structured_response_type=self.questionnaire_type,
+                    created_by=self.request.user,
+                    updated_by=self.request.user,
+                )
 
     def clean_update_data(self, request_data):
         request_data.pop("id", None)
@@ -202,6 +237,12 @@ class EMRBaseViewSet(GenericViewSet):
             queryset, **{self.lookup_field: self.kwargs[self.lookup_field]}
         )
 
+    def fetch_encounter_from_instance(self, instance):
+        return instance.encounter
+
+    def fetch_patient_from_instance(self, instance):
+        return instance.patient
+
 
 class EMRModelViewSet(
     EMRCreateMixin,
@@ -223,21 +264,3 @@ class EMRModelReadOnlyViewSet(
     EMRBaseViewSet,
 ):
     pass
-
-
-# DONE Maybe use a different pydantic model for request and response, Response does not need validations or defined Types
-# DONE Maybe switch to use custom mixins
-# Complete update and delete logic
-# DONE Create valuesets for allergy intolerance and write the logic for validation
-# DONE Convert to questionnaire spec and store it somewhere and return on the questionnaire API
-# Write the history function based on the update.
-
-# DONE Validate valueset data on create
-# DONEAdd option for extra validation being written in the model
-
-# DONE Model the questionnaire object in pydantic
-# DONE Create CRUD for questionnaire
-# DONE Create definition returning API for questionnaire
-# Submit API for Questionnaire -> Implicitly requires observations to be completed
-
-# Create API's for valuesets and code concepts ( integrations already built  )

@@ -20,6 +20,7 @@ class QuestionnaireViewSet(EMRModelViewSet):
     pydantic_model = QuestionnaireSpec
     pydantic_read_model = QuestionnaireReadSpec
     lookup_field = "slug"
+    CREATE_QUESTIONNAIRE_RESPONSE = False
 
     def get_queryset(self):
         queryset = super().get_queryset()

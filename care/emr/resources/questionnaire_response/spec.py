@@ -38,13 +38,18 @@ class QuestionnaireResponseReadSpec(EMRResource):
     subject_id: str
     responses: list
     encounter: str
+    structured_responses: dict
+    structured_response_type: str
     created_by: UserSpec = dict
     updated_by: UserSpec = dict
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
-        mapping["questionnaire"] = QuestionnaireReadSpec.serialize(obj.questionnaire)
+        if obj.questionnaire:
+            mapping["questionnaire"] = QuestionnaireReadSpec.serialize(
+                obj.questionnaire
+            )
         mapping["encounter"] = obj.encounter.external_id
         if obj.created_by:
             mapping["created_by"] = UserSpec.serialize(obj.created_by)

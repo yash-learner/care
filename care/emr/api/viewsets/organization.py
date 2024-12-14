@@ -25,6 +25,7 @@ class OrganizationViewSet(EMRModelViewSet):
     questionnaire_subject_type = SubjectType.patient.value
     filterset_class = FacilityOrganizationFilter
     filter_backends = [filters.DjangoFilterBackend]
+    CREATE_QUESTIONNAIRE_RESPONSE = False
 
     def clean_create_data(self, request_data):
         request_data["facility"] = self.kwargs["facility_external_id"]
