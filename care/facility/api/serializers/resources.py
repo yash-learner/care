@@ -3,6 +3,7 @@ from rest_framework.exceptions import ValidationError
 
 from care.facility.api.serializers import TIMESTAMP_FIELDS
 from care.facility.api.serializers.facility import FacilityBasicInfoSerializer
+from care.facility.api.serializers.patient import PatientListSerializer
 from care.facility.models import (
     RESOURCE_CATEGORY_CHOICES,
     RESOURCE_STATUS_CHOICES,
@@ -74,8 +75,10 @@ class ResourceRequestSerializer(serializers.ModelSerializer):
     )
 
     related_patient = ExternalIdSerializerField(
-        queryset=PatientRegistration.objects.all(), required=False
+        queryset=PatientRegistration.objects.all(), required=False , write_only=True
     )
+
+    related_patient_object = PatientListSerializer(source="related_patient" , read_only=True)
 
     assigned_to_object = UserBaseMinimumSerializer(source="assigned_to", read_only=True)
     created_by_object = UserBaseMinimumSerializer(source="created_by", read_only=True)
