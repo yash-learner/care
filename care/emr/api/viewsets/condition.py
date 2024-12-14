@@ -7,7 +7,11 @@ from care.emr.models.condition import Condition
 from care.emr.registries.system_questionnaire.system_questionnaire import (
     InternalQuestionnaireRegistry,
 )
-from care.emr.resources.condition.spec import ConditionSpec, ConditionSpecRead, CategoryChoices
+from care.emr.resources.condition.spec import (
+    CategoryChoices,
+    ConditionSpec,
+    ConditionSpecRead,
+)
 from care.emr.resources.questionnaire.spec import SubjectType
 from care.facility.models.patient_consultation import PatientConsultation
 
@@ -48,9 +52,13 @@ class SymptomViewSet(EMRModelViewSet):
         return (
             super()
             .get_queryset()
-            .filter(patient__external_id=self.kwargs["patient_external_id"] , category=CategoryChoices.problem_list_item.value)
+            .filter(
+                patient__external_id=self.kwargs["patient_external_id"],
+                category=CategoryChoices.problem_list_item.value,
+            )
             .select_related("patient", "encounter", "created_by", "updated_by")
         )
+
 
 InternalQuestionnaireRegistry.register(SymptomViewSet)
 
@@ -82,7 +90,10 @@ class DiagnosisViewSet(EMRModelViewSet):
         return (
             super()
             .get_queryset()
-            .filter(patient__external_id=self.kwargs["patient_external_id"] , category=CategoryChoices.encounter_diagnosis.value)
+            .filter(
+                patient__external_id=self.kwargs["patient_external_id"],
+                category=CategoryChoices.encounter_diagnosis.value,
+            )
             .select_related("patient", "encounter", "created_by", "updated_by")
         )
 

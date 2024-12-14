@@ -80,6 +80,7 @@ class ResourceFilterSet(filters.FilterSet):
     title = filters.CharFilter(field_name="title", lookup_expr="icontains")
     related_patient = filters.UUIDFilter(field_name="related_patient__external_id")
 
+
 class ResourceRequestViewSet(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,

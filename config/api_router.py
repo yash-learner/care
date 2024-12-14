@@ -6,7 +6,7 @@ from rest_framework_nested.routers import NestedSimpleRouter
 from care.emr.api.otp_viewsets.login import OTPLoginView
 from care.emr.api.viewsets.allergy_intolerance import AllergyIntoleranceViewSet
 from care.emr.api.viewsets.batch_request import BatchRequestView
-from care.emr.api.viewsets.condition import SymptomViewSet, DiagnosisViewSet
+from care.emr.api.viewsets.condition import DiagnosisViewSet, SymptomViewSet
 from care.emr.api.viewsets.encounter import EncounterViewSet
 from care.emr.api.viewsets.medication_request import MedicationRequestViewSet
 from care.emr.api.viewsets.observation import ObservationViewSet

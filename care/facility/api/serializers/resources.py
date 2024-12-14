@@ -119,14 +119,19 @@ class ResourceRequestSerializer(serializers.ModelSerializer):
             validated = False
             if validated_data["status"] in LIMITED_RECIEVING_STATUS:
                 validated = True
-                if instance.assigned_facility and not has_facility_permission(
-                    user, instance.assigned_facility
+                if (
+                    instance.assigned_facility
+                    and not User.TYPE_VALUE_MAP[user.user_type]
+                    < User.TYPE_VALUE_MAP["Volunteer"]
+                    and not has_facility_permission(user, instance.assigned_facility)
                 ):
                     raise ValidationError({"status": ["Permission Denied"]})
             if (
                 not validated
                 and instance.approving_facility
                 and validated_data["status"] in LIMITED_REQUEST_STATUS
+                and not User.TYPE_VALUE_MAP[user.user_type]
+                < User.TYPE_VALUE_MAP["Volunteer"]
                 and not has_facility_permission(user, instance.approving_facility)
             ):
                 raise ValidationError({"status": ["Permission Denied"]})
