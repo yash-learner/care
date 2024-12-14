@@ -140,6 +140,6 @@ class ObservationReadSpec(BaseObservationSpec):
         if obj.created_by:
             mapping["created_by"] = UserSpec.serialize(obj.created_by)
         if obj.updated_by:
-            mapping["updated_by"] = UserSpec.serialize(obj.created_by)
+            mapping["updated_by"] = UserSpec.serialize(obj.updated_by)
         if obj.data_entered_by:
             mapping["data_entered_by"] = UserSpec.serialize(obj.data_entered_by)
