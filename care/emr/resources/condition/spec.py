@@ -56,10 +56,10 @@ class BaseConditionSpec(EMRResource):
 
 
 class ConditionSpec(BaseConditionSpec):
-    clinical_status: ClinicalStatusChoices
-    verification_status: VerificationStatusChoices
-    category: CategoryChoices
-    severity: SeverityChoices
+    clinical_status: ClinicalStatusChoices | None = None
+    verification_status: VerificationStatusChoices | None = None
+    category: CategoryChoices | None = None
+    severity: SeverityChoices | None = None
     code: Coding = Field(json_schema_extra={"slug": CARE_CODITION_CODE_VALUESET.slug})
     encounter: UUID4
     onset: ConditionOnSetSpec = {}
