@@ -109,7 +109,7 @@ class ResourceRequestViewSet(
         "assigned_to",
         "created_by",
         "last_edited_by",
-        "related_patient"
+        "related_patient",
     )
     ordering_fields = [
         "id",

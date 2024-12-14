@@ -1,4 +1,4 @@
-from datetime import timedelta, timezone
+from datetime import timedelta
 
 from django.conf import settings
 from django.utils import timezone
@@ -22,8 +22,9 @@ class OTPLoginRequestSpec(BaseModel):
     def validate_phone_number(cls, value):
         try:
             mobile_validator(value)
-        except Exception:
-            raise ValueError("Invalid phone number")
+        except Exception as e:
+            msg = "Invalid phone number"
+            raise ValueError(msg) from e
         return value
 
 
@@ -58,7 +59,7 @@ class OTPLoginView(EMRBaseViewSet):
         elif settings.DEBUG:
             import logging
 
-            logging.info(f"{otp_obj.otp} {otp_obj.phone_number}")
+            logging.debug(f"{otp_obj.otp} {otp_obj.phone_number}")  # noqa: G004
         otp_obj.save()
         return Response({"otp": "generated"})
 
@@ -71,7 +72,7 @@ class OTPLoginView(EMRBaseViewSet):
         if not otp_object:
             raise ValidationError({"otp": "Invalid OTP"})
 
-        # otp_object.is_used = True # TODO UNCOMMENT THIS !!
+        # otp_object.is_used = True # TODO UNCOMMENT THIS !!  # noqa: ERA001
         otp_object.save()
 
         token = PatientToken()

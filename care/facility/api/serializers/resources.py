@@ -75,10 +75,12 @@ class ResourceRequestSerializer(serializers.ModelSerializer):
     )
 
     related_patient = ExternalIdSerializerField(
-        queryset=PatientRegistration.objects.all(), required=False , write_only=True
+        queryset=PatientRegistration.objects.all(), required=False, write_only=True
     )
 
-    related_patient_object = PatientListSerializer(source="related_patient" , read_only=True)
+    related_patient_object = PatientListSerializer(
+        source="related_patient", read_only=True
+    )
 
     assigned_to_object = UserBaseMinimumSerializer(source="assigned_to", read_only=True)
     created_by_object = UserBaseMinimumSerializer(source="created_by", read_only=True)

@@ -70,7 +70,11 @@ class JWTTokenPatientAuthentication(CustomJWTAuthentication):
         obj.phone_number = validated_token["phone_number"]
         return obj
 
-class OTPAuthenticatedPermission(BasePermission):
 
+class OTPAuthenticatedPermission(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.is_alternative_login and request.user.phone_number
+        return (
+            request.user.is_authenticated
+            and request.user.is_alternative_login
+            and request.user.phone_number
+        )
