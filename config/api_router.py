@@ -3,9 +3,10 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter, SimpleRouter
 from rest_framework_nested.routers import NestedSimpleRouter
 
+from care.emr.api.otp_viewsets.login import OTPLoginView
 from care.emr.api.viewsets.allergy_intolerance import AllergyIntoleranceViewSet
 from care.emr.api.viewsets.batch_request import BatchRequestView
-from care.emr.api.viewsets.condition import ConditionViewSet
+from care.emr.api.viewsets.condition import SymptomViewSet, DiagnosisViewSet
 from care.emr.api.viewsets.encounter import EncounterViewSet
 from care.emr.api.viewsets.medication_request import MedicationRequestViewSet
 from care.emr.api.viewsets.observation import ObservationViewSet
@@ -141,6 +142,9 @@ router.register("icd", ICDViewSet, basename="icd")
 router.register("otp/token", PatientMobileOTPViewSet, basename="otp-token")
 
 router.register("otp/patient", OTPPatientDataViewSet, basename="otp-patient")
+
+router.register("otp", OTPLoginView, basename="otp-login")
+
 
 router.register("notification", NotificationViewSet, basename="notification")
 
@@ -299,7 +303,8 @@ patient_nested_router.register(
     r"allergy_intolerance", AllergyIntoleranceViewSet, basename="allergy-intolerance"
 )
 
-patient_nested_router.register(r"condition", ConditionViewSet, basename="condition")
+patient_nested_router.register(r"symptom", SymptomViewSet, basename="symptom")
+patient_nested_router.register(r"diagnosis", DiagnosisViewSet, basename="diagnosis")
 
 
 patient_nested_router.register(r"encounter", EncounterViewSet, basename="encounter")

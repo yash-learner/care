@@ -23,6 +23,7 @@ RESOURCE_CATEGORY_CHOICES = (
     (10, "PATIENT_CARE"),
     (20, "COMFORT_DEVICES"),
     (30, "MEDICINES"),
+    (40, "FINANCIAL"),
     (100, "OTHERS"),
     (200, "SUPPLIES"),
 )

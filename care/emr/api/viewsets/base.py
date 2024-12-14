@@ -3,6 +3,7 @@ import json
 from django.db import transaction
 from django.http.response import Http404
 from pydantic import ValidationError
+from rest_framework.exceptions import ValidationError as RestFrameworkValidationError
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
@@ -29,6 +30,8 @@ def emr_exception_handler(exc, context):
             },
             status=404,
         )
+    if isinstance(exc, RestFrameworkValidationError) and getattr(exc,"detail" , None):
+        return Response({"errors": [exc.detail]}, status=400)
     return drf_exception_handler(exc, context)
 
 
