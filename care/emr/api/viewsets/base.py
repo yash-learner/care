@@ -31,6 +31,9 @@ def emr_exception_handler(exc, context):
             status=404,
         )
     if isinstance(exc, RestFrameworkValidationError) and getattr(exc, "detail", None):
+        if type(exc.detail) == dict:
+            if "errors" in exc.detail:
+                return Response(exc.detail, status=400)
         return Response({"errors": [exc.detail]}, status=400)
     return drf_exception_handler(exc, context)
 

@@ -62,7 +62,7 @@ class ScheduleWriteSpec(ScheduleBaseSpec):
     availabilities: list[AvailabilityBaseSpec]
 
     def perform_extra_deserialization(self, is_update, obj):
-        if not is_update:
+        if not is_update:  # noqa SIM102
             if self.resource_type == ResourceTypeOptions.user:
                 user = User.objects.filter(external_id=self.resource).first()
                 # TODO Validation that user is in given facility

@@ -9,7 +9,10 @@ from care.emr.api.viewsets.base import (
     EMRUpdateMixin,
 )
 from care.emr.models import TokenBooking
-from care.emr.resources.scheduling.slot.spec import TokenBookingReadSpec, TokenBookingUpdateSpec
+from care.emr.resources.scheduling.slot.spec import (
+    TokenBookingReadSpec,
+    TokenBookingUpdateSpec,
+)
 
 
 class TokenBookingFilters(FilterSet):
@@ -32,7 +35,11 @@ class TokenBookingViewSet(
         return (
             super()
             .get_queryset()
-            .filter(token_slot__resource__facility__external_id=self.kwargs["facility_external_id"])
+            .filter(
+                token_slot__resource__facility__external_id=self.kwargs[
+                    "facility_external_id"
+                ]
+            )
             .select_related(
                 "token_slot",
                 "patient",

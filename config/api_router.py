@@ -254,7 +254,9 @@ facility_nested_router.register(r"schedule", ScheduleViewSet, basename="schedule
 
 facility_nested_router.register(r"slots", SlotViewSet, basename="slot")
 
-facility_nested_router.register(r"appointments", TokenBookingViewSet, basename="appointments")
+facility_nested_router.register(
+    r"appointments", TokenBookingViewSet, basename="appointments"
+)
 
 
 router.register("asset", AssetViewSet, basename="asset")

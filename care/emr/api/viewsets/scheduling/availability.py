@@ -49,7 +49,7 @@ def convert_availability_to_slots(availabilities):
         i = 0
         while current_time < end_time:
             i += 1
-            if i == 30:
+            if i == 30:  # noqa PLR2004
                 # Failsafe to prevent infinite loop
                 break
             slots[
@@ -129,14 +129,16 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
         )
         for slot in created_slots:
             slot_key = f"{slot.start_datetime.time()}-{slot.end_datetime.time()}"
-            if slot_key in slots:
-                if slots[slot_key]["availability_id"] == slot.availability.id:
-                    slots.pop(slot_key)
+            if (
+                slot_key in slots
+                and slots[slot_key]["availability_id"] == slot.availability.id
+            ):
+                slots.pop(slot_key)
 
         # Create everything else
         for _slot in slots:
             slot = slots[_slot]
-            a = TokenSlot.objects.create(
+            TokenSlot.objects.create(
                 resource=schedulable_resource_obj,
                 start_datetime=datetime.datetime.combine(
                     request_data.day, slot["start_time"], tzinfo=timezone.now().tzinfo
