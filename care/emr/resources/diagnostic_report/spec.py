@@ -229,3 +229,21 @@ class DiagnosticReportObservationRequest(BaseModel):
         default=[],
         description="List of observations that are part of the diagnostic report",
     )
+
+
+class DiagnosticReportVerifyRequest(BaseModel):
+    is_approved: bool = Field(
+        ...,
+        description="Indicates whether the diagnostic report is approved or rejected",
+    )
+
+
+class DiagnosticReportReviewRequest(BaseModel):
+    is_approved: bool = Field(
+        ...,
+        description="Indicates whether the diagnostic report is approved or rejected",
+    )
+    conclusion: str | None = Field(
+        default=None,
+        description="Additional notes about the review",
+    )
