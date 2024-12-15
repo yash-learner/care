@@ -207,7 +207,7 @@ class PatientRegistration(PatientBaseModel, PatientPermissionMixin):
     )
 
     is_antenatal = models.BooleanField(
-        default=None, verbose_name="Does the patient require Prenatal Care ?"
+        default=None, null=True, verbose_name="Does the patient require Prenatal Care ?"
     )
     last_menstruation_start_date = models.DateField(
         default=None, null=True, verbose_name="Last Menstruation Start Date"
@@ -462,7 +462,7 @@ class PatientRegistration(PatientBaseModel, PatientPermissionMixin):
         if self.district is not None:
             self.state = self.district.state
 
-        if self.date_of_birth:
+        if self.date_of_birth and not self.year_of_birth:
             self.year_of_birth = self.date_of_birth.year
 
         self.date_of_receipt_of_information = (
