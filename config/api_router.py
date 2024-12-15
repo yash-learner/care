@@ -86,13 +86,6 @@ from care.facility.api.viewsets.shifting import (
     ShifitngRequestCommentViewSet,
     ShiftingViewSet,
 )
-from care.facility.api.viewsets.summary import (
-    DistrictPatientSummaryViewSet,
-    FacilityCapacitySummaryViewSet,
-    PatientSummaryViewSet,
-    TestsSummaryViewSet,
-    TriageSummaryViewSet,
-)
 from care.users.api.viewsets.lsg import (
     DistrictViewSet,
     LocalBodyViewSet,
@@ -132,21 +125,6 @@ router.register("otp/token", PatientMobileOTPViewSet, basename="otp-token")
 router.register("otp/patient", OTPPatientDataViewSet, basename="otp-patient")
 
 router.register("notification", NotificationViewSet, basename="notification")
-
-# Summarisation
-router.register(
-    "facility_summary", FacilityCapacitySummaryViewSet, basename="summary-facility"
-)
-router.register("patient_summary", PatientSummaryViewSet, basename="summary-patient")
-router.register("tests_summary", TestsSummaryViewSet, basename="summary-tests")
-router.register("triage_summary", TriageSummaryViewSet, basename="summary-triage")
-
-# District Summary
-router.register(
-    "district_patient_summary",
-    DistrictPatientSummaryViewSet,
-    basename="district-summary-patient",
-)
 
 router.register("items", FacilityInventoryItemViewSet, basename="items")
 
