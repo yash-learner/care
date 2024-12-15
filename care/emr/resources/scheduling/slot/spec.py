@@ -51,6 +51,7 @@ class BookingStatusChoices(str, Enum):
     entered_in_error = "entered_in_error"
     checked_in = "checked_in"
     waitlist = "waitlist"
+    in_consultation = "in_consultation"
 
 
 class TokenBookingBaseSpec(EMRResource):

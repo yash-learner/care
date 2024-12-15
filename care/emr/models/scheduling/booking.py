@@ -28,7 +28,7 @@ class TokenBooking(EMRBaseModel):
     )
     booked_on = models.DateTimeField(auto_now_add=True)
     booked_by = models.ForeignKey(
-        User, on_delete=models.CASCADE, null=False, blank=False
+        User, on_delete=models.CASCADE, null=True, blank=True
     )
     status = models.CharField()
     reason_for_visit = models.TextField(null=True, blank=True)

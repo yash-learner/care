@@ -87,8 +87,12 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
 
     @action(detail=False, methods=["POST"])
     def get_slots_for_day(self, request, *args, **kwargs):
-        facility = self.kwargs["facility_external_id"]
-        request_data = SlotsForDayRequestSpec(**request.data)
+        return self.get_slots_for_day_handler(self.kwargs["facility_external_id"], request.data)
+
+    @classmethod
+    def get_slots_for_day_handler(cls,facility_external_id , request_data):
+        facility = facility_external_id
+        request_data = SlotsForDayRequestSpec(**request_data)
         user = User.objects.filter(external_id=request_data.resource).first()
         if not user:
             raise ValidationError("Resource does not exist")
@@ -165,17 +169,22 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
         # Get list of all slots, create if missed
         # Return slots
 
-    @action(detail=True, methods=["POST"])
-    def create_appointment(self, request, *args, **kwargs):
-        request_data = AppointmentBookingSpec(**request.data)
+
+    @classmethod
+    def create_appointment_handler(cls , obj, request_data , user):
+        request_data = AppointmentBookingSpec(**request_data)
         patient = PatientRegistration.objects.filter(
             external_id=request_data.patient
         ).first()
         if not patient:
             raise ValidationError({"Patient not found"})
         appointment = lock_create_appointment(
-            self.get_object(), patient, request.user, request_data.reason_for_visit
+            obj, patient, user, request_data.reason_for_visit
         )
         return Response(
             TokenBookingReadSpec.serialize(appointment).model_dump(exclude=["meta"])
         )
+
+    @action(detail=True, methods=["POST"])
+    def create_appointment(self, request, *args, **kwargs):
+        return self.create_appointment_handler(self.get_object() , request.data , request.user)

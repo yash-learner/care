@@ -5,6 +5,7 @@ from rest_framework_nested.routers import NestedSimpleRouter
 
 from care.emr.api.otp_viewsets.login import OTPLoginView
 from care.emr.api.otp_viewsets.patient import PatientOTPView
+from care.emr.api.otp_viewsets.slot import OTPSlotViewSet
 from care.emr.api.viewsets.allergy_intolerance import AllergyIntoleranceViewSet
 from care.emr.api.viewsets.batch_request import BatchRequestView
 from care.emr.api.viewsets.condition import DiagnosisViewSet, SymptomViewSet
@@ -143,6 +144,8 @@ router.register("icd", ICDViewSet, basename="icd")
 router.register("otp", OTPLoginView, basename="otp-login")
 
 router.register("otp/patient", PatientOTPView, basename="otp-patient")
+
+router.register("otp/slots", OTPSlotViewSet, basename="otp-slots")
 
 
 router.register("notification", NotificationViewSet, basename="notification")
