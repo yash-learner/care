@@ -12,8 +12,7 @@ from care.users.models import User
 
 
 class ScheduleFilters(FilterSet):
-    resource = UUIDFilter(field_name="resource")
-
+    pass
 
 class ScheduleViewSet(EMRModelViewSet):
     database_model = Schedule
