@@ -84,7 +84,6 @@ def lock_create_appointment(token_slot, patient, created_by, reason_for_visit):
 class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
     database_model = TokenSlot
     pydantic_read_model = TokenSlotBaseSpec
-    pydantic_retrieve_model = TokenBookingRetrieveSpec
 
     @action(detail=False, methods=["POST"])
     def get_slots_for_day(self, request, *args, **kwargs):
