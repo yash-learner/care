@@ -43,10 +43,10 @@ class SeverityChoices(str, Enum):
 
 
 class ConditionOnSetSpec(EMRResource):
-    onset_datetime: datetime.datetime = None
-    onset_age: int = None
-    onset_string: str = None
-    note: str
+    onset_datetime: datetime.datetime | None = None
+    onset_age: int | None = None
+    onset_string: str | None = None
+    note: str | None = None
 
 
 class BaseConditionSpec(EMRResource):
@@ -57,7 +57,7 @@ class BaseConditionSpec(EMRResource):
 
 class ConditionSpec(BaseConditionSpec):
     clinical_status: ClinicalStatusChoices | None = None
-    verification_status: VerificationStatusChoices | None = None
+    verification_status: VerificationStatusChoices
     severity: SeverityChoices | None = None
     code: Coding = Field(json_schema_extra={"slug": CARE_CODITION_CODE_VALUESET.slug})
     encounter: UUID4
