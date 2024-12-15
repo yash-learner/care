@@ -25,7 +25,7 @@ class ResourceTypeOptions(str, Enum):
 
 
 class AvailabilityDateTimeSpec(EMRResource):
-    day_of_week: int = Field(le=6 )
+    day_of_week: int = Field(le=6)
     start_time: datetime.time
     end_time: datetime.time
 
@@ -47,12 +47,12 @@ class AvailabilityBaseSpec(EMRResource):
 
 class ScheduleBaseSpec(EMRResource):
     __model__ = Schedule
-    __exclude__ = ["resource" , "facility"]
+    __exclude__ = ["resource", "facility"]
 
     id: UUID4 | None = None
 
-class ScheduleWriteSpec(ScheduleBaseSpec):
 
+class ScheduleWriteSpec(ScheduleBaseSpec):
     resource: UUID4
     facility: UUID4
     resource_type: ResourceTypeOptions = ResourceTypeOptions.user
@@ -70,7 +70,7 @@ class ScheduleWriteSpec(ScheduleBaseSpec):
                     raise ValueError("User not found")
                 obj.facility = Facility.objects.get(external_id=self.facility)
 
-                resource , _ = SchedulableResource.objects.get_or_create(
+                resource, _ = SchedulableResource.objects.get_or_create(
                     facility=obj.facility,
                     resource_type=ResourceTypeOptions.user.value,
                     resource_id=user.id,
@@ -80,13 +80,12 @@ class ScheduleWriteSpec(ScheduleBaseSpec):
 
 
 class ScheduleReadSpec(ScheduleBaseSpec):
-
     resource: UUID4
     resource_type: ResourceTypeOptions = ResourceTypeOptions.user
     name: str
     valid_from: datetime.datetime
     valid_to: datetime.datetime
-    availabilities : list = []
+    availabilities: list = []
     created_by: UserSpec = {}
     updated_by: UserSpec = {}
 
@@ -100,4 +99,7 @@ class ScheduleReadSpec(ScheduleBaseSpec):
         if obj.updated_by:
             mapping["updated_by"] = UserSpec.serialize(obj.updated_by)
 
-        mapping["availabilities"] = [ AvailabilityBaseSpec.serialize(o) for o in Availability.objects.filter(schedule=obj) ]
+        mapping["availabilities"] = [
+            AvailabilityBaseSpec.serialize(o)
+            for o in Availability.objects.filter(schedule=obj)
+        ]

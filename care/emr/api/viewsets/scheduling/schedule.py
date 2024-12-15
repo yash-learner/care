@@ -4,13 +4,14 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from care.emr.api.viewsets.base import EMRModelViewSet
 from care.emr.models.scheduling.schedule import Schedule
-from care.emr.resources.scheduling.schedule.spec import ScheduleBaseSpec, AvailabilityBaseSpec, ScheduleReadSpec, \
-    ScheduleWriteSpec
+from care.emr.resources.scheduling.schedule.spec import (
+    ScheduleReadSpec,
+    ScheduleWriteSpec,
+)
 
 
 class ScheduleFilters(FilterSet):
     resource = UUIDFilter(field_name="resource")
-
 
 
 class ScheduleViewSet(EMRModelViewSet):
@@ -29,7 +30,6 @@ class ScheduleViewSet(EMRModelViewSet):
                 availability_obj.schedule = instance
                 availability_obj.save()
 
-
     def clean_create_data(self, request_data):
         request_data["facility"] = self.kwargs["facility_external_id"]
         return request_data
@@ -42,5 +42,3 @@ class ScheduleViewSet(EMRModelViewSet):
             .select_related("resource", "created_by", "updated_by")
             .order_by("-modified_date")
         )
-
-
