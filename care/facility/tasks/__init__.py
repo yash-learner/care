@@ -7,13 +7,6 @@ from care.facility.tasks.cleanup import delete_old_notifications
 from care.facility.tasks.location_monitor import check_location_status
 from care.facility.tasks.plausible_stats import capture_goals
 from care.facility.tasks.redis_index import load_redis_index
-from care.facility.tasks.summarisation import (
-    summarize_district_patient,
-    summarize_facility_capacity,
-    summarize_patient,
-    summarize_tests,
-    summarize_triage,
-)
 
 
 @current_app.on_after_finalize.connect

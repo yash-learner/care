@@ -53,7 +53,6 @@ from care.facility.api.viewsets.inventory import (
 from care.facility.api.viewsets.notification import NotificationViewSet
 from care.facility.api.viewsets.patient import (
     FacilityDischargedPatientViewSet,
-    FacilityPatientStatsHistoryViewSet,
     PatientNotesEditViewSet,
     PatientNotesViewSet,
     PatientSearchViewSet,
@@ -156,11 +155,6 @@ facility_nested_router.register(
 )
 facility_nested_router.register(
     r"capacity", FacilityCapacityViewSet, basename="facility-capacity"
-)
-facility_nested_router.register(
-    r"patient_stats",
-    FacilityPatientStatsHistoryViewSet,
-    basename="facility-patient-stats",
 )
 facility_nested_router.register(
     r"inventory", FacilityInventoryLogViewSet, basename="facility-inventory"
