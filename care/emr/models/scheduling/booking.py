@@ -16,6 +16,7 @@ class TokenSlot(EMRBaseModel):
     start_datetime = models.DateTimeField(null=False, blank=False)
     end_datetime = models.DateTimeField(null=False, blank=False)
     allocated = models.IntegerField(null=False, blank=False, default=0)
+    # TODO propogate facility to this level or at the booking level to avoid joins
 
 
 class TokenBooking(EMRBaseModel):

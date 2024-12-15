@@ -10,7 +10,7 @@ from care.emr.models.scheduling.schedule import (
 from care.emr.resources.base import EMRResource
 from care.emr.resources.patient.otp_based_flow import PatientOTPWriteSpec
 from care.emr.resources.user.spec import UserSpec
-
+from enum import Enum
 
 class AvailabilityforTokenSpec(EMRResource):
     __model__ = Availability
@@ -39,11 +39,28 @@ class TokenSlotBaseSpec(EMRResource):
         }
 
 
-class TokenBookingReadSpec(EMRResource):
+class BookingStatusChoices(str , Enum):
+    proposed ="proposed"
+    pending ="pending"
+    booked ="booked"
+    arrived ="arrived"
+    fulfilled ="fulfilled"
+    cancelled ="cancelled"
+    noshow ="noshow"
+    entered_in_error="entered_in_error"
+    checked_in="checked_in"
+    waitlist="waitlist"
+
+class TokenBookingBaseSpec(EMRResource):
     __model__ = TokenBooking
     __exclude__ = ["token_slot", "patient"]
 
+class TokenBookingUpdateSpec(TokenBookingBaseSpec):
+    status : BookingStatusChoices
+
+class TokenBookingReadSpec(TokenBookingBaseSpec):
     id: UUID4 | None = None
+
     token_slot: TokenSlotBaseSpec
     patient: PatientOTPWriteSpec
     booked_on: datetime.datetime

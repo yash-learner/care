@@ -15,6 +15,7 @@ from care.emr.api.viewsets.organization import OrganizationViewSet
 from care.emr.api.viewsets.questionnaire import QuestionnaireViewSet
 from care.emr.api.viewsets.questionnaire_response import QuestionnaireResponseViewSet
 from care.emr.api.viewsets.scheduling import ScheduleViewSet, SlotViewSet
+from care.emr.api.viewsets.scheduling.booking import TokenBookingViewSet
 from care.emr.api.viewsets.units import UnitsView
 from care.emr.api.viewsets.valueset import ValueSetViewSet
 from care.facility.api.viewsets.ambulance import AmbulanceViewSet
@@ -252,6 +253,9 @@ facility_nested_router.register(
 facility_nested_router.register(r"schedule", ScheduleViewSet, basename="schedule")
 
 facility_nested_router.register(r"slots", SlotViewSet, basename="slot")
+
+facility_nested_router.register(r"appointments", TokenBookingViewSet, basename="appointments")
+
 
 router.register("asset", AssetViewSet, basename="asset")
 asset_nested_router = NestedSimpleRouter(router, r"asset", lookup="asset")
