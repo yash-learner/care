@@ -31,7 +31,7 @@ def emr_exception_handler(exc, context):
             status=404,
         )
     if isinstance(exc, RestFrameworkValidationError) and getattr(exc, "detail", None):
-        if type(exc.detail) == dict:
+        if type(exc.detail) is dict:  # noqa SIM102
             if "errors" in exc.detail:
                 return Response(exc.detail, status=400)
         return Response({"errors": [exc.detail]}, status=400)
@@ -53,7 +53,6 @@ class EMRQuestionnaireMixin:
 
 
 class EMRRetrieveMixin:
-
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         data = self.get_retrieve_pydantic_model().serialize(instance)

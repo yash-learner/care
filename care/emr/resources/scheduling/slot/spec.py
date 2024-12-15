@@ -84,14 +84,16 @@ class TokenBookingReadSpec(TokenBookingBaseSpec):
             exclude=["meta"]
         )
 
+
 class TokenBookingRetrieveSpec(TokenBookingReadSpec):
     id: UUID4 | None = None
 
-    resource : dict = {}
+    resource: dict = {}
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         super().perform_extra_serialization(mapping, obj)
         if obj.token_slot.resource.resource_type == "user":
-            mapping["resource"] = UserSpec.serialize(User.objects.get(id=obj.token_slot.resource.resource_id)).model_dump(exclude=["meta"])
-
+            mapping["resource"] = UserSpec.serialize(
+                User.objects.get(id=obj.token_slot.resource.resource_id)
+            ).model_dump(exclude=["meta"])

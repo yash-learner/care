@@ -19,7 +19,8 @@ from care.emr.resources.scheduling.schedule.spec import (
     SlotTypeOptions,
 )
 from care.emr.resources.scheduling.slot.spec import (
-    TokenSlotBaseSpec, TokenBookingRetrieveSpec,
+    TokenBookingRetrieveSpec,
+    TokenSlotBaseSpec,
 )
 from care.facility.models import PatientRegistration
 from care.users.models import User
@@ -87,10 +88,12 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
 
     @action(detail=False, methods=["POST"])
     def get_slots_for_day(self, request, *args, **kwargs):
-        return self.get_slots_for_day_handler(self.kwargs["facility_external_id"], request.data)
+        return self.get_slots_for_day_handler(
+            self.kwargs["facility_external_id"], request.data
+        )
 
     @classmethod
-    def get_slots_for_day_handler(cls,facility_external_id , request_data):
+    def get_slots_for_day_handler(cls, facility_external_id, request_data):
         facility = facility_external_id
         request_data = SlotsForDayRequestSpec(**request_data)
         user = User.objects.filter(external_id=request_data.resource).first()
@@ -169,9 +172,8 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
         # Get list of all slots, create if missed
         # Return slots
 
-
     @classmethod
-    def create_appointment_handler(cls , obj, request_data , user):
+    def create_appointment_handler(cls, obj, request_data, user):
         request_data = AppointmentBookingSpec(**request_data)
         patient = PatientRegistration.objects.filter(
             external_id=request_data.patient
@@ -187,4 +189,6 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
 
     @action(detail=True, methods=["POST"])
     def create_appointment(self, request, *args, **kwargs):
-        return self.create_appointment_handler(self.get_object() , request.data , request.user)
+        return self.create_appointment_handler(
+            self.get_object(), request.data, request.user
+        )
