@@ -8,6 +8,7 @@ from care.emr.resources.scheduling.schedule.spec import (
     ScheduleReadSpec,
     ScheduleWriteSpec,
 )
+from care.users.models import User
 
 
 class ScheduleFilters(FilterSet):
@@ -35,10 +36,18 @@ class ScheduleViewSet(EMRModelViewSet):
         return request_data
 
     def get_queryset(self):
-        return (
+        queryset = (
             super()
             .get_queryset()
             .filter(resource__facility__external_id=self.kwargs["facility_external_id"])
             .select_related("resource", "created_by", "updated_by")
             .order_by("-modified_date")
         )
+        if self.request.GET.get("resource") and self.request.GET.get("resource_type"):
+            if self.request.GET.get("resource_type") == "user":
+                user_obj = User.objects.filter(
+                    external_id=self.request.GET.get("resource")
+                ).first()
+                if user_obj:
+                    queryset = queryset.filter(resource__resource_id=user_obj.id)
+        return queryset
