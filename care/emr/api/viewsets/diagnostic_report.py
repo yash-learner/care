@@ -1,4 +1,8 @@
-from django_filters import FilterSet, UUIDFilter
+from datetime import UTC, datetime
+
+from django.db import models
+from django.db.models import Case, CharField, Value, When
+from django_filters import ChoiceFilter, FilterSet, OrderingFilter, UUIDFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework.decorators import action
@@ -18,9 +22,38 @@ from care.emr.resources.diagnostic_report.spec import (
 from care.emr.resources.observation.spec import Performer, PerformerType
 
 
+class PhaseChoices(models.TextChoices):
+    IN_PROCESS = "in_process", "In Process"
+    VERIFICATION_REQUIRED = "verification_required", "Verification Required"
+    REVIEW_REQUIRED = "review_required", "Review Required"
+    REVIEWED = "reviewed", "Reviewed"
+
+
 class DiagnosticReportFilters(FilterSet):
-    subject = UUIDFilter(field_name="subject__external_id")
-    encounter = UUIDFilter(field_name="encounter__external_id")
+    phase = ChoiceFilter(choices=PhaseChoices.choices, method="filter_phase")
+    status = ChoiceFilter(
+        choices=[(status.value, status.value) for status in StatusChoices]
+    )
+    specimen = UUIDFilter(field_name="specimen__external_id")
+    based_on = UUIDFilter(field_name="based_on__external_id")
+
+    ordering = OrderingFilter(
+        fields=(
+            ("created_date", "created_date"),
+            ("modified_date", "modified_date"),
+        )
+    )
+
+    def filter_phase(self, queryset, name, value):
+        return queryset.annotate(
+            phase=Case(
+                When(status=StatusChoices.final, then=Value("reviewed")),
+                When(status=StatusChoices.preliminary, then=Value("review_required")),
+                When(status=StatusChoices.partial, then=Value("verification_required")),
+                default=Value("in_process"),
+                output_field=CharField(),
+            )
+        ).filter(phase=value)
 
 
 @extend_schema_view(
@@ -32,6 +65,12 @@ class DiagnosticReportViewSet(EMRModelViewSet):
     pydantic_read_model = DiagnosticReportReadSpec
     filter_backends = [DjangoFilterBackend]
     filterset_class = DiagnosticReportFilters
+
+    def clean_create_data(self, request, *args, **kwargs):
+        clean_data = super().clean_create_data(request, *args, **kwargs)
+
+        clean_data["performer"] = request.user.external_id
+        return clean_data
 
     @extend_schema(
         request=DiagnosticReportObservationRequest,
@@ -84,6 +123,7 @@ class DiagnosticReportViewSet(EMRModelViewSet):
         else:
             report.status = StatusChoices.cancelled
 
+        report.issued = datetime.now(UTC)
         report.save()
 
         return Response(

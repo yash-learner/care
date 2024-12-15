@@ -1,4 +1,4 @@
-from django_filters import FilterSet, UUIDFilter
+from django_filters import FilterSet, OrderingFilter, UUIDFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, extend_schema_view
 
@@ -13,6 +13,13 @@ from care.emr.resources.service_request.spec import (
 class ServiceRequestFilters(FilterSet):
     subject = UUIDFilter(field_name="subject__external_id")
     encounter = UUIDFilter(field_name="encounter__external_id")
+
+    ordering = OrderingFilter(
+        fields=(
+            ("created_date", "created_date"),
+            ("modified_date", "modified_date"),
+        )
+    )
 
 
 @extend_schema_view(

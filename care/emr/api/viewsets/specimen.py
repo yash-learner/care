@@ -1,8 +1,8 @@
 from datetime import UTC, datetime
-from enum import Enum
 
+from django.db import models
 from django.db.models import Case, CharField, Q, Value, When
-from django_filters import CharFilter, FilterSet, UUIDFilter
+from django_filters import ChoiceFilter, FilterSet, OrderingFilter, UUIDFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import status
@@ -24,32 +24,65 @@ from care.emr.resources.specimen.spec import (
 )
 
 
-class FlowStatusChoices(str, Enum):
-    ordered = "ordered"
-    collected = "collected"
-    sent = "sent"
-    received = "received"
-    in_process = "in_process"
+class PhaseChoices(models.TextChoices):
+    ORDERED = "ordered", "Ordered"
+    COLLECTED = "collected", "Collected"
+    SENT = "sent", "Sent"
+    RECEIVED = "received", "Received"
+    IN_PROCESS = "in_process", "In Process"
 
 
 class SpecimenFilters(FilterSet):
     request = UUIDFilter(field_name="request__external_id")
     encounter = UUIDFilter(field_name="request__encounter__external_id")
-    flow_status = CharFilter(
-        method="filter_flow_status"
-    )  # TODO: make this a choice filter
+    phase = ChoiceFilter(choices=PhaseChoices.choices, method="filter_phase")
 
-    def filter_flow_status(self, queryset, name, value):
+    ordering = OrderingFilter(
+        fields=(
+            ("created_date", "created_date"),
+            ("modified_date", "modified_date"),
+        )
+    )
+
+    def filter_phase(self, queryset, name, value):
         return queryset.annotate(
-            flow_status=Case(
-                When(processing__gt=[], then=Value("in_process")),
-                When(received_at__isnull=False, then=Value("received")),
-                When(dispatched_at__isnull=False, then=Value("sent")),
-                When(collected_at__isnull=False, then=Value("collected")),
-                default=Value("ordered"),
+            phase=Case(
+                When(
+                    Q(processing__gt=[])
+                    & (
+                        Q(diagnostic_report__isnull=True)
+                        | Q(diagnostic_report__status__in=["registered", "partial"])
+                    ),
+                    then=Value("in_process"),
+                ),
+                When(
+                    diagnostic_report__isnull=True,
+                    received_at__isnull=False,
+                    then=Value("received"),
+                ),
+                When(
+                    diagnostic_report__isnull=True,
+                    received_at__isnull=True,
+                    dispatched_at__isnull=False,
+                    then=Value("sent"),
+                ),
+                When(
+                    diagnostic_report__isnull=True,
+                    received_at__isnull=True,
+                    dispatched_at__isnull=True,
+                    collected_at__isnull=False,
+                    then=Value("collected"),
+                ),
+                When(
+                    diagnostic_report__isnull=True,
+                    received_at__isnull=True,
+                    dispatched_at__isnull=True,
+                    collected_at__isnull=True,
+                    then=Value("ordered"),
+                ),
                 output_field=CharField(),
             )
-        ).filter(flow_status=value)
+        ).filter(phase=value)
 
 
 @extend_schema_view(
