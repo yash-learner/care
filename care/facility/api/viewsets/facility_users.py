@@ -32,6 +32,8 @@ class FacilityUserViewSet(GenericViewSet, mixins.ListModelMixin):
         filters.DjangoFilterBackend,
         drf_filters.SearchFilter,
     ]
+    authentication_classes = []
+    permission_classes = []
     search_fields = ["first_name", "last_name", "username"]
 
     def get_queryset(self):

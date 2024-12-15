@@ -53,9 +53,10 @@ class EMRQuestionnaireMixin:
 
 
 class EMRRetrieveMixin:
+
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        data = self.get_read_pydantic_model().serialize(instance)
+        data = self.get_retrieve_pydantic_model().serialize(instance)
         return Response(data.model_dump(exclude=["meta"]))
 
 
@@ -218,6 +219,7 @@ class EMRBaseViewSet(GenericViewSet):
     pydantic_model: EMRResource = None
     pydantic_read_model: EMRResource = None
     pydantic_update_model: EMRResource = None
+    pydantic_retrieve_model: EMRResource = None
     database_model: EMRBaseModel = None
     lookup_field = "external_id"
 
@@ -226,6 +228,11 @@ class EMRBaseViewSet(GenericViewSet):
 
     def get_queryset(self):
         return self.filter_queryset(self.database_model.objects.all())
+
+    def get_retrieve_pydantic_model(self):
+        if self.pydantic_retrieve_model:
+            return self.pydantic_retrieve_model
+        return self.get_read_pydantic_model()
 
     def get_read_pydantic_model(self):
         if self.pydantic_read_model:

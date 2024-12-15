@@ -19,8 +19,7 @@ from care.emr.resources.scheduling.schedule.spec import (
     SlotTypeOptions,
 )
 from care.emr.resources.scheduling.slot.spec import (
-    TokenBookingReadSpec,
-    TokenSlotBaseSpec,
+    TokenSlotBaseSpec, TokenBookingRetrieveSpec,
 )
 from care.facility.models import PatientRegistration
 from care.users.models import User
@@ -84,6 +83,7 @@ def lock_create_appointment(token_slot, patient, created_by, reason_for_visit):
 class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
     database_model = TokenSlot
     pydantic_read_model = TokenSlotBaseSpec
+    pydantic_retrieve_model = TokenBookingRetrieveSpec
 
     @action(detail=False, methods=["POST"])
     def get_slots_for_day(self, request, *args, **kwargs):
@@ -182,7 +182,7 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
             obj, patient, user, request_data.reason_for_visit
         )
         return Response(
-            TokenBookingReadSpec.serialize(appointment).model_dump(exclude=["meta"])
+            TokenBookingRetrieveSpec.serialize(appointment).model_dump(exclude=["meta"])
         )
 
     @action(detail=True, methods=["POST"])
