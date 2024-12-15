@@ -1,5 +1,5 @@
 from django.db import transaction
-from django_filters import FilterSet, UUIDFilter
+from django_filters import FilterSet
 from django_filters.rest_framework import DjangoFilterBackend
 
 from care.emr.api.viewsets.base import EMRModelViewSet
@@ -13,6 +13,7 @@ from care.users.models import User
 
 class ScheduleFilters(FilterSet):
     pass
+
 
 class ScheduleViewSet(EMRModelViewSet):
     database_model = Schedule
@@ -42,11 +43,14 @@ class ScheduleViewSet(EMRModelViewSet):
             .select_related("resource", "created_by", "updated_by")
             .order_by("-modified_date")
         )
-        if self.request.GET.get("resource") and self.request.GET.get("resource_type"):
-            if self.request.GET.get("resource_type") == "user":
-                user_obj = User.objects.filter(
-                    external_id=self.request.GET.get("resource")
-                ).first()
-                if user_obj:
-                    queryset = queryset.filter(resource__resource_id=user_obj.id)
+        if (
+            self.request.GET.get("resource")
+            and self.request.GET.get("resource_type")
+            and self.request.GET.get("resource_type") == "user"
+        ):
+            user_obj = User.objects.filter(
+                external_id=self.request.GET.get("resource")
+            ).first()
+            if user_obj:
+                queryset = queryset.filter(resource__resource_id=user_obj.id)
         return queryset
