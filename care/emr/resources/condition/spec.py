@@ -97,6 +97,7 @@ class ConditionSpecRead(BaseConditionSpec):
     verification_status: str
     category: str
     criticality: str
+    severity: str
     code: Coding
     encounter: UUID4
     onset: ConditionOnSetSpec = dict
