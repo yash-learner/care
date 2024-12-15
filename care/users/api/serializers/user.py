@@ -279,6 +279,8 @@ class UserCreateSerializer(SignUpSerializer):
 
 
 class UserSerializer(SignUpSerializer):
+    external_id = serializers.UUIDField(read_only=True)
+
     user_type = ChoiceField(choices=User.TYPE_CHOICES, read_only=True)
     created_by = serializers.CharField(source="created_by_user", read_only=True)
     is_superuser = serializers.BooleanField(read_only=True)
@@ -305,6 +307,7 @@ class UserSerializer(SignUpSerializer):
         model = User
         fields = (
             "id",
+            "external_id",
             "username",
             "first_name",
             "last_name",
@@ -378,11 +381,13 @@ class UserSerializer(SignUpSerializer):
 class UserBaseMinimumSerializer(serializers.ModelSerializer):
     user_type = ChoiceField(choices=User.TYPE_CHOICES, read_only=True)
     read_profile_picture_url = serializers.URLField(read_only=True)
+    external_id = serializers.UUIDField(read_only=True)
 
     class Meta:
         model = User
         fields = (
             "id",
+            "external_id",
             "first_name",
             "username",
             "email",
@@ -400,11 +405,13 @@ class UserAssignedSerializer(serializers.ModelSerializer):
         read_only=True,
     )
     skills = UserSkillSerializer(many=True, read_only=True)
+    external_id = serializers.UUIDField(read_only=True)
 
     class Meta:
         model = User
         fields = (
             "id",
+            "external_id",
             "first_name",
             "username",
             "email",
@@ -434,11 +441,13 @@ class UserListSerializer(serializers.ModelSerializer):
     )
     home_facility = ExternalIdSerializerField(queryset=Facility.objects.all())
     read_profile_picture_url = serializers.URLField(read_only=True)
+    external_id = serializers.UUIDField(read_only=True)
 
     class Meta:
         model = User
         fields = (
             "id",
+            "external_id",
             "first_name",
             "last_name",
             "username",

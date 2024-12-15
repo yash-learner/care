@@ -4,7 +4,10 @@ from care.emr.resources.patient.otp_based_flow import (
     PatientOTPWriteSpec,
 )
 from care.facility.models import PatientRegistration
-from config.patient_otp_authentication import JWTTokenPatientAuthentication, OTPAuthenticatedPermission
+from config.patient_otp_authentication import (
+    JWTTokenPatientAuthentication,
+    OTPAuthenticatedPermission,
+)
 
 
 class PatientOTPView(EMRCreateMixin, EMRListMixin, EMRBaseViewSet):
