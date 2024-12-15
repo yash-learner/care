@@ -59,7 +59,7 @@ class OTPLoginView(EMRBaseViewSet):
         elif settings.DEBUG:
             import logging
 
-            logging.debug(f"{otp_obj.otp} {otp_obj.phone_number}")  # noqa: G004
+            logging.info(f"{otp_obj.otp} {otp_obj.phone_number}")  # noqa G004
         otp_obj.save()
         return Response({"otp": "generated"})
 
@@ -72,7 +72,7 @@ class OTPLoginView(EMRBaseViewSet):
         if not otp_object:
             raise ValidationError({"otp": "Invalid OTP"})
 
-        # otp_object.is_used = True # TODO UNCOMMENT THIS !!  # noqa: ERA001
+        # otp_object.is_used = True # TODO UNCOMMENT THIS !! # noqa ERA001
         otp_object.save()
 
         token = PatientToken()

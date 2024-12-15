@@ -138,10 +138,6 @@ router.register("ambulance", AmbulanceViewSet, basename="ambulance")
 
 router.register("icd", ICDViewSet, basename="icd")
 
-# router.register("otp/token", PatientMobileOTPViewSet, basename="otp-token")
-
-# router.register("otp/patient", OTPPatientDataViewSet, basename="otp-patient")
-
 router.register("otp", OTPLoginView, basename="otp-login")
 
 router.register("otp/patient", PatientOTPView, basename="otp-patient")
