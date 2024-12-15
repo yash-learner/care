@@ -1,5 +1,7 @@
 from django_filters import CharFilter, FilterSet
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import (
     EMRBaseViewSet,
@@ -8,11 +10,13 @@ from care.emr.api.viewsets.base import (
     EMRRetrieveMixin,
     EMRUpdateMixin,
 )
-from care.emr.models import TokenBooking
+from care.emr.models import TokenBooking, SchedulableResource
 from care.emr.resources.scheduling.slot.spec import (
     TokenBookingReadSpec,
     TokenBookingUpdateSpec,
 )
+from care.emr.resources.user.spec import UserSpec
+from care.facility.models import FacilityUser, Facility
 
 
 class TokenBookingFilters(FilterSet):
@@ -48,3 +52,10 @@ class TokenBookingViewSet(
             )
             .order_by("-modified_date")
         )
+
+    @action(detail=False, methods=["GET"])
+    def available_doctors(self , request, *args, **kwargs):
+        facility = Facility.objects.get(external_id=self.kwargs["facility_external_id"])
+        facility_users = FacilityUser.objects.filter( user_id__in=SchedulableResource.objects.filter(facility=facility).values("resource_id"), facility=facility )
+
+        return Response({"users": [UserSpec.serialize(facility_user.user).model_dump(exclude=["meta"]) for facility_user in facility_users]})
