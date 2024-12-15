@@ -728,10 +728,6 @@ class FacilityDischargedPatientViewSet(
         )
 
 
-class FacilityPatientStatsHistoryFilterSet(filters.FilterSet):
-    entry_date = filters.DateFromToRangeFilter(field_name="entry_date")
-
-
 class PatientSearchSetPagination(PageNumberPagination):
     page_size = 200
 
