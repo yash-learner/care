@@ -1,18 +1,16 @@
 import datetime
-from enum import Enum
 
-from pydantic import UUID4, Field
+from pydantic import UUID4
 
+from care.emr.models import TokenBooking
 from care.emr.models.scheduling.booking import TokenSlot
 from care.emr.models.scheduling.schedule import (
     Availability,
-    SchedulableResource,
-    Schedule,
 )
 from care.emr.resources.base import EMRResource
+from care.emr.resources.patient.otp_based_flow import PatientOTPWriteSpec
 from care.emr.resources.user.spec import UserSpec
-from care.facility.models import Facility
-from care.users.models import User
+
 
 class AvailabilityforTokenSpec(EMRResource):
     __model__ = Availability
@@ -24,7 +22,7 @@ class AvailabilityforTokenSpec(EMRResource):
 
 class TokenSlotBaseSpec(EMRResource):
     __model__ = TokenSlot
-    __exclude__ = ["resource" , "availability"]
+    __exclude__ = ["resource", "availability"]
 
     id: UUID4 | None = None
     availability: UUID4
@@ -32,9 +30,33 @@ class TokenSlotBaseSpec(EMRResource):
     end_datetime: datetime.datetime
     allocated: int
 
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        mapping["id"] = obj.external_id
+        mapping["availability"] = {
+            "name": obj.availability.name,
+            "tokens_per_slot": obj.availability.tokens_per_slot,
+        }
+
+
+class TokenBookingReadSpec(EMRResource):
+    __model__ = TokenBooking
+    __exclude__ = ["token_slot", "patient"]
+
+    id: UUID4 | None = None
+    token_slot: TokenSlotBaseSpec
+    patient: PatientOTPWriteSpec
+    booked_on: datetime.datetime
+    booked_by: UserSpec
+    status: str
+    reason_for_visit: str
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
-        mapping["availability"] = {"name" : obj.availability.name , "tokens_per_slot" : obj.availability.tokens_per_slot}
-
+        mapping["token_slot"] = TokenSlotBaseSpec.serialize(obj.token_slot).model_dump(
+            exclude=["meta"]
+        )
+        mapping["patient"] = PatientOTPWriteSpec.serialize(obj.patient).model_dump(
+            exclude=["meta"]
+        )

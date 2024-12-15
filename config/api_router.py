@@ -14,8 +14,7 @@ from care.emr.api.viewsets.observation import ObservationViewSet
 from care.emr.api.viewsets.organization import OrganizationViewSet
 from care.emr.api.viewsets.questionnaire import QuestionnaireViewSet
 from care.emr.api.viewsets.questionnaire_response import QuestionnaireResponseViewSet
-from care.emr.api.viewsets.scheduling import SlotViewSet
-from care.emr.api.viewsets.scheduling import ScheduleViewSet
+from care.emr.api.viewsets.scheduling import ScheduleViewSet, SlotViewSet
 from care.emr.api.viewsets.units import UnitsView
 from care.emr.api.viewsets.valueset import ValueSetViewSet
 from care.facility.api.viewsets.ambulance import AmbulanceViewSet

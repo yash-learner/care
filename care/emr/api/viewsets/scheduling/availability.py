@@ -1,28 +1,41 @@
 import datetime
-import logging
 
+from dateutil.parser import parse
+from django.db import transaction
+from django.utils import timezone
 from pydantic import UUID4, BaseModel
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from care.emr.api.viewsets.base import EMRModelReadOnlyViewSet
+from care.emr.api.viewsets.base import (
+    EMRBaseViewSet,
+    EMRRetrieveMixin,
+)
+from care.emr.models import TokenBooking
 from care.emr.models.scheduling.booking import TokenSlot
 from care.emr.models.scheduling.schedule import Availability, SchedulableResource
 from care.emr.resources.scheduling.schedule.spec import (
     SlotTypeOptions,
 )
-from care.emr.resources.scheduling.slot.spec import TokenSlotBaseSpec
+from care.emr.resources.scheduling.slot.spec import (
+    TokenBookingReadSpec,
+    TokenSlotBaseSpec,
+)
+from care.facility.models import PatientRegistration
 from care.users.models import User
-from dateutil.parser import parse
+from care.utils.lock import Lock
 
-from django.utils import timezone
 
 class SlotsForDayRequestSpec(BaseModel):
     resource: UUID4
     resource_type: str = "user"
     day: datetime.date
 
+
+class AppointmentBookingSpec(BaseModel):
+    patient: UUID4
+    reason_for_visit: str
 
 
 def convert_availability_to_slots(availabilities):
@@ -35,21 +48,43 @@ def convert_availability_to_slots(availabilities):
         current_time = start_time
         i = 0
         while current_time < end_time:
-            i+=1
+            i += 1
             if i == 30:
                 # Failsafe to prevent infinite loop
                 break
-            slots[f"{current_time.time()}-{(current_time + datetime.timedelta(minutes=slot_size_in_minutes)).time()}"] = {
-                    "start_time": current_time.time(),
-                    "end_time": (current_time + datetime.timedelta(minutes=slot_size_in_minutes)).time(),
-                    "availability_id": availability_id,
-                }
+            slots[
+                f"{current_time.time()}-{(current_time + datetime.timedelta(minutes=slot_size_in_minutes)).time()}"
+            ] = {
+                "start_time": current_time.time(),
+                "end_time": (
+                    current_time + datetime.timedelta(minutes=slot_size_in_minutes)
+                ).time(),
+                "availability_id": availability_id,
+            }
 
             current_time += datetime.timedelta(minutes=slot_size_in_minutes)
     return slots
 
 
-class SlotViewSet(EMRModelReadOnlyViewSet):
+def lock_create_appointment(token_slot, patient, created_by, reason_for_visit):
+    with Lock(f"booking:resource:{token_slot.resource.id}"), transaction.atomic():
+        if token_slot.allocated >= token_slot.availability.tokens_per_slot:
+            raise ValidationError("Slot is already full")
+        token_slot.allocated += 1
+        token_slot.save()
+        return TokenBooking.objects.create(
+            token_slot=token_slot,
+            patient=patient,
+            booked_by=created_by,
+            reason_for_visit=reason_for_visit,
+            status="booked",
+        )
+
+
+class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
+    database_model = TokenSlot
+    pydantic_read_model = TokenSlotBaseSpec
+
     @action(detail=False, methods=["POST"])
     def get_slots_for_day(self, request, *args, **kwargs):
         facility = self.kwargs["facility_external_id"]
@@ -84,16 +119,16 @@ class SlotViewSet(EMRModelReadOnlyViewSet):
                         }
                     )
         # Remove anything that has an availability exception
-        logging.info(calculated_dow_availabilities)
         # Generate all slots already created for that day
         slots = convert_availability_to_slots(calculated_dow_availabilities)
         # Fetch all existing slots in that day
-        created_slots = TokenSlot.objects.filter(start_datetime__date=request_data.day, end_datetime__date=request_data.day , resource=schedulable_resource_obj)
-        logging.info(slots)
+        created_slots = TokenSlot.objects.filter(
+            start_datetime__date=request_data.day,
+            end_datetime__date=request_data.day,
+            resource=schedulable_resource_obj,
+        )
         for slot in created_slots:
-            logging.info(slot.start_datetime)
             slot_key = f"{slot.start_datetime.time()}-{slot.end_datetime.time()}"
-            logging.info(slot_key)
             if slot_key in slots:
                 if slots[slot_key]["availability_id"] == slot.availability.id:
                     slots.pop(slot_key)
@@ -103,16 +138,42 @@ class SlotViewSet(EMRModelReadOnlyViewSet):
             slot = slots[_slot]
             a = TokenSlot.objects.create(
                 resource=schedulable_resource_obj,
-                start_datetime=datetime.datetime.combine(request_data.day, slot["start_time"] ,tzinfo=timezone.now().tzinfo),
-                end_datetime=datetime.datetime.combine(request_data.day, slot["end_time"] ,tzinfo=timezone.now().tzinfo),
+                start_datetime=datetime.datetime.combine(
+                    request_data.day, slot["start_time"], tzinfo=timezone.now().tzinfo
+                ),
+                end_datetime=datetime.datetime.combine(
+                    request_data.day, slot["end_time"], tzinfo=timezone.now().tzinfo
+                ),
                 availability_id=slot["availability_id"],
             )
-            logging.info(slot["start_time"])
-            logging.info(slot["end_time"])
-            logging.info(a.start_datetime)
-            logging.info(a.end_datetime)
         # Compare and figure out what needs to be created
-        return Response({"results" : [ TokenSlotBaseSpec.serialize(slot).model_dump(exclude=["meta"]) for slot in TokenSlot.objects.filter(start_datetime__date=request_data.day, end_datetime__date=request_data.day , resource=schedulable_resource_obj).select_related("availability") ]})
+        return Response(
+            {
+                "results": [
+                    TokenSlotBaseSpec.serialize(slot).model_dump(exclude=["meta"])
+                    for slot in TokenSlot.objects.filter(
+                        start_datetime__date=request_data.day,
+                        end_datetime__date=request_data.day,
+                        resource=schedulable_resource_obj,
+                    ).select_related("availability")
+                ]
+            }
+        )
         # Find all existing Slot objects for that period
         # Get list of all slots, create if missed
         # Return slots
+
+    @action(detail=True, methods=["POST"])
+    def create_appointment(self, request, *args, **kwargs):
+        request_data = AppointmentBookingSpec(**request.data)
+        patient = PatientRegistration.objects.filter(
+            external_id=request_data.patient
+        ).first()
+        if not patient:
+            raise ValidationError({"Patient not found"})
+        appointment = lock_create_appointment(
+            self.get_object(), patient, request.user, request_data.reason_for_visit
+        )
+        return Response(
+            TokenBookingReadSpec.serialize(appointment).model_dump(exclude=["meta"])
+        )
