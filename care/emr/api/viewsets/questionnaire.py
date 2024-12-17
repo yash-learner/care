@@ -13,6 +13,14 @@ from care.emr.resources.questionnaire_response.spec import (
     QuestionnaireResponseReadSpec,
     QuestionnaireSubmitRequest,
 )
+from django_filters import rest_framework as filters
+
+from care.emr.resources.questionnaire_response.spec import QuestionnaireResponseReadSpec
+
+
+class QuestionnaireFilter(filters.FilterSet):
+    title = filters.CharFilter(field_name="title", lookup_expr="icontains")
+    subject_type = filters.CharFilter(field_name="subject_type", lookup_expr="iexact")
 
 
 class QuestionnaireViewSet(EMRModelViewSet):
@@ -21,6 +29,8 @@ class QuestionnaireViewSet(EMRModelViewSet):
     pydantic_read_model = QuestionnaireReadSpec
     lookup_field = "slug"
     CREATE_QUESTIONNAIRE_RESPONSE = False
+    filterset_class = QuestionnaireFilter
+    filter_backends = [filters.DjangoFilterBackend]
 
     def get_queryset(self):
         queryset = super().get_queryset()
