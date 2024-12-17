@@ -251,6 +251,8 @@ class User(AbstractUser):
 
     REVERSE_TYPE_MAP = reverse_choices(TYPE_CHOICES)
 
+    REVERSE_MAPPING = {value : name for name , value in TYPE_VALUE_MAP.items()}
+
     user_type = models.IntegerField(choices=TYPE_CHOICES, blank=False)
     created_by = models.ForeignKey(
         "self",

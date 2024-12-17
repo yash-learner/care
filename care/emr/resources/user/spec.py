@@ -12,3 +12,7 @@ class UserSpec(EMRResource):
     user_type: str
     last_login: str
     read_profile_picture_url: str
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        mapping["user_type"] = User.REVERSE_MAPPING[obj.user_type]
