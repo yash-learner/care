@@ -344,8 +344,8 @@ class PatientConsultationSerializer(serializers.ModelSerializer):
         else:
             raise ValidationError({"route_to_facility": "This field is required"})
 
-        create_diagnosis = validated_data.pop("create_diagnoses")
-        create_symptoms = validated_data.pop("create_symptoms")
+        create_diagnosis = validated_data.pop("create_diagnoses", [])
+        create_symptoms = validated_data.pop("create_symptoms" , [])
 
         action = validated_data.pop("action", -1)
         review_interval = validated_data.get("review_interval", -1)
@@ -403,32 +403,32 @@ class PatientConsultationSerializer(serializers.ModelSerializer):
                 > consultation.encounter_date
             ):
                 consultation.is_readmission = True
-
-            ConsultationDiagnosis.objects.bulk_create(
-                [
-                    ConsultationDiagnosis(
+            if create_diagnosis:
+                ConsultationDiagnosis.objects.bulk_create(
+                    [
+                        ConsultationDiagnosis(
+                            consultation=consultation,
+                            diagnosis_id=obj["diagnosis"].id,
+                            is_principal=obj["is_principal"],
+                            verification_status=obj["verification_status"],
+                            created_by=user,
+                        )
+                        for obj in create_diagnosis
+                    ]
+                )
+            if create_symptoms:
+                EncounterSymptom.objects.bulk_create(
+                    EncounterSymptom(
                         consultation=consultation,
-                        diagnosis_id=obj["diagnosis"].id,
-                        is_principal=obj["is_principal"],
-                        verification_status=obj["verification_status"],
+                        symptom=obj.get("symptom"),
+                        onset_date=obj.get("onset_date"),
+                        cure_date=obj.get("cure_date"),
+                        clinical_impression_status=obj.get("clinical_impression_status"),
+                        other_symptom=obj.get("other_symptom") or "",
                         created_by=user,
                     )
-                    for obj in create_diagnosis
-                ]
-            )
-
-            EncounterSymptom.objects.bulk_create(
-                EncounterSymptom(
-                    consultation=consultation,
-                    symptom=obj.get("symptom"),
-                    onset_date=obj.get("onset_date"),
-                    cure_date=obj.get("cure_date"),
-                    clinical_impression_status=obj.get("clinical_impression_status"),
-                    other_symptom=obj.get("other_symptom") or "",
-                    created_by=user,
+                    for obj in create_symptoms
                 )
-                for obj in create_symptoms
-            )
 
             if bed and consultation.suggestion == SuggestionChoices.A:
                 consultation_bed = ConsultationBed(
