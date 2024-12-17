@@ -3,12 +3,15 @@ from django_filters import rest_framework as filters
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import filters as drf_filters
 from rest_framework import mixins
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from care.facility.models.facility import Facility
 from care.users.api.serializers.user import UserAssignedSerializer
 from care.users.models import User, UserSkill
+from care.users.api.serializers.user import UserBaseMinimumSerializer
 
 
 class UserFilter(filters.FilterSet):
@@ -24,7 +27,7 @@ class UserFilter(filters.FilterSet):
 
 
 @extend_schema_view(list=extend_schema(tags=["facility", "users"]))
-class FacilityUserViewSet(GenericViewSet, mixins.ListModelMixin):
+class FacilityUserViewSet(GenericViewSet,mixins.RetrieveModelMixin, mixins.ListModelMixin):
     serializer_class = UserAssignedSerializer
     filterset_class = UserFilter
     queryset = User.objects.all()
@@ -35,6 +38,7 @@ class FacilityUserViewSet(GenericViewSet, mixins.ListModelMixin):
     authentication_classes = []
     permission_classes = []
     search_fields = ["first_name", "last_name", "username"]
+    lookup_field = "external_id"
 
     def get_queryset(self):
         try:
