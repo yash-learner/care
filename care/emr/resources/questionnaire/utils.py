@@ -260,7 +260,7 @@ def handle_response(questionnaire_obj: Questionnaire, results, user):
     ).first()
     if not encounter:
         raise ValidationError(
-            {"errors": [{"type": "object_not_found", "msg": "Encounter not found"}]}
+            {"type": "object_not_found", "msg": "Encounter not found"}
         )
 
     questionnaire_mapping = {}
@@ -268,6 +268,10 @@ def handle_response(questionnaire_obj: Questionnaire, results, user):
     errors = []
     for result in results.results:
         responses[str(result.question_id)] = result
+    if not responses:
+        raise ValidationError(
+            {"type": "questionnaire_empty", "msg": "Empty Questionnaire cannot be submitted"}
+        )
     for question in questionnaire_obj.questions:
         validate_question_result(
             question,
