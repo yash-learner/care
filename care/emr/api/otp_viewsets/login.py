@@ -49,13 +49,17 @@ class OTPLoginView(EMRBaseViewSet):
         random_otp = "45612"  # rand_pass(settings.OTP_LENGTH)
         otp_obj = PatientMobileOTP(phone_number=data.phone_number, otp=random_otp)
         if settings.USE_SMS:
-            send_sms(
-                otp_obj.phone_number,
-                (
-                    f"Open Healthcare Network Patient Management System Login, OTP is {otp_obj.otp} . "
-                    "Please do not share this Confidential Login Token with anyone else"
-                ),
-            )
+            try:
+                send_sms(
+                    otp_obj.phone_number,
+                    (
+                        f"Open Healthcare Network Patient Management System Login, OTP is {otp_obj.otp} . "
+                        "Please do not share this Confidential Login Token with anyone else"
+                    ),
+                )
+            except Exception as e:
+                import logging
+                logging.error(e)
         elif settings.DEBUG:
             import logging
 
