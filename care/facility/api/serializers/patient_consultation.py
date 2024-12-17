@@ -664,11 +664,11 @@ class PatientConsultationSerializer(serializers.ModelSerializer):
                     {"review_interval": ["This field value is must be greater than 0."]}
                 )
 
-        if not self.instance and "create_diagnoses" not in validated:
-            raise ValidationError({"create_diagnoses": ["This field is required."]})
+        # if not self.instance and "create_diagnoses" not in validated:
+        #     raise ValidationError({"create_diagnoses": ["This field is required."]})
 
-        if not self.instance and "create_symptoms" not in validated:
-            raise ValidationError({"create_symptoms": ["This field is required."]})
+        # if not self.instance and "create_symptoms" not in validated:
+        #     raise ValidationError({"create_symptoms": ["This field is required."]})
 
         return validated
 
