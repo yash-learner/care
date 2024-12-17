@@ -26,7 +26,8 @@ class QuestionnaireSubmitResult(BaseModel):
 
 class QuestionnaireSubmitRequest(BaseModel):
     resource_id: UUID4
-    encounter: UUID4
+    encounter: UUID4 | None = None
+    patient:UUID4
     results: list[QuestionnaireSubmitResult]
 
 

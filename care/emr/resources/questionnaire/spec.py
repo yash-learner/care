@@ -68,7 +68,7 @@ class QuestionnaireStatus(str, Enum):
 
 class SubjectType(str, Enum):
     patient = "patient"
-
+    encounter = "encounter"
 
 class QuestionnaireBaseSpec(EMRResource):
     __model__ = Questionnaire

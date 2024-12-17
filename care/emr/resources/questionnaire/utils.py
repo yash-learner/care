@@ -10,6 +10,7 @@ from care.emr.models.questionnaire import Questionnaire, QuestionnaireResponse
 from care.emr.registries.care_valueset.care_valueset import validate_valueset
 from care.emr.resources.observation.spec import ObservationSpec, ObservationStatus
 from care.emr.resources.questionnaire.spec import QuestionType
+from care.facility.models import PatientRegistration
 from care.facility.models.patient_consultation import PatientConsultation
 
 
@@ -255,12 +256,23 @@ def handle_response(questionnaire_obj: Questionnaire, results, user):
     """
     # Construct questionnaire response
 
-    encounter = PatientConsultation.objects.filter(
-        external_id=results.encounter
+    if questionnaire_obj.subject_type == "patient":
+        encounter = None
+    else:
+        encounter = PatientConsultation.objects.filter(
+            external_id=results.encounter
+        ).first()
+        if not encounter:
+            raise ValidationError(
+                {"type": "object_not_found", "msg": "Encounter not found"}
+            )
+
+    patient = PatientRegistration.objects.filter(
+        external_id=results.patient
     ).first()
-    if not encounter:
+    if not patient:
         raise ValidationError(
-            {"type": "object_not_found", "msg": "Encounter not found"}
+            {"type": "object_not_found", "msg": "Patient not found"}
         )
 
     questionnaire_mapping = {}
@@ -304,22 +316,22 @@ def handle_response(questionnaire_obj: Questionnaire, results, user):
         questionnaire=questionnaire_obj,
         subject_id=results.resource_id,
         encounter=encounter,
-        patient=encounter.patient,
+        patient=patient,
         responses=json_results["results"],
         created_by=user,
         updated_by=user,
     )
     # Serialize and return questionnaire response
+    if encounter:
+        bulk = []
+        for observation in observations_objects:
+            temp = observation.de_serialize()
+            temp.questionnaire_response = questionnaire_response
+            temp.subject_id = results.resource_id
+            temp.patient = patient
+            temp.encounter = encounter
+            bulk.append(temp)
 
-    bulk = []
-    for observation in observations_objects:
-        temp = observation.de_serialize()
-        temp.questionnaire_response = questionnaire_response
-        temp.subject_id = results.resource_id
-        temp.patient = encounter.patient
-        temp.encounter = encounter
-        bulk.append(temp)
-
-    Observation.objects.bulk_create(bulk)
+        Observation.objects.bulk_create(bulk)
 
     return questionnaire_response
