@@ -38,7 +38,7 @@ class QuestionnaireResponseReadSpec(EMRResource):
     questionnaire: QuestionnaireReadSpec
     subject_id: str
     responses: list
-    encounter: str
+    encounter: str | None = None
     structured_responses: dict
     structured_response_type: str
     created_by: UserSpec = dict
@@ -51,7 +51,10 @@ class QuestionnaireResponseReadSpec(EMRResource):
             mapping["questionnaire"] = QuestionnaireReadSpec.serialize(
                 obj.questionnaire
             )
-        mapping["encounter"] = obj.encounter.external_id
+        if obj.encounter:
+                mapping["encounter"] = obj.encounter.external_id
+        else:
+            mapping["encounter"] = None
         if obj.created_by:
             mapping["created_by"] = UserSpec.serialize(obj.created_by)
         if obj.updated_by:
