@@ -1,4 +1,4 @@
-from django_filters import CharFilter, FilterSet
+from django_filters import CharFilter, FilterSet, UUIDFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -22,7 +22,7 @@ from care.facility.models import Facility, FacilityUser
 
 class TokenBookingFilters(FilterSet):
     status = CharFilter(field_name="status")
-
+    patient = UUIDFilter(field_name="patient__external_id")
 
 class TokenBookingViewSet(
     EMRRetrieveMixin, EMRUpdateMixin, EMRListMixin, EMRDeleteMixin, EMRBaseViewSet
