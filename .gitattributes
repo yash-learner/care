@@ -1,3 +1,2 @@
 * text=auto
-scripts/* text eol=lf
-docker/minio/* text eol=lf
+*.sh text eol=lf 
