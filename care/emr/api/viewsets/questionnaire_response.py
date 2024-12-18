@@ -7,7 +7,9 @@ from care.emr.resources.questionnaire_response.spec import QuestionnaireResponse
 
 class QuestionnaireResponseFilters(filters.FilterSet):
     encounter = filters.CharFilter(field_name="encounter__external_id")
-
+    subject_type = filters.CharFilter(field_name="questionnaire__subject_type")
+    questionnaire = filters.UUIDFilter(field_name="questionnaire__external_id")
+    questionnaire_slug = filters.CharFilter(field_name="questionnaire__slug")
 
 class QuestionnaireResponseViewSet(EMRModelReadOnlyViewSet):
     database_model = QuestionnaireResponse
