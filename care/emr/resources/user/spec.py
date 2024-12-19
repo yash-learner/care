@@ -14,6 +14,7 @@ class UserSpec(EMRResource):
     read_profile_picture_url: str
 
     @classmethod
-    def perform_extra_serialization(cls, mapping, obj):
+    def perform_extra_serialization(cls, mapping, obj : User):
         mapping["user_type"] = User.REVERSE_MAPPING[obj.user_type]
         mapping["id"] = str(obj.external_id)
+        mapping["profile_picture_url"] = obj.read_profile_picture_url()
