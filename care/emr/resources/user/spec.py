@@ -4,7 +4,7 @@ from care.users.models import User
 
 class UserSpec(EMRResource):
     __model__ = User
-    id: int
+    id: str
     first_name: str
     username: str
     email: str
@@ -16,3 +16,4 @@ class UserSpec(EMRResource):
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["user_type"] = User.REVERSE_MAPPING[obj.user_type]
+        mapping["id"] = str(obj.external_id)
