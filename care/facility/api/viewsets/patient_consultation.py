@@ -110,7 +110,7 @@ class PatientConsultationViewSet(
         )
         # A user should be able to see all consultations part of their home facility
         applied_filters |= Q(facility=self.request.user.home_facility)
-        # applied_filters |= Q(patient__assigned_to=self.request.user)
+        # applied_filters |= Q(patient__assigned_to=self.request.user) # noqa ERA001
         return queryset.filter(applied_filters)
 
     @transaction.non_atomic_requests

@@ -1,9 +1,11 @@
 import datetime
+from datetime import timedelta
 
 from dateutil.parser import parse
 from django.db import transaction
+from django.db.models import Sum
 from django.utils import timezone
-from pydantic import UUID4, BaseModel
+from pydantic import UUID4, BaseModel, model_validator
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
@@ -12,7 +14,7 @@ from care.emr.api.viewsets.base import (
     EMRBaseViewSet,
     EMRRetrieveMixin,
 )
-from care.emr.models import TokenBooking
+from care.emr.models import AvailabilityException, Schedule, TokenBooking
 from care.emr.models.scheduling.booking import TokenSlot
 from care.emr.models.scheduling.schedule import Availability, SchedulableResource
 from care.emr.resources.scheduling.schedule.spec import (
@@ -36,6 +38,21 @@ class SlotsForDayRequestSpec(BaseModel):
 class AppointmentBookingSpec(BaseModel):
     patient: UUID4
     reason_for_visit: str
+
+
+class AvailabilityStatsRequestSpec(BaseModel):
+    from_date: datetime.date
+    to_date: datetime.date
+    resource: UUID4
+    resource_type: str = "user"
+
+    @model_validator(mode="after")
+    def validate_period(self):
+        max_period = 32
+        if self.from_date > self.to_date:
+            raise ValidationError("From Date cannot be greater than To Date")
+        if self.from_date - self.to_date > datetime.timedelta(days=max_period):
+            raise ValidationError("Period cannot be be greater than max days")
 
 
 def convert_availability_to_slots(availabilities):
@@ -191,3 +208,121 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
         return self.create_appointment_handler(
             self.get_object(), request.data, request.user
         )
+
+    @action(detail=False, methods=["POST"])
+    def availability_stats(self, request, *args, **kwargs):
+        """
+        Return the stats for available slots compared to the booked slots
+        ie Availability percentage.
+        """
+        request_data = AvailabilityStatsRequestSpec(**request.data)
+        # Fetch the entire schedule and calculate total slots available for each day
+        resource = None
+        if request_data.resource_type == "user":  # TODO make this a utility
+            user = User.objects.filter(external_id=request_data.resource).first()
+            if not user:
+                raise ValidationError("User does not exist")
+            resource = SchedulableResource.objects.filter(resource_id=user.id).first()
+            if not resource:
+                raise ValidationError("Resource is not schedulable")
+
+        schedules = Schedule.objects.filter(
+            valid_from__lte=request_data.to_date,
+            valid_to__gte=request_data.from_date,
+            resource=resource,
+        ).values()
+
+        # Cache availabilities
+        availabilities = {}
+        for schedule in schedules:
+            availabilities[schedule["id"]] = Availability.objects.filter(
+                schedule_id=schedule["id"]
+            ).values()
+
+        availability_exceptions = AvailabilityException.objects.filter(
+            valid_from__lte=request_data.to_date,
+            valid_to__gte=request_data.from_date,
+            resource=resource,
+        ).values()
+
+        # Generate a list of all available days as a dict
+
+        days = {}
+        response_days = {}
+        day = request_data.from_date
+        while day < request_data.to_date:
+            days[day] = {"total_slots": 0, "booked_slots": 0}
+            response_days[str(day)] = {"total_slots": 0, "booked_slots": 0}
+            day += timedelta(days=1)
+
+        for day in days:
+            # Calculate all matching schedules
+            current_schedules = []
+            for schedule in schedules:
+                if schedule["valid_from"].date() <= day <= schedule["valid_to"].date():
+                    current_schedules.append(schedule)
+            # Calculate availability exception for that day
+            exceptions = []
+            for exception in availability_exceptions:
+                if exception["valid_from"] <= day <= exception["valid_to"]:
+                    exceptions.append(exception)
+            # Calculate slots based on these data
+
+            slots_count = calculate_slots(
+                day, availabilities, current_schedules, exceptions
+            )
+            days[day]["total_slots"] = slots_count
+            response_days[str(day)]["total_slots"] = slots_count
+        # Query slots data for these dates, group by date and sum up count
+
+        booked_slots = (
+            TokenSlot.objects.filter(
+                start_datetime__lte=request_data.to_date,
+                end_datetime__gte=request_data.from_date,
+                resource=resource,
+            )
+            .values("start_datetime__date")
+            .annotate(allocated_sum=Sum("allocated"))
+            .values("allocated_sum", "start_datetime__date")
+        )
+
+        for slot in booked_slots:
+            response_days[str(slot["start_datetime__date"])]["booked_slots"] = slot[
+                "allocated_sum"
+            ]
+        # Query all the booked slots for the given days and get the total booked
+
+        return Response(response_days)
+
+
+def calculate_slots(
+    date: datetime.date,
+    availabilities: list[Availability],
+    schedules,
+    exceptions: list[AvailabilityException],
+):
+    # We don't care about duplicate slots because they won't exist because of our validations
+    day_of_week = date.weekday()
+    slots = 0
+    for schedule in schedules:
+        for availability in availabilities[schedule["id"]]:
+            for available_slot in availability["availability"]:
+                if available_slot["day_of_week"] != day_of_week:
+                    continue
+                start_time = parse(available_slot["start_time"])
+                end_time = parse(available_slot["end_time"])
+                while start_time <= end_time:
+                    conflicting = False
+                    for exception in exceptions:
+                        if (
+                            exception["start_time"] <= end_time
+                            and exception["end_time"] >= start_time
+                        ):
+                            conflicting = True
+                    if conflicting:
+                        continue
+                    slots += availability["tokens_per_slot"]
+                    start_time += timedelta(
+                        minutes=availability["slot_size_in_minutes"]
+                    )
+    return slots

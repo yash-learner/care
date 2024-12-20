@@ -59,6 +59,7 @@ class OTPLoginView(EMRBaseViewSet):
                 )
             except Exception as e:
                 import logging
+
                 logging.error(e)
         elif settings.DEBUG:
             import logging

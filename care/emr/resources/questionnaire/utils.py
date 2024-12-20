@@ -267,13 +267,9 @@ def handle_response(questionnaire_obj: Questionnaire, results, user):
                 {"type": "object_not_found", "msg": "Encounter not found"}
             )
 
-    patient = PatientRegistration.objects.filter(
-        external_id=results.patient
-    ).first()
+    patient = PatientRegistration.objects.filter(external_id=results.patient).first()
     if not patient:
-        raise ValidationError(
-            {"type": "object_not_found", "msg": "Patient not found"}
-        )
+        raise ValidationError({"type": "object_not_found", "msg": "Patient not found"})
 
     questionnaire_mapping = {}
     responses = {}
@@ -282,7 +278,10 @@ def handle_response(questionnaire_obj: Questionnaire, results, user):
         responses[str(result.question_id)] = result
     if not responses:
         raise ValidationError(
-            {"type": "questionnaire_empty", "msg": "Empty Questionnaire cannot be submitted"}
+            {
+                "type": "questionnaire_empty",
+                "msg": "Empty Questionnaire cannot be submitted",
+            }
         )
     for question in questionnaire_obj.questions:
         validate_question_result(

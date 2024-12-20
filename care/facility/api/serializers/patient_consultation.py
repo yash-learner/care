@@ -345,7 +345,7 @@ class PatientConsultationSerializer(serializers.ModelSerializer):
             raise ValidationError({"route_to_facility": "This field is required"})
 
         create_diagnosis = validated_data.pop("create_diagnoses", [])
-        create_symptoms = validated_data.pop("create_symptoms" , [])
+        create_symptoms = validated_data.pop("create_symptoms", [])
 
         action = validated_data.pop("action", -1)
         review_interval = validated_data.get("review_interval", -1)
@@ -423,7 +423,9 @@ class PatientConsultationSerializer(serializers.ModelSerializer):
                         symptom=obj.get("symptom"),
                         onset_date=obj.get("onset_date"),
                         cure_date=obj.get("cure_date"),
-                        clinical_impression_status=obj.get("clinical_impression_status"),
+                        clinical_impression_status=obj.get(
+                            "clinical_impression_status"
+                        ),
                         other_symptom=obj.get("other_symptom") or "",
                         created_by=user,
                     )
@@ -663,12 +665,6 @@ class PatientConsultationSerializer(serializers.ModelSerializer):
                 raise ValidationError(
                     {"review_interval": ["This field value is must be greater than 0."]}
                 )
-
-        # if not self.instance and "create_diagnoses" not in validated:
-        #     raise ValidationError({"create_diagnoses": ["This field is required."]})
-
-        # if not self.instance and "create_symptoms" not in validated:
-        #     raise ValidationError({"create_symptoms": ["This field is required."]})
 
         return validated
 

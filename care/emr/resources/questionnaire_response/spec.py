@@ -27,7 +27,7 @@ class QuestionnaireSubmitResult(BaseModel):
 class QuestionnaireSubmitRequest(BaseModel):
     resource_id: UUID4
     encounter: UUID4 | None = None
-    patient:UUID4
+    patient: UUID4
     results: list[QuestionnaireSubmitResult]
 
 
@@ -52,7 +52,7 @@ class QuestionnaireResponseReadSpec(EMRResource):
                 obj.questionnaire
             )
         if obj.encounter:
-                mapping["encounter"] = obj.encounter.external_id
+            mapping["encounter"] = obj.encounter.external_id
         else:
             mapping["encounter"] = None
         if obj.created_by:

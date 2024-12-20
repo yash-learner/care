@@ -11,6 +11,7 @@ class QuestionnaireResponseFilters(filters.FilterSet):
     questionnaire = filters.UUIDFilter(field_name="questionnaire__external_id")
     questionnaire_slug = filters.CharFilter(field_name="questionnaire__slug")
 
+
 class QuestionnaireResponseViewSet(EMRModelReadOnlyViewSet):
     database_model = QuestionnaireResponse
     pydantic_model = QuestionnaireResponseReadSpec

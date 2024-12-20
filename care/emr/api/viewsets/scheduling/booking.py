@@ -24,6 +24,7 @@ class TokenBookingFilters(FilterSet):
     status = CharFilter(field_name="status")
     patient = UUIDFilter(field_name="patient__external_id")
 
+
 class TokenBookingViewSet(
     EMRRetrieveMixin, EMRUpdateMixin, EMRListMixin, EMRDeleteMixin, EMRBaseViewSet
 ):
