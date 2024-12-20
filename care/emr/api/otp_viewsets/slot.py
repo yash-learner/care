@@ -15,7 +15,7 @@ from care.emr.api.viewsets.scheduling import (
 from care.emr.models import TokenBooking, TokenSlot
 from care.emr.resources.scheduling.slot.spec import (
     TokenBookingReadSpec,
-    TokenBookingRetrieveSpec,
+    TokenBookingRetrieveSpec, TokenSlotBaseSpec,
 )
 from care.facility.models import PatientRegistration
 from config.patient_otp_authentication import (
@@ -32,7 +32,7 @@ class OTPSlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
     authentication_classes = [JWTTokenPatientAuthentication]
     permission_classes = [OTPAuthenticatedPermission]
     database_model = TokenSlot
-    pydantic_read_model = TokenBookingRetrieveSpec
+    pydantic_read_model = TokenSlotBaseSpec
 
     @action(detail=False, methods=["POST"])
     def get_slots_for_day(self, request, *args, **kwargs):
