@@ -11,6 +11,7 @@ from care.emr.api.viewsets.batch_request import BatchRequestView
 from care.emr.api.viewsets.condition import DiagnosisViewSet, SymptomViewSet
 from care.emr.api.viewsets.encounter import EncounterViewSet
 from care.emr.api.viewsets.medication_request import MedicationRequestViewSet
+from care.emr.api.viewsets.medication_statement import MedicationStatementViewSet
 from care.emr.api.viewsets.observation import ObservationViewSet
 from care.emr.api.viewsets.organization import OrganizationViewSet
 from care.emr.api.viewsets.questionnaire import QuestionnaireViewSet
@@ -342,6 +343,11 @@ patient_nested_router.register(
     r"medication/request",
     MedicationRequestViewSet,
     basename="medication-request",
+)
+patient_nested_router.register(
+    r"medication/statement",
+    MedicationStatementViewSet,
+    basename="medication-statement",
 )
 
 router.register(
