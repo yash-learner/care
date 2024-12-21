@@ -1,5 +1,5 @@
 import datetime
-from datetime import timedelta
+from datetime import time, timedelta
 
 from dateutil.parser import parse
 from django.db import transaction
@@ -10,16 +10,11 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from care.emr.api.viewsets.base import (
-    EMRBaseViewSet,
-    EMRRetrieveMixin,
-)
+from care.emr.api.viewsets.base import EMRBaseViewSet, EMRRetrieveMixin
 from care.emr.models import AvailabilityException, Schedule, TokenBooking
 from care.emr.models.scheduling.booking import TokenSlot
 from care.emr.models.scheduling.schedule import Availability, SchedulableResource
-from care.emr.resources.scheduling.schedule.spec import (
-    SlotTypeOptions,
-)
+from care.emr.resources.scheduling.schedule.spec import SlotTypeOptions
 from care.emr.resources.scheduling.slot.spec import (
     TokenBookingRetrieveSpec,
     TokenSlotBaseSpec,
@@ -309,8 +304,8 @@ def calculate_slots(
             for available_slot in availability["availability"]:
                 if available_slot["day_of_week"] != day_of_week:
                     continue
-                start_time = parse(available_slot["start_time"])
-                end_time = parse(available_slot["end_time"])
+                start_time = time.fromisoformat(available_slot["start_time"])
+                end_time = time.fromisoformat(available_slot["end_time"])
                 while start_time <= end_time:
                     conflicting = False
                     for exception in exceptions:
@@ -319,10 +314,10 @@ def calculate_slots(
                             and exception["end_time"] >= start_time
                         ):
                             conflicting = True
-                    if conflicting:
-                        continue
-                    slots += availability["tokens_per_slot"]
-                    start_time += timedelta(
-                        minutes=availability["slot_size_in_minutes"]
-                    )
+                    if not conflicting:
+                        slots += availability["tokens_per_slot"]
+                    start_time = (
+                        datetime.datetime.combine(date.today(), start_time)
+                        + timedelta(minutes=availability["slot_size_in_minutes"])
+                    ).time()
     return slots
