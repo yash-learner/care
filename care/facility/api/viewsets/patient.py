@@ -71,7 +71,11 @@ from care.facility.models.icd11_diagnosis import (
     ConditionVerificationStatus,
 )
 from care.facility.models.notification import Notification
-from care.facility.models.patient import PatientNotesEdit, RationCardCategory
+from care.facility.models.patient import (
+    MobilityStatus,
+    PatientNotesEdit,
+    RationCardCategory,
+)
 from care.facility.models.patient_base import (
     DISEASE_STATUS_DICT,
     NewDischargeReasonEnum,
@@ -133,6 +137,7 @@ class PatientFilterSet(filters.FilterSet):
         choices=CATEGORY_CHOICES,
     )
     ration_card_category = filters.ChoiceFilter(choices=RationCardCategory.choices)
+    mobility_status = filters.ChoiceFilter(choices=MobilityStatus.choices)
 
     def filter_by_category(self, queryset, name, value):
         if value:

@@ -51,6 +51,17 @@ class RationCardCategory(models.TextChoices):
     APL = "APL", _("APL")
 
 
+class MobilityStatus(models.TextChoices):
+    UNKNOWN = "UNKNOWN", _("Unknown")
+    INDEPENDENTLY_MOBILE = "INDEPENDENTLY_MOBILE", _("Independently Mobile")
+    INDEPENDENTLY_MOBILE_WITH_ILLNESS = (
+        "INDEPENDENTLY_MOBILE_WITH_ILLNESS",
+        _("Independently Mobile with Illness"),
+    )
+    HOME_BOUND = "HOME_BOUND", _("Home Bound")
+    BED_BOUND = "BED_BOUND", _("Bed Bound")
+
+
 class PatientRegistration(PatientBaseModel, PatientPermissionMixin):
     # fields in the PatientSearch model
     PATIENT_SEARCH_KEYS = [
@@ -147,6 +158,14 @@ class PatientRegistration(PatientBaseModel, PatientPermissionMixin):
     )
     ration_card_category = models.CharField(
         choices=RationCardCategory, null=True, max_length=8
+    )
+
+    mobility_status = models.CharField(
+        null=False,
+        max_length=50,
+        choices=MobilityStatus,
+        default=MobilityStatus.UNKNOWN,
+        verbose_name="Mobility Status of Patient",
     )
 
     is_medical_worker = models.BooleanField(
