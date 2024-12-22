@@ -215,6 +215,7 @@ def check_if_spoke_is_not_ancestor(base_id: int, spoke_id: int):
 
 class Facility(FacilityBaseModel, FacilityPermissionMixin):
     name = models.CharField(max_length=1000, blank=False, null=False)
+    description = models.TextField(blank=True, null=False)
     is_active = models.BooleanField(default=True)
     verified = models.BooleanField(default=False)
     facility_type = models.IntegerField(choices=FACILITY_TYPES)
