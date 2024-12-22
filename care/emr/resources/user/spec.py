@@ -11,7 +11,7 @@ class UserSpec(EMRResource):
     last_name: str
     user_type: str
     last_login: str
-    read_profile_picture_url: str
+    profile_picture_url: str
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj: User):
