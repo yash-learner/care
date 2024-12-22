@@ -308,16 +308,17 @@ def calculate_slots(
                 end_time = time.fromisoformat(available_slot["end_time"])
                 while start_time <= end_time:
                     conflicting = False
+                    start_time = (
+                        datetime.datetime.combine(date.today(), start_time)
+                        + timedelta(minutes=availability["slot_size_in_minutes"])
+                    ).time()
                     for exception in exceptions:
                         if (
                             exception["start_time"] <= end_time
                             and exception["end_time"] >= start_time
                         ):
                             conflicting = True
-                    if not conflicting:
-                        slots += availability["tokens_per_slot"]
-                    start_time = (
-                        datetime.datetime.combine(date.today(), start_time)
-                        + timedelta(minutes=availability["slot_size_in_minutes"])
-                    ).time()
+                    if conflicting:
+                        continue
+                    slots += availability["tokens_per_slot"]
     return slots
