@@ -77,6 +77,7 @@ class FacilityBasicInfoSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "name",
+            "description",
             "local_body",
             "district",
             "state",
@@ -113,6 +114,7 @@ class FacilitySerializer(FacilityBasicInfoSerializer):
         fields = [
             "id",
             "name",
+            "description",
             "ward",
             "local_body",
             "district",
