@@ -3,10 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from care.emr.api.viewsets.base import (
-    EMRBaseViewSet,
-    EMRRetrieveMixin,
-)
+from care.emr.api.viewsets.base import EMRBaseViewSet, EMRRetrieveMixin
 from care.emr.api.viewsets.scheduling import (
     AppointmentBookingSpec,
     SlotsForDayRequestSpec,
@@ -15,7 +12,7 @@ from care.emr.api.viewsets.scheduling import (
 from care.emr.models import TokenBooking, TokenSlot
 from care.emr.resources.scheduling.slot.spec import (
     TokenBookingReadSpec,
-    TokenBookingRetrieveSpec, TokenSlotBaseSpec,
+    TokenSlotBaseSpec,
 )
 from care.facility.models import PatientRegistration
 from config.patient_otp_authentication import (
