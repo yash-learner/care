@@ -125,6 +125,8 @@ FACILITY_TYPES = [
     (1510, "Request Fulfilment Center"),
     # Use 16xx for War Rooms.
     (1600, "District War Room"),
+    (3000, "Non Governmental Organization"),
+    (4000, "Community Based Organization"),
 ]
 
 REVERSE_FACILITY_TYPES = reverse_choices(FACILITY_TYPES)
