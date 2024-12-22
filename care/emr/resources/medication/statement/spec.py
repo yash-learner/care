@@ -1,6 +1,6 @@
 from enum import Enum
 
-from pydantic import UUID4, BaseModel, Field, field_validator
+from pydantic import UUID4, Field, field_validator
 
 from care.emr.fhir.schema.base import Coding, Period
 from care.emr.models.medication_statement import MedicationStatement
@@ -26,21 +26,6 @@ class MedicationStatementInformationSourceType(str, Enum):
     related_person = "related_person"
     user = "user"
     patient = "patient"
-
-
-class MedicationStatementInformationSource(BaseModel):
-    type: MedicationStatementInformationSourceType = Field(
-        description="The user type of the information source",
-    )
-    id: UUID4 | None = Field(
-        description="The ID of the information source, References User or Patient. None incase of related_person",
-    )
-    display: str | None = Field(
-        description="The display name of the information source",
-    )
-    relationship: str | None = Field(
-        description="The relationship of the information source with the patient",
-    )
 
 
 class BaseMedicationStatementSpec(EMRResource):
@@ -76,9 +61,9 @@ class BaseMedicationStatementSpec(EMRResource):
         description="The encounter where the statement was noted",
     )
 
-    information_source: MedicationStatementInformationSource | None = Field(
+    information_source: MedicationStatementInformationSourceType | None = Field(
         None,
-        description="The source of the information, If None then its the patient",
+        description="The source of the information about the medication, patient, related person, or healthcare provider",
     )
 
     note: str | None = Field(
