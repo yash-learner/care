@@ -1,5 +1,6 @@
 import base64
 import json
+import logging
 
 import sentry_sdk
 from authlib.jose import JsonWebKey
@@ -126,6 +127,6 @@ SNS_REGION = env("SNS_REGION", default="ap-south-1")
 # open id connect
 JWKS = JsonWebKey.import_key_set(
     json.loads(
-        base64.b64decode(env("JWKS_BASE64", default=get_jwks_from_file(BASE_DIR)))
+        base64.b64decode(env("JWKS_BASE64", default=get_jwks_from_file(BASE_DIR)))  # noqa F405
     )
 )
