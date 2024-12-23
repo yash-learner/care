@@ -10,6 +10,7 @@ from care.emr.api.viewsets.allergy_intolerance import AllergyIntoleranceViewSet
 from care.emr.api.viewsets.batch_request import BatchRequestView
 from care.emr.api.viewsets.condition import DiagnosisViewSet, SymptomViewSet
 from care.emr.api.viewsets.encounter import EncounterViewSet
+from care.emr.api.viewsets.facility_organization import FacilityOrganizationViewSet
 from care.emr.api.viewsets.medication_request import MedicationRequestViewSet
 from care.emr.api.viewsets.medication_statement import MedicationStatementViewSet
 from care.emr.api.viewsets.observation import ObservationViewSet
@@ -162,6 +163,7 @@ router.register("valueset", ValueSetViewSet, basename="value-set")
 
 router.register("questionnaire", QuestionnaireViewSet, basename="questionnaire")
 
+router.register("organization", OrganizationViewSet, basename="organization")
 
 # Summarisation
 router.register(
@@ -255,7 +257,7 @@ facility_nested_router.register(
 facility_nested_router.register(r"hubs", FacilityHubsViewSet, basename="facility-hubs")
 
 facility_nested_router.register(
-    r"organizations", OrganizationViewSet, basename="organization"
+    r"organizations", FacilityOrganizationViewSet, basename="facility-organization"
 )
 facility_nested_router.register(r"schedule", ScheduleViewSet, basename="schedule")
 

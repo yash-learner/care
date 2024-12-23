@@ -16,6 +16,7 @@ type BucketName = str
 
 class CSProvider(enum.Enum):
     AWS = "AWS"
+    AWS_ROLE_BASED = "AWS_ROLE_BASED"
     GCP = "GCP"
     DIGITAL_OCEAN = "DIGITAL_OCEAN"
     MINIO = "MINIO"
