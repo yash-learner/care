@@ -201,6 +201,9 @@ class DiagnosticReportReadSpec(BaseDiagnosticReportSpec):
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
+        mapping["based_on"] = ServiceRequestReadSpec.serialize(obj.based_on).model_dump(
+            exclude=["meta"]
+        )
         mapping["id"] = obj.external_id
 
         mapping["subject"] = PatientDetailSerializer(obj.subject).data

@@ -203,7 +203,7 @@ class ServiceRequestReadSpec(BaseServiceRequestSpec):
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
-        mapping["id"] = obj.external_id
+        mapping["id"] = obj.id
 
         mapping["subject"] = PatientDetailSerializer(obj.subject).data
         mapping["encounter"] = PatientConsultationSerializer(obj.encounter).data

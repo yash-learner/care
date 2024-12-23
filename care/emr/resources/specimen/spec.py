@@ -204,6 +204,10 @@ class SpecimenReadSpec(BaseSpecimenSpec):
             else None
         )
 
+        mapping["request"] = ServiceRequestReadSpec.serialize(obj.request).model_dump(
+            exclude=["meta"]
+        )
+
 
 class SpecimenCollectRequest(BaseModel):
     identifier: str | None = Field(
