@@ -9,7 +9,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('emr', '0032_alter_medicationstatement_information_source'),
+        ('emr', '0033_organization'),
         ('facility', '0470_alter_historicalpatientregistration_is_antenatal_and_more'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
