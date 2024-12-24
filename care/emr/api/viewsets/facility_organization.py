@@ -20,7 +20,6 @@ class FacilityOrganizationViewSet(EMRModelViewSet):
     pydantic_read_model = FacilityOrganizationReadSpec
     filterset_class = FacilityOrganizationFilter
     filter_backends = [filters.DjangoFilterBackend]
-    CREATE_QUESTIONNAIRE_RESPONSE = False
 
     def clean_create_data(self, request_data):
         request_data["facility"] = self.kwargs["facility_external_id"]

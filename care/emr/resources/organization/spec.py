@@ -40,6 +40,12 @@ class OrganizationWriteSpec(OrganizationBaseSpec):
         if not is_update:
             if self.parent:
                 obj.parent = Organization.objects.get(external_id=self.parent)
+                obj.level_cache = obj.parent.level_cache + 1
+                obj.parent_cache = [*obj.parent.parent_cache, obj.parent.id]
+                if obj.parent.root_org is None:
+                    obj.root_org = obj.parent
+                else:
+                    obj.root_org = obj.parent.root_org
             else:
                 obj.parent = None
 
@@ -47,6 +53,8 @@ class OrganizationWriteSpec(OrganizationBaseSpec):
 class OrganizationReadSpec(OrganizationBaseSpec):
     created_by: UserSpec = dict
     updated_by: UserSpec = dict
+    level_cache: int = 0
+    system_generated: bool
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):

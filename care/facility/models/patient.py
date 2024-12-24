@@ -3,6 +3,7 @@ from datetime import date
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.postgres.aggregates import ArrayAgg
+from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Case, F, Func, JSONField, Value, When
@@ -440,6 +441,12 @@ class PatientRegistration(PatientBaseModel, PatientPermissionMixin):
         blank="True",
         related_name="root_patient_assigned_to",
     )
+
+    geo_organization = models.ForeignKey(
+        "emr.Organization", on_delete=models.SET_NULL, null=True, blank=True
+    )
+
+    organization_cache = ArrayField(models.IntegerField(), default=list)
 
     history = HistoricalRecords(excluded_fields=["meta_info"])
 

@@ -128,3 +128,6 @@ class EMRResource(BaseModel):
             questionnire_obj.append(field_obj)
         cls.__questionnaire_cache__ = questionnire_obj
         return questionnire_obj
+
+    def to_json(self):
+        return self.model_dump(mode="json", exclude=["meta"])

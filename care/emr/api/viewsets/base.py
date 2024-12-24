@@ -34,7 +34,9 @@ def emr_exception_handler(exc, context):
         if type(exc.detail) is dict:  # noqa SIM102
             if "errors" in exc.detail:
                 return Response(exc.detail, status=400)
-        return Response({"errors": [exc.detail]}, status=400)
+        return Response(
+            {"errors": {"type": "validation_error", "msg": exc.detail}}, status=400
+        )
     return drf_exception_handler(exc, context)
 
 
@@ -56,18 +58,16 @@ class EMRRetrieveMixin:
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         data = self.get_retrieve_pydantic_model().serialize(instance)
-        return Response(data.model_dump(exclude=["meta"]))
+        return Response(data.to_json())
 
 
 class EMRCreateMixin:
-    CREATE_QUESTIONNAIRE_RESPONSE = True
-
     def perform_create(self, instance):
         instance.created_by = self.request.user
         instance.updated_by = self.request.user
         with transaction.atomic():
             instance.save()
-            if self.CREATE_QUESTIONNAIRE_RESPONSE:
+            if getattr(self, "CREATE_QUESTIONNAIRE_RESPONSE", False):
                 QuestionnaireResponse.objects.create(
                     subject_id=self.fetch_patient_from_instance(instance).external_id,
                     patient=self.fetch_patient_from_instance(instance),
@@ -86,23 +86,23 @@ class EMRCreateMixin:
     def clean_create_data(self, request_data):
         return request_data
 
-    def authorize_create(self, request_user, request_instance):
+    def authorize_create(self, instance):
+        pass
+
+    def validate_data(self, instance, model_obj=None):
         pass
 
     def create(self, request, *args, **kwargs):
-        return Response(self.handle_create(request.data, request.user))
+        return Response(self.handle_create(request.data))
 
-    def handle_create(self, request_data, request_user):
+    def handle_create(self, request_data):
         clean_data = self.clean_create_data(request_data)
         instance = self.pydantic_model(**clean_data)
-        self.authorize_create(request_user, instance)
+        self.validate_data(instance, None)
+        self.authorize_create(instance)
         model_instance = instance.de_serialize()
         self.perform_create(model_instance)
-        return (
-            self.get_read_pydantic_model()
-            .serialize(model_instance)
-            .model_dump(exclude=["meta"])
-        )
+        return self.get_read_pydantic_model().serialize(model_instance).to_json()
 
 
 class EMRListMixin:
@@ -112,15 +112,11 @@ class EMRListMixin:
         page = paginator.paginate_queryset(queryset, request)
         if page is not None:
             data = [
-                self.get_read_pydantic_model()
-                .serialize(obj)
-                .model_dump(exclude=["meta"])
-                for obj in page
+                self.get_read_pydantic_model().serialize(obj).to_json() for obj in page
             ]
             return paginator.get_paginated_response(data)
         data = [
-            self.get_read_pydantic_model().serialize(obj).model_dump(exclude=["meta"])
-            for obj in queryset
+            self.get_read_pydantic_model().serialize(obj).to_json() for obj in queryset
         ]
         return Response(data)
 
@@ -128,10 +124,10 @@ class EMRListMixin:
 class EMRUpdateMixin:
     def perform_update(self, instance):
         instance.updated_by = self.request.user
-        # TODO Handle hisorical data by taking a dump from current model and appending to history object
+        # TODO Handle historical data by taking a dump from current model and appending to history object
         with transaction.atomic():
             instance.save()
-            if self.CREATE_QUESTIONNAIRE_RESPONSE:
+            if getattr(self, "CREATE_QUESTIONNAIRE_RESPONSE", False):
                 QuestionnaireResponse.objects.create(
                     subject_id=self.fetch_patient_from_instance(instance),
                     patient=self.fetch_patient_from_instance(instance),
@@ -156,21 +152,21 @@ class EMRUpdateMixin:
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
-        return Response(self.handle_update(instance, request.data, request.user))
+        return Response(self.handle_update(instance, request.data))
 
-    def handle_update(self, instance, request_data, request_user):
+    def authorize_update(self, request_obj, model_instance):
+        pass
+
+    def handle_update(self, instance, request_data):
         clean_data = self.clean_update_data(request_data)  # From Create
         pydantic_model = self.get_update_pydantic_model()
         serializer_obj = pydantic_model.model_validate(
             clean_data, context={"is_update": True, "object": instance}
         )
+        self.authorize_update(serializer_obj, instance)
         model_instance = serializer_obj.de_serialize(obj=instance)
         self.perform_update(model_instance)
-        return (
-            self.get_read_pydantic_model()
-            .serialize(model_instance)
-            .model_dump(exclude=["meta"])
-        )
+        return self.get_read_pydantic_model().serialize(model_instance).to_json()
 
 
 class EMRDeleteMixin:
@@ -198,11 +194,9 @@ class EMRUpsertMixin:
                             instance = get_object_or_404(
                                 self.database_model, external_id=datapoint["id"]
                             )
-                            result = self.handle_update(
-                                instance, datapoint, request.user
-                            )
+                            result = self.handle_update(instance, datapoint)
                         else:
-                            result = self.handle_create(datapoint, request.user)
+                            result = self.handle_create(datapoint)
                         results.append(result)
                     except Exception as e:
                         errored = True
@@ -254,6 +248,10 @@ class EMRBaseViewSet(GenericViewSet):
 
     def fetch_patient_from_instance(self, instance):
         return instance.patient
+
+
+class EMRQuestionnaireResponseMixin:
+    CREATE_QUESTIONNAIRE_RESPONSE = True
 
 
 class EMRModelViewSet(

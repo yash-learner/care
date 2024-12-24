@@ -14,9 +14,13 @@ from care.emr.api.viewsets.facility_organization import FacilityOrganizationView
 from care.emr.api.viewsets.medication_request import MedicationRequestViewSet
 from care.emr.api.viewsets.medication_statement import MedicationStatementViewSet
 from care.emr.api.viewsets.observation import ObservationViewSet
-from care.emr.api.viewsets.organization import OrganizationViewSet
+from care.emr.api.viewsets.organization import (
+    OrganizationUsersViewSet,
+    OrganizationViewSet,
+)
 from care.emr.api.viewsets.questionnaire import QuestionnaireViewSet
 from care.emr.api.viewsets.questionnaire_response import QuestionnaireResponseViewSet
+from care.emr.api.viewsets.roles import RoleViewSet
 from care.emr.api.viewsets.scheduling import ScheduleViewSet, SlotViewSet
 from care.emr.api.viewsets.scheduling.availability_exceptions import (
     AvailabilityExceptionsViewSet,
@@ -155,6 +159,16 @@ router.register("valueset", ValueSetViewSet, basename="value-set")
 router.register("questionnaire", QuestionnaireViewSet, basename="questionnaire")
 
 router.register("organization", OrganizationViewSet, basename="organization")
+
+router.register("role", RoleViewSet, basename="role")
+
+organization_nested_router = NestedSimpleRouter(
+    router, r"organization", lookup="organization"
+)
+
+organization_nested_router.register(
+    "users", OrganizationUsersViewSet, basename="organization-users"
+)
 
 router.register("items", FacilityInventoryItemViewSet, basename="items")
 
@@ -389,4 +403,5 @@ urlpatterns = [
     path("", include(consultation_nested_router.urls)),
     path("", include(resource_nested_router.urls)),
     path("", include(shifting_nested_router.urls)),
+    path("", include(organization_nested_router.urls)),
 ]

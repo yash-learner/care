@@ -7,8 +7,7 @@ from care.security.models import RoleAssociation, RolePermission
 class PermissionContext(enum.Enum):
     GENERIC = "GENERIC"
     FACILITY = "FACILITY"
-    ASSET = "ASSET"
-    LOCATION = "LOCATION"
+    PATIENT = "PATIENT"
 
 
 @dataclass

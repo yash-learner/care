@@ -59,6 +59,12 @@ class FacilityOrganizationWriteSpec(FacilityOrganizationBaseSpec):
                 obj.parent = FacilityOrganization.objects.get(
                     facility=obj.facility, external_id=self.parent
                 )
+                obj.level_cache = obj.parent.level_cache + 1
+                obj.parent_cache = [*obj.parent.parent_cache, obj.parent.id]
+                if obj.parent.root_org is None:
+                    obj.root_org = obj.parent
+                else:
+                    obj.root_org = obj.parent.root_org
             else:
                 obj.parent = None
 
@@ -66,6 +72,8 @@ class FacilityOrganizationWriteSpec(FacilityOrganizationBaseSpec):
 class FacilityOrganizationReadSpec(FacilityOrganizationBaseSpec):
     created_by: UserSpec = dict
     updated_by: UserSpec = dict
+    system_generated: bool
+    level_cache: int = 0
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):

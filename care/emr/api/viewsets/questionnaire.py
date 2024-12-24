@@ -26,7 +26,6 @@ class QuestionnaireViewSet(EMRModelViewSet):
     pydantic_model = QuestionnaireSpec
     pydantic_read_model = QuestionnaireReadSpec
     lookup_field = "slug"
-    CREATE_QUESTIONNAIRE_RESPONSE = False
     filterset_class = QuestionnaireFilter
     filter_backends = [filters.DjangoFilterBackend]
 
