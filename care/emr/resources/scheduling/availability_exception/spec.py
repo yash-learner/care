@@ -6,9 +6,7 @@ from pydantic import UUID4
 from rest_framework.exceptions import ValidationError
 
 from care.emr.models import AvailabilityException
-from care.emr.models.scheduling.schedule import (
-    SchedulableResource,
-)
+from care.emr.models.scheduling.schedule import SchedulableUserResource
 from care.emr.resources.base import EMRResource
 from care.facility.models import Facility
 from care.users.models import User
@@ -33,22 +31,19 @@ class AvailabilityExceptionBaseSpec(EMRResource):
 class AvailabilityExceptionWriteSpec(AvailabilityExceptionBaseSpec):
     facility: UUID4 | None = None
     resource: UUID4
-    resource_type: ResourceTypeOptions = ResourceTypeOptions.user
 
     def perform_extra_deserialization(self, is_update, obj):
         if not is_update:
             resource = None
-            if self.resource_type == ResourceTypeOptions.user:
-                try:
-                    user_resource = User.objects.get(external_id=self.resource)
-                    resource = SchedulableResource.objects.get(
-                        resource_id=user_resource.id,
-                        resource_type="user",
-                        facility=Facility.objects.get(external_id=self.facility),
-                    )
-                    obj.resource = resource
-                except ObjectDoesNotExist as e:
-                    raise ValidationError("Object does not exist") from e
+            try:
+                user_resource = User.objects.get(external_id=self.resource)
+                resource = SchedulableUserResource.objects.get(
+                    resource=user_resource,
+                    facility=Facility.objects.get(external_id=self.facility),
+                )
+                obj.resource = resource
+            except ObjectDoesNotExist as e:
+                raise ValidationError("Object does not exist") from e
 
 
 class AvailabilityExceptionReadSpec(AvailabilityExceptionBaseSpec):

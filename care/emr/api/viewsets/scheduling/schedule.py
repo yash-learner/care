@@ -43,14 +43,10 @@ class ScheduleViewSet(EMRModelViewSet):
             .select_related("resource", "created_by", "updated_by")
             .order_by("-modified_date")
         )
-        if (
-            self.request.GET.get("resource")
-            and self.request.GET.get("resource_type")
-            and self.request.GET.get("resource_type") == "user"
-        ):
+        if self.request.GET.get("resource"):
             user_obj = User.objects.filter(
                 external_id=self.request.GET.get("resource")
             ).first()
             if user_obj:
-                queryset = queryset.filter(resource__resource_id=user_obj.id)
+                queryset = queryset.filter(resource__resource=user_obj)
         return queryset

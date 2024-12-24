@@ -9,7 +9,7 @@ from care.emr.api.viewsets.scheduling import (
     SlotsForDayRequestSpec,
     SlotViewSet,
 )
-from care.emr.models import TokenBooking, TokenSlot
+from care.emr.models.scheduling import TokenBooking, TokenSlot
 from care.emr.resources.scheduling.slot.spec import (
     TokenBookingReadSpec,
     TokenSlotBaseSpec,

@@ -10,7 +10,7 @@ from care.emr.api.viewsets.base import (
     EMRRetrieveMixin,
     EMRUpdateMixin,
 )
-from care.emr.models import SchedulableResource, TokenBooking
+from care.emr.models.scheduling import SchedulableUserResource, TokenBooking
 from care.emr.resources.scheduling.slot.spec import (
     TokenBookingReadSpec,
     TokenBookingRetrieveSpec,
@@ -61,9 +61,9 @@ class TokenBookingViewSet(
     def available_doctors(self, request, *args, **kwargs):
         facility = Facility.objects.get(external_id=self.kwargs["facility_external_id"])
         facility_users = FacilityUser.objects.filter(
-            user_id__in=SchedulableResource.objects.filter(facility=facility).values(
-                "resource_id"
-            ),
+            user_id__in=SchedulableUserResource.objects.filter(
+                facility=facility
+            ).values("resource_id"),
             facility=facility,
         )
 

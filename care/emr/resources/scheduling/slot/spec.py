@@ -82,10 +82,9 @@ class TokenBookingReadSpec(TokenBookingBaseSpec):
         mapping["patient"] = PatientOTPReadSpec.serialize(obj.patient).model_dump(
             exclude=["meta"]
         )
-        if obj.token_slot.resource.resource_type == "user":
-            mapping["resource"] = UserSpec.serialize(
-                User.objects.get(id=obj.token_slot.resource.resource_id)
-            ).model_dump(exclude=["meta"])
+        mapping["resource"] = UserSpec.serialize(
+            User.objects.get(id=obj.token_slot.resource.resource_id)
+        ).model_dump(exclude=["meta"])
 
 
 class TokenBookingRetrieveSpec(TokenBookingReadSpec):

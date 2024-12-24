@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from care.emr.api.viewsets.base import EMRBaseViewSet, EMRRetrieveMixin
 from care.emr.models import AvailabilityException, Schedule, TokenBooking
 from care.emr.models.scheduling.booking import TokenSlot
-from care.emr.models.scheduling.schedule import Availability, SchedulableResource
+from care.emr.models.scheduling.schedule import Availability, SchedulableUserResource
 from care.emr.resources.scheduling.schedule.spec import SlotTypeOptions
 from care.emr.resources.scheduling.slot.spec import (
     TokenBookingRetrieveSpec,
@@ -26,7 +26,6 @@ from care.utils.lock import Lock
 
 class SlotsForDayRequestSpec(BaseModel):
     resource: UUID4
-    resource_type: str = "user"
     day: datetime.date
 
 
@@ -39,7 +38,6 @@ class AvailabilityStatsRequestSpec(BaseModel):
     from_date: datetime.date
     to_date: datetime.date
     resource: UUID4
-    resource_type: str = "user"
 
     @model_validator(mode="after")
     def validate_period(self):
@@ -105,15 +103,13 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
 
     @classmethod
     def get_slots_for_day_handler(cls, facility_external_id, request_data):
-        facility = facility_external_id
         request_data = SlotsForDayRequestSpec(**request_data)
         user = User.objects.filter(external_id=request_data.resource).first()
         if not user:
             raise ValidationError("Resource does not exist")
-        schedulable_resource_obj = SchedulableResource.objects.filter(
-            facility__external_id=facility,
-            resource_id=user.id,
-            resource_type=request_data.resource_type,
+        schedulable_resource_obj = SchedulableUserResource.objects.filter(
+            facility__external_id=facility_external_id,
+            resource=user,
         ).first()
         if not schedulable_resource_obj:
             raise ValidationError("Resource is not schedulable")
@@ -212,14 +208,12 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
         """
         request_data = AvailabilityStatsRequestSpec(**request.data)
         # Fetch the entire schedule and calculate total slots available for each day
-        resource = None
-        if request_data.resource_type == "user":  # TODO make this a utility
-            user = User.objects.filter(external_id=request_data.resource).first()
-            if not user:
-                raise ValidationError("User does not exist")
-            resource = SchedulableResource.objects.filter(resource_id=user.id).first()
-            if not resource:
-                raise ValidationError("Resource is not schedulable")
+        user = User.objects.filter(external_id=request_data.resource).first()
+        if not user:
+            raise ValidationError("User does not exist")
+        resource = SchedulableUserResource.objects.filter(resource=user).first()
+        if not resource:
+            raise ValidationError("Resource is not schedulable")
 
         schedules = Schedule.objects.filter(
             valid_from__lte=request_data.to_date,

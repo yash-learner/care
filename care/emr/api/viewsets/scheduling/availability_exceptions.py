@@ -34,11 +34,7 @@ class AvailabilityExceptionsViewSet(EMRModelViewSet):
             .select_related("resource", "created_by", "updated_by")
             .order_by("-modified_date")
         )
-        if (
-            self.request.GET.get("resource")
-            and self.request.GET.get("resource_type")
-            and self.request.GET.get("resource_type") == "user"
-        ):
+        if self.request.GET.get("resource"):
             user_obj = User.objects.filter(
                 external_id=self.request.GET.get("resource")
             ).first()
