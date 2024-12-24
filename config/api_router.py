@@ -10,6 +10,7 @@ from care.emr.api.viewsets.allergy_intolerance import AllergyIntoleranceViewSet
 from care.emr.api.viewsets.batch_request import BatchRequestView
 from care.emr.api.viewsets.condition import DiagnosisViewSet, SymptomViewSet
 from care.emr.api.viewsets.encounter import EncounterViewSet
+from care.emr.api.viewsets.facility_organization import FacilityOrganizationViewSet
 from care.emr.api.viewsets.medication_administration import (
     MedicationAdministrationViewSet,
 )
@@ -76,7 +77,6 @@ from care.facility.api.viewsets.inventory import (
 from care.facility.api.viewsets.notification import NotificationViewSet
 from care.facility.api.viewsets.patient import (
     FacilityDischargedPatientViewSet,
-    FacilityPatientStatsHistoryViewSet,
     PatientNotesEditViewSet,
     PatientNotesViewSet,
     PatientSearchViewSet,
@@ -106,13 +106,6 @@ from care.facility.api.viewsets.resources import (
 from care.facility.api.viewsets.shifting import (
     ShifitngRequestCommentViewSet,
     ShiftingViewSet,
-)
-from care.facility.api.viewsets.summary import (
-    DistrictPatientSummaryViewSet,
-    FacilityCapacitySummaryViewSet,
-    PatientSummaryViewSet,
-    TestsSummaryViewSet,
-    TriageSummaryViewSet,
 )
 from care.users.api.viewsets.lsg import (
     DistrictViewSet,
@@ -154,7 +147,6 @@ router.register("otp/patient", PatientOTPView, basename="otp-patient")
 
 router.register("otp/slots", OTPSlotViewSet, basename="otp-slots")
 
-
 router.register("notification", NotificationViewSet, basename="notification")
 
 router.register("batch_requests", BatchRequestView, basename="batch-requests")
@@ -165,22 +157,7 @@ router.register("valueset", ValueSetViewSet, basename="value-set")
 
 router.register("questionnaire", QuestionnaireViewSet, basename="questionnaire")
 
-
-# Summarisation
-router.register(
-    "facility_summary", FacilityCapacitySummaryViewSet, basename="summary-facility"
-)
-router.register("patient_summary", PatientSummaryViewSet, basename="summary-patient")
-router.register("tests_summary", TestsSummaryViewSet, basename="summary-tests")
-router.register("triage_summary", TriageSummaryViewSet, basename="summary-triage")
-
-
-# District Summary
-router.register(
-    "district_patient_summary",
-    DistrictPatientSummaryViewSet,
-    basename="district-summary-patient",
-)
+router.register("organization", OrganizationViewSet, basename="organization")
 
 router.register("items", FacilityInventoryItemViewSet, basename="items")
 
@@ -212,11 +189,6 @@ facility_nested_router.register(
 )
 facility_nested_router.register(
     r"capacity", FacilityCapacityViewSet, basename="facility-capacity"
-)
-facility_nested_router.register(
-    r"patient_stats",
-    FacilityPatientStatsHistoryViewSet,
-    basename="facility-patient-stats",
 )
 facility_nested_router.register(
     r"inventory", FacilityInventoryLogViewSet, basename="facility-inventory"
@@ -258,7 +230,7 @@ facility_nested_router.register(
 facility_nested_router.register(r"hubs", FacilityHubsViewSet, basename="facility-hubs")
 
 facility_nested_router.register(
-    r"organizations", OrganizationViewSet, basename="organization"
+    r"organizations", FacilityOrganizationViewSet, basename="facility-organization"
 )
 facility_nested_router.register(r"schedule", ScheduleViewSet, basename="schedule")
 
