@@ -5,7 +5,7 @@ from pydantic import UUID4, Field
 
 from care.emr.models.scheduling.schedule import (
     Availability,
-    SchedulableResource,
+    SchedulableUserResource,
     Schedule,
 )
 from care.emr.resources.base import EMRResource
@@ -55,33 +55,28 @@ class ScheduleBaseSpec(EMRResource):
 class ScheduleWriteSpec(ScheduleBaseSpec):
     resource: UUID4
     facility: UUID4
-    resource_type: ResourceTypeOptions = ResourceTypeOptions.user
     name: str
     valid_from: datetime.datetime
     valid_to: datetime.datetime
     availabilities: list[AvailabilityBaseSpec]
 
     def perform_extra_deserialization(self, is_update, obj):
-        if not is_update:  # noqa SIM102
-            if self.resource_type == ResourceTypeOptions.user:
-                user = User.objects.filter(external_id=self.resource).first()
-                # TODO Validation that user is in given facility
-                if not user:
-                    raise ValueError("User not found")
-                obj.facility = Facility.objects.get(external_id=self.facility)
+        if not is_update:
+            user = User.objects.filter(external_id=self.resource).first()
+            # TODO Validation that user is in given facility
+            if not user:
+                raise ValueError("User not found")
+            obj.facility = Facility.objects.get(external_id=self.facility)
 
-                resource, _ = SchedulableResource.objects.get_or_create(
-                    facility=obj.facility,
-                    resource_type=ResourceTypeOptions.user.value,
-                    resource_id=user.id,
-                )
-                obj.resource = resource
-                obj.availabilities = self.availabilities
+            resource, _ = SchedulableUserResource.objects.get_or_create(
+                facility=obj.facility,
+                resource=user,
+            )
+            obj.resource = resource
+            obj.availabilities = self.availabilities
 
 
 class ScheduleReadSpec(ScheduleBaseSpec):
-    resource: UUID4
-    resource_type: ResourceTypeOptions = ResourceTypeOptions.user
     name: str
     valid_from: datetime.datetime
     valid_to: datetime.datetime
@@ -92,7 +87,6 @@ class ScheduleReadSpec(ScheduleBaseSpec):
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
-        mapping["resource"] = obj.resource.external_id
 
         if obj.created_by:
             mapping["created_by"] = UserSpec.serialize(obj.created_by)

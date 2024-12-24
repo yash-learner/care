@@ -1,5 +1,5 @@
 from django.db import transaction
-from django_filters import FilterSet
+from django_filters import FilterSet, UUIDFilter
 from django_filters.rest_framework import DjangoFilterBackend
 
 from care.emr.api.viewsets.base import EMRModelViewSet
@@ -8,11 +8,10 @@ from care.emr.resources.scheduling.schedule.spec import (
     ScheduleReadSpec,
     ScheduleWriteSpec,
 )
-from care.users.models import User
 
 
 class ScheduleFilters(FilterSet):
-    pass
+    resource = UUIDFilter(field_name="resource__resource__external_id")
 
 
 class ScheduleViewSet(EMRModelViewSet):
@@ -36,21 +35,10 @@ class ScheduleViewSet(EMRModelViewSet):
         return request_data
 
     def get_queryset(self):
-        queryset = (
+        return (
             super()
             .get_queryset()
             .filter(resource__facility__external_id=self.kwargs["facility_external_id"])
             .select_related("resource", "created_by", "updated_by")
             .order_by("-modified_date")
         )
-        if (
-            self.request.GET.get("resource")
-            and self.request.GET.get("resource_type")
-            and self.request.GET.get("resource_type") == "user"
-        ):
-            user_obj = User.objects.filter(
-                external_id=self.request.GET.get("resource")
-            ).first()
-            if user_obj:
-                queryset = queryset.filter(resource__resource_id=user_obj.id)
-        return queryset
