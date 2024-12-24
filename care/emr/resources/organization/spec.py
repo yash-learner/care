@@ -23,7 +23,7 @@ class OrganizationBaseSpec(EMRResource):
     name: str
     description: str = ""
     parent: UUID4 | None = None
-
+    metadata: dict = {}
 
 class OrganizationWriteSpec(OrganizationBaseSpec):
     @model_validator(mode="after")
@@ -46,6 +46,8 @@ class OrganizationWriteSpec(OrganizationBaseSpec):
                     obj.root_org = obj.parent
                 else:
                     obj.root_org = obj.parent.root_org
+                obj.parent.has_children = True
+                obj.parent.save(update_fields=["has_children"])
             else:
                 obj.parent = None
 
@@ -55,6 +57,7 @@ class OrganizationReadSpec(OrganizationBaseSpec):
     updated_by: UserSpec = dict
     level_cache: int = 0
     system_generated: bool
+    has_children: bool
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):

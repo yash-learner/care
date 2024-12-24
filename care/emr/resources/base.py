@@ -79,7 +79,7 @@ class EMRResource(BaseModel):
         return obj
 
     @classmethod
-    def questionnaire(cls, parent_classes=None):  # noqa PLR0912
+    def as_questionnaire(cls, parent_classes=None):  # noqa PLR0912
         """
         This is created so that the FE has an idea about bound valuesets and other metadata about the form
         Maybe we can speed up this process by starting with model's JSON Schema
@@ -124,7 +124,7 @@ class EMRResource(BaseModel):
                 field_obj["type"] = "group"
                 parent_classes = parent_classes[::]
                 parent_classes.append(cls)
-                field_obj["questions"] = field_type.questionnaire(parent_classes)
+                field_obj["questions"] = field_type.as_questionnaire(parent_classes)
             questionnire_obj.append(field_obj)
         cls.__questionnaire_cache__ = questionnire_obj
         return questionnire_obj

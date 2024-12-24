@@ -11,6 +11,7 @@ class FacilityOrganization(EMRBaseModel):
     )
     org_type = models.CharField(max_length=255)
     name = models.CharField(max_length=255)
+    has_children = models.BooleanField(default=False)
     description = models.TextField(blank=True, null=True)
     facility = models.ForeignKey("facility.Facility", on_delete=models.CASCADE)
     system_generated = models.BooleanField(default=False)
@@ -19,7 +20,7 @@ class FacilityOrganization(EMRBaseModel):
     )
     level_cache = models.IntegerField(default=0)
     parent_cache = ArrayField(models.IntegerField(), default=list)
-
+    metadata = models.JSONField(default=dict)
 
 class Organization(EMRBaseModel):
     active = models.BooleanField(default=True)
@@ -28,6 +29,7 @@ class Organization(EMRBaseModel):
     )
     org_type = models.CharField(max_length=255)
     name = models.CharField(max_length=255)
+    has_children = models.BooleanField(default=False)
     description = models.TextField(blank=True, null=True)
     level_cache = models.IntegerField(default=0)
     system_generated = models.BooleanField(default=False)
@@ -35,6 +37,7 @@ class Organization(EMRBaseModel):
     parent = models.ForeignKey(
         "self", related_name="children", on_delete=models.CASCADE, null=True, blank=True
     )
+    metadata = models.JSONField(default=dict)
 
 
 class OrganizationUser(EMRBaseModel):
