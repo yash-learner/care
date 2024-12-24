@@ -1,4 +1,4 @@
-from django_filters import FilterSet
+from django_filters import FilterSet, UUIDFilter
 from django_filters.rest_framework import DjangoFilterBackend
 
 from care.emr.api.viewsets.base import EMRModelViewSet
@@ -7,11 +7,10 @@ from care.emr.resources.scheduling.availability_exception.spec import (
     AvailabilityExceptionReadSpec,
     AvailabilityExceptionWriteSpec,
 )
-from care.users.models import User
 
 
 class AvailabilityExceptionFilters(FilterSet):
-    pass
+    resource = UUIDFilter(field_name="resource__resource__external_id")
 
 
 class AvailabilityExceptionsViewSet(EMRModelViewSet):
@@ -27,17 +26,10 @@ class AvailabilityExceptionsViewSet(EMRModelViewSet):
         return request_data
 
     def get_queryset(self):
-        queryset = (
+        return (
             super()
             .get_queryset()
             .filter(resource__facility__external_id=self.kwargs["facility_external_id"])
             .select_related("resource", "created_by", "updated_by")
             .order_by("-modified_date")
         )
-        if self.request.GET.get("resource"):
-            user_obj = User.objects.filter(
-                external_id=self.request.GET.get("resource")
-            ).first()
-            if user_obj:
-                queryset = queryset.filter(resource__resource_id=user_obj.id)
-        return queryset

@@ -13,7 +13,6 @@ from care.emr.api.viewsets.base import (
 from care.emr.models.scheduling import SchedulableUserResource, TokenBooking
 from care.emr.resources.scheduling.slot.spec import (
     TokenBookingReadSpec,
-    TokenBookingRetrieveSpec,
     TokenBookingUpdateSpec,
 )
 from care.emr.resources.user.spec import UserSpec
@@ -33,7 +32,6 @@ class TokenBookingViewSet(
     pydantic_model = TokenBookingReadSpec
     pydantic_read_model = TokenBookingReadSpec
     pydantic_update_model = TokenBookingUpdateSpec
-    pydantic_retrieve_model = TokenBookingRetrieveSpec
 
     filterset_class = TokenBookingFilters
     filter_backends = [DjangoFilterBackend]

@@ -85,7 +85,3 @@ class TokenBookingReadSpec(TokenBookingBaseSpec):
         mapping["resource"] = UserSpec.serialize(
             User.objects.get(id=obj.token_slot.resource.resource_id)
         ).model_dump(exclude=["meta"])
-
-
-class TokenBookingRetrieveSpec(TokenBookingReadSpec):
-    id: UUID4 | None = None

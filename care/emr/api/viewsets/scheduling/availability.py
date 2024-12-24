@@ -16,7 +16,7 @@ from care.emr.models.scheduling.booking import TokenSlot
 from care.emr.models.scheduling.schedule import Availability, SchedulableUserResource
 from care.emr.resources.scheduling.schedule.spec import SlotTypeOptions
 from care.emr.resources.scheduling.slot.spec import (
-    TokenBookingRetrieveSpec,
+    TokenBookingReadSpec,
     TokenSlotBaseSpec,
 )
 from care.facility.models import PatientRegistration
@@ -191,7 +191,7 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
             obj, patient, user, request_data.reason_for_visit
         )
         return Response(
-            TokenBookingRetrieveSpec.serialize(appointment).model_dump(exclude=["meta"])
+            TokenBookingReadSpec.serialize(appointment).model_dump(exclude=["meta"])
         )
 
     @action(detail=True, methods=["POST"])
@@ -302,16 +302,16 @@ def calculate_slots(
                 end_time = time.fromisoformat(available_slot["end_time"])
                 while start_time <= end_time:
                     conflicting = False
-                    start_time = (
-                        datetime.datetime.combine(date.today(), start_time)
-                        + timedelta(minutes=availability["slot_size_in_minutes"])
-                    ).time()
                     for exception in exceptions:
                         if (
                             exception["start_time"] <= end_time
                             and exception["end_time"] >= start_time
                         ):
                             conflicting = True
+                    start_time = (
+                        datetime.datetime.combine(date.today(), start_time)
+                        + timedelta(minutes=availability["slot_size_in_minutes"])
+                    ).time()
                     if conflicting:
                         continue
                     slots += availability["tokens_per_slot"]
