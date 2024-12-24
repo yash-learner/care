@@ -22,6 +22,7 @@ from care.facility.models import Facility, FacilityUser
 
 class TokenBookingFilters(FilterSet):
     status = CharFilter(field_name="status")
+    slot = UUIDFilter(field_name="token_slot__external_id")
     patient = UUIDFilter(field_name="patient__external_id")
 
 
