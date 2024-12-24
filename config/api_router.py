@@ -10,6 +10,9 @@ from care.emr.api.viewsets.allergy_intolerance import AllergyIntoleranceViewSet
 from care.emr.api.viewsets.batch_request import BatchRequestView
 from care.emr.api.viewsets.condition import DiagnosisViewSet, SymptomViewSet
 from care.emr.api.viewsets.encounter import EncounterViewSet
+from care.emr.api.viewsets.medication_administration import (
+    MedicationAdministrationViewSet,
+)
 from care.emr.api.viewsets.medication_request import MedicationRequestViewSet
 from care.emr.api.viewsets.medication_statement import MedicationStatementViewSet
 from care.emr.api.viewsets.observation import ObservationViewSet
@@ -348,6 +351,11 @@ patient_nested_router.register(
     r"medication/statement",
     MedicationStatementViewSet,
     basename="medication-statement",
+)
+patient_nested_router.register(
+    r"medication/administration",
+    MedicationAdministrationViewSet,
+    basename="medication-administration",
 )
 
 router.register(
