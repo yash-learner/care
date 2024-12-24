@@ -1,7 +1,9 @@
 from django.db.models import Q
 from django_filters import rest_framework as filters
+from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
+from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import EMRModelViewSet
 from care.emr.models.organziation import Organization, OrganizationUser
@@ -48,7 +50,13 @@ class OrganizationViewSet(EMRModelViewSet):
             super().get_queryset().select_related("parent", "created_by", "updated_by")
         )
 
-
+    @action(detail=False , methods=["GET"])
+    def mine(self , request, *args , **kwargs):
+        orgusers = OrganizationUser.objects.filter(user = request.user).select_related("organization")
+        data = [
+            self.get_read_pydantic_model().serialize(orguser.organization).to_json() for orguser in orgusers
+        ]
+        return Response({ "count" : len(data) ,  "results" : data})
 class OrganizationUsersViewSet(EMRModelViewSet):
     database_model = OrganizationUser
     pydantic_model = OrganizationUserWriteSpec
