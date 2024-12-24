@@ -81,7 +81,7 @@ class PatientConsultationSerializer(serializers.ModelSerializer):
     deprecated_covid_category = ChoiceField(
         choices=COVID_CATEGORY_CHOICES, required=False
     )
-    category = ChoiceField(choices=CATEGORY_CHOICES, required=True)
+    category = ChoiceField(choices=CATEGORY_CHOICES, required=False)
 
     referred_to_object = FacilityBasicInfoSerializer(
         source="referred_to", read_only=True

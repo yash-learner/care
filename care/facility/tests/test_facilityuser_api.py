@@ -77,3 +77,26 @@ class FacilityUserTest(TestUtils, APITestCase):
         self.client.force_authenticate(user=district_lab_admin)
         response = self.client.get(f"/api/v1/facility/{self.facility.external_id}/")
         self.assertIs(response.status_code, status.HTTP_200_OK)
+
+    def test_user_is_not_listed_if_deleted(self):
+        # Testing FE's delete functionality (soft delete/is_active is set to false when user is deleted)
+        response = self.client.get(
+            f"/api/v1/facility/{self.facility.external_id}/get_users/"
+        )
+        response_json = response.json()
+        results = response_json["results"]
+        self.assertIs(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(results), 2)
+        self.assertIn(self.super_user.username, [user["username"] for user in results])
+        self.assertIn(self.user.username, [user["username"] for user in results])
+        self.user.is_active = False
+        self.user.save()
+        response = self.client.get(
+            f"/api/v1/facility/{self.facility.external_id}/get_users/"
+        )
+        response_json = response.json()
+        results = response_json["results"]
+        self.assertIs(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(results), 1)
+        self.assertIn(self.super_user.username, [user["username"] for user in results])
+        self.assertNotIn(self.user.username, [user["username"] for user in results])

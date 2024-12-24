@@ -24,9 +24,6 @@ from care.facility.models import (
     Ward,
 )
 from care.facility.models.icd11_diagnosis import ConditionVerificationStatus
-from care.facility.models.mixins.permissions.facility import (
-    FacilityRelatedPermissionMixin,
-)
 from care.facility.models.mixins.permissions.patient import (
     ConsultationRelatedPermissionMixin,
     PatientPermissionMixin,
@@ -49,6 +46,17 @@ class RationCardCategory(models.TextChoices):
     NON_CARD_HOLDER = "NO_CARD", _("Non-card holder")
     BPL = "BPL", _("BPL")
     APL = "APL", _("APL")
+
+
+class MobilityStatus(models.TextChoices):
+    UNKNOWN = "UNKNOWN", _("Unknown")
+    INDEPENDENTLY_MOBILE = "INDEPENDENTLY_MOBILE", _("Independently Mobile")
+    INDEPENDENTLY_MOBILE_WITH_ILLNESS = (
+        "INDEPENDENTLY_MOBILE_WITH_ILLNESS",
+        _("Independently Mobile with Illness"),
+    )
+    HOME_BOUND = "HOME_BOUND", _("Home Bound")
+    BED_BOUND = "BED_BOUND", _("Bed Bound")
 
 
 class PatientRegistration(PatientBaseModel, PatientPermissionMixin):
@@ -147,6 +155,14 @@ class PatientRegistration(PatientBaseModel, PatientPermissionMixin):
     )
     ration_card_category = models.CharField(
         choices=RationCardCategory, null=True, max_length=8
+    )
+
+    mobility_status = models.CharField(
+        null=False,
+        max_length=50,
+        choices=MobilityStatus,
+        default=MobilityStatus.UNKNOWN,
+        verbose_name="Mobility Status of Patient",
     )
 
     is_medical_worker = models.BooleanField(
@@ -735,33 +751,6 @@ class Disease(models.Model):
 
     def get_disease_display(self):
         return DISEASE_CHOICES[self.disease - 1][1]
-
-
-class FacilityPatientStatsHistory(FacilityBaseModel, FacilityRelatedPermissionMixin):
-    facility = models.ForeignKey("Facility", on_delete=models.PROTECT)
-    entry_date = models.DateField()
-    num_patients_visited = models.IntegerField(default=0)
-    num_patients_home_quarantine = models.IntegerField(default=0)
-    num_patients_isolation = models.IntegerField(default=0)
-    num_patient_referred = models.IntegerField(default=0)
-    num_patient_confirmed_positive = models.IntegerField(default=0)
-
-    CSV_RELATED_MAPPING = {
-        "facilitypatientstatshistory__entry_date": "Entry Date",
-        "facilitypatientstatshistory__num_patients_visited": "Vistited Patients",
-        "facilitypatientstatshistory__num_patients_home_quarantine": "Home Quarantined Patients",
-        "facilitypatientstatshistory__num_patients_isolation": "Patients Isolated",
-        "facilitypatientstatshistory__num_patient_referred": "Patients Referred",
-        "facilitypatientstatshistory__num_patient_confirmed_positive": "Patients Confirmed Positive",
-    }
-
-    CSV_MAKE_PRETTY = {}
-
-    class Meta:
-        unique_together = (
-            "facility",
-            "entry_date",
-        )
 
 
 class PatientMobileOTP(BaseModel):

@@ -406,7 +406,7 @@ if USE_TZ:
     # https://docs.celeryq.dev/en/latest/userguide/configuration.html#std:setting-timezone
     CELERY_TIMEZONE = TIME_ZONE
 # https://docs.celeryq.dev/en/latest/userguide/configuration.html#std:setting-broker_url
-CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:6379/0")
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default=REDIS_URL)
 # https://docs.celeryq.dev/en/latest/userguide/configuration.html#std:setting-result_backend
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 # https://docs.celeryq.dev/en/latest/userguide/configuration.html#std:setting-accept_content
@@ -640,17 +640,6 @@ IS_PRODUCTION = False
 PLAUSIBLE_HOST = env("PLAUSIBLE_HOST", default="")
 PLAUSIBLE_SITE_ID = env("PLAUSIBLE_SITE_ID", default="")
 PLAUSIBLE_AUTH_TOKEN = env("PLAUSIBLE_AUTH_TOKEN", default="")
-
-# Disable summarization tasks
-TASK_SUMMARIZE_TRIAGE = env.bool("TASK_SUMMARIZE_TRIAGE", default=True)
-TASK_SUMMARIZE_TESTS = env.bool("TASK_SUMMARIZE_TESTS", default=True)
-TASK_SUMMARIZE_FACILITY_CAPACITY = env.bool(
-    "TASK_SUMMARIZE_FACILITY_CAPACITY", default=True
-)
-TASK_SUMMARIZE_PATIENT = env.bool("TASK_SUMMARIZE_PATIENT", default=True)
-TASK_SUMMARIZE_DISTRICT_PATIENT = env.bool(
-    "TASK_SUMMARIZE_DISTRICT_PATIENT", default=True
-)
 
 # Timeout for middleware request (in seconds)
 MIDDLEWARE_REQUEST_TIMEOUT = env.int("MIDDLEWARE_REQUEST_TIMEOUT", 20)
