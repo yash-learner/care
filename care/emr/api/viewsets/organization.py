@@ -17,6 +17,7 @@ from care.emr.resources.organization.spec import (
 )
 from care.security.models import RoleModel
 
+
 class ParentFilter(filters.UUIDFilter):
     def filter(self, qs, value):
         queryset = qs
@@ -25,6 +26,7 @@ class ParentFilter(filters.UUIDFilter):
         else:
             queryset = queryset.filter(parent__isnull=True)
         return queryset
+
 
 class OrganizationFilter(filters.FilterSet):
     parent = ParentFilter(field_name="parent__external_id")

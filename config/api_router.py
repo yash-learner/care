@@ -18,6 +18,7 @@ from care.emr.api.viewsets.organization import (
     OrganizationUsersViewSet,
     OrganizationViewSet,
 )
+from care.emr.api.viewsets.patient import NewPatientViewSet
 from care.emr.api.viewsets.questionnaire import QuestionnaireViewSet
 from care.emr.api.viewsets.questionnaire_response import QuestionnaireResponseViewSet
 from care.emr.api.viewsets.roles import RoleViewSet
@@ -161,6 +162,8 @@ router.register("questionnaire", QuestionnaireViewSet, basename="questionnaire")
 router.register("organization", OrganizationViewSet, basename="organization")
 
 router.register("role", RoleViewSet, basename="role")
+
+router.register("new/patient", NewPatientViewSet, basename="new-patient")
 
 organization_nested_router = NestedSimpleRouter(
     router, r"organization", lookup="organization"

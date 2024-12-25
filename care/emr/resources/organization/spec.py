@@ -22,11 +22,12 @@ class OrganizationBaseSpec(EMRResource):
     org_type: OrganizationTypeChoices
     name: str
     description: str = ""
-    parent: UUID4 | None = None
     metadata: dict = {}
 
 
 class OrganizationWriteSpec(OrganizationBaseSpec):
+    parent: UUID4 | None = None
+
     @model_validator(mode="after")
     def validate_parent_organization(self):
         if (
@@ -59,11 +60,12 @@ class OrganizationReadSpec(OrganizationBaseSpec):
     level_cache: int = 0
     system_generated: bool
     has_children: bool
+    parent: dict
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
-        mapping["parent"] = obj.parent.external_id if obj.parent else None
+        mapping["parent"] = obj.get_parent_json()
 
         if obj.created_by:
             mapping["created_by"] = UserSpec.serialize(obj.created_by)
