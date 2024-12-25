@@ -1,4 +1,4 @@
-from django_filters import CharFilter, FilterSet, UUIDFilter
+from django_filters import CharFilter, DateFilter, FilterSet, UUIDFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -21,7 +21,9 @@ from care.facility.models import Facility, FacilityUser
 
 class TokenBookingFilters(FilterSet):
     status = CharFilter(field_name="status")
+    date = DateFilter(field_name="token_slot__start_datetime__date")
     slot = UUIDFilter(field_name="token_slot__external_id")
+    resource = UUIDFilter(field_name="token_slot__resource__resource__external_id")
     patient = UUIDFilter(field_name="patient__external_id")
 
 
