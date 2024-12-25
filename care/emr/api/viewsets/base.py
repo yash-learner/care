@@ -37,10 +37,10 @@ def emr_exception_handler(exc, context):
         if type(exc.detail) is list:
             errors = " , ".join([str(e) for e in exc.detail])
             return Response(
-                {"errors": {"type": "validation_error", "msg": errors}}, status=400
+                {"errors": [{"type": "validation_error", "msg": errors}]}, status=400
             )
         return Response(
-            {"errors": {"type": "validation_error", "msg": exc.detail}}, status=400
+            {"errors": [{"type": "validation_error", "msg": exc.detail}]}, status=400
         )
     return drf_exception_handler(exc, context)
 
