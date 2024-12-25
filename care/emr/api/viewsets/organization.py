@@ -9,7 +9,8 @@ from care.emr.api.viewsets.base import EMRModelViewSet
 from care.emr.models.organziation import Organization, OrganizationUser
 from care.emr.resources.organization.organization_user_spec import (
     OrganizationUserReadSpec,
-    OrganizationUserWriteSpec, OrganizationUserUpdateSpec,
+    OrganizationUserUpdateSpec,
+    OrganizationUserWriteSpec,
 )
 from care.emr.resources.organization.spec import (
     OrganizationReadSpec,

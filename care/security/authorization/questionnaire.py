@@ -5,6 +5,7 @@ from care.security.authorization.base import (
 )
 from care.security.permissions.questionnaire import QuestionnairePermissions
 
+
 class QuestionnaireAccess(AuthorizationHandler):
     def can_read_questionnaire(self, user, org=None):
         return self.check_permission_in_organization(
@@ -35,8 +36,14 @@ class QuestionnaireAccess(AuthorizationHandler):
     def get_filtered_questionnaires(self, qs, user):
         if user.is_superuser:
             return qs
-        roles = self.get_role_from_permissions([QuestionnairePermissions.can_write_questionnaire.name])
-        organization_ids = list(OrganizationUser.objects.filter(user=user, role_id__in=roles).values_list("organization_id" ,flat=True))
+        roles = self.get_role_from_permissions(
+            [QuestionnairePermissions.can_write_questionnaire.name]
+        )
+        organization_ids = list(
+            OrganizationUser.objects.filter(user=user, role_id__in=roles).values_list(
+                "organization_id", flat=True
+            )
+        )
         return qs.filter(organization_cache__overlap=organization_ids)
 
 

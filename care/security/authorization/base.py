@@ -83,6 +83,7 @@ class AuthorizationController:
             if item in cls.cache["queries"]:
                 return getattr(cls.cache["queries"][item](), item)(*args, **kwargs)
             raise ValueError("Invalid Query")
+        raise ValueError("Invalid Item")
 
     @classmethod
     def register_internal_controller(cls, controller):

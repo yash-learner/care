@@ -45,10 +45,12 @@ class QuestionnaireViewSet(EMRModelViewSet):
     def perform_create(self, instance):
         with transaction.atomic():
             super().perform_create(instance)
-            for organization in instance._organizations:
-                organization = get_object_or_404(Organization, external_id=organization)
+            for organization in instance._organizations:  # noqa SLF001
+                organization_obj = get_object_or_404(
+                    Organization, external_id=organization
+                )
                 QuestionnaireOrganization.objects.create(
-                    questionnaire=instance, organization=organization
+                    questionnaire=instance, organization=organization_obj
                 )
 
     def authorize_create(self, instance):
@@ -60,10 +62,11 @@ class QuestionnaireViewSet(EMRModelViewSet):
             ):
                 raise PermissionDenied("Permission Denied for Organization")
 
-
     def get_queryset(self):
         queryset = super().get_queryset()
-        queryset = AuthorizationController.call("get_filtered_questionnaires" , queryset , self.request.user)
+        queryset = AuthorizationController.call(
+            "get_filtered_questionnaires", queryset, self.request.user
+        )
         if "search" in self.request.GET:
             queryset = queryset.filter(title__icontains=self.request.GET.get("search"))
         return queryset.select_related("created_by", "updated_by")

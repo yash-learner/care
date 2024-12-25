@@ -11,7 +11,8 @@ from care.users.models import User
 class OrganizationUserBaseSpec(EMRResource):
     __model__ = OrganizationUser
     __exclude__ = ["user", "role"]
-    id : UUID4
+    id: UUID4
+
 
 class OrganizationUserUpdateSpec(OrganizationUserBaseSpec):
     role: UUID4

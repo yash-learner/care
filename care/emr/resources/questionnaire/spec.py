@@ -236,7 +236,8 @@ class QuestionnaireSpec(QuestionnaireBaseSpec):
         return self
 
     def perform_extra_deserialization(self, is_update, obj):
-        obj._organizations = self.organizations
+        obj._organizations = self.organizations  # noqa SLF001
+
 
 class QuestionnaireReadSpec(QuestionnaireBaseSpec):
     id: str
