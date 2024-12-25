@@ -100,6 +100,9 @@ class OrganizationUsersViewSet(EMRModelViewSet):
         ):
             raise ValidationError("User association already exists")
 
+    def authorize_update(self, request_obj, model_instance):
+        self.authorize_create(request_obj)
+
     def authorize_create(self, instance):
         """
         - Creates are only allowed if the user is part of the organization
