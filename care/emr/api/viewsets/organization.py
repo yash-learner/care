@@ -16,7 +16,7 @@ from care.emr.resources.organization.spec import (
     OrganizationReadSpec,
     OrganizationWriteSpec,
 )
-from care.security.models import RoleModel, PermissionModel, RolePermission
+from care.security.models import PermissionModel, RoleModel, RolePermission
 
 
 class OrganizationFilter(filters.FilterSet):
@@ -53,9 +53,17 @@ class OrganizationViewSet(EMRModelViewSet):
         if "parent" in self.request.GET and not self.request.GET.get("parent"):
             queryset = queryset.filter(parent__isnull=True)
         if "permission" in self.request.GET and not self.request.user.is_superuser:
-            permission = get_object_or_404(PermissionModel , slug=self.request.GET.get("permission"))
-            roles = RolePermission.objects.filter(permission=permission).values_list("role_id", flat=True)
-            queryset = queryset.filter(id__in=OrganizationUser.objects.filter(user=self.request.user, role_id__in=roles).values_list("organization_id", flat=True))
+            permission = get_object_or_404(
+                PermissionModel, slug=self.request.GET.get("permission")
+            )
+            roles = RolePermission.objects.filter(permission=permission).values_list(
+                "role_id", flat=True
+            )
+            queryset = queryset.filter(
+                id__in=OrganizationUser.objects.filter(
+                    user=self.request.user, role_id__in=roles
+                ).values_list("organization_id", flat=True)
+            )
         return queryset
 
     @action(detail=False, methods=["GET"])
