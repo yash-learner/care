@@ -82,7 +82,7 @@ class FacilityOrganizationReadSpec(FacilityOrganizationBaseSpec):
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
-        mapping["parent"] = obj.parent.external_id if obj.parent else None
+        mapping["parent"] = obj.get_parent_json()
 
         if obj.created_by:
             mapping["created_by"] = UserSpec.serialize(obj.created_by)

@@ -6,8 +6,7 @@ from django.utils import timezone
 
 from care.emr.models import EMRBaseModel
 
-
-class FacilityOrganization(EMRBaseModel):
+class OrganizationCommonBase(EMRBaseModel):
     active = models.BooleanField(default=True)
     root_org = models.ForeignKey(
         "self", on_delete=models.CASCADE, related_name="root", null=True, blank=True
@@ -16,31 +15,12 @@ class FacilityOrganization(EMRBaseModel):
     name = models.CharField(max_length=255)
     has_children = models.BooleanField(default=False)
     description = models.TextField(blank=True, null=True)
-    facility = models.ForeignKey("facility.Facility", on_delete=models.CASCADE)
     system_generated = models.BooleanField(default=False)
     parent = models.ForeignKey(
         "self", related_name="children", on_delete=models.CASCADE, null=True, blank=True
     )
     level_cache = models.IntegerField(default=0)
     parent_cache = ArrayField(models.IntegerField(), default=list)
-    metadata = models.JSONField(default=dict)
-
-
-class Organization(EMRBaseModel):
-    active = models.BooleanField(default=True)
-    root_org = models.ForeignKey(
-        "self", on_delete=models.CASCADE, related_name="root", null=True, blank=True
-    )
-    org_type = models.CharField(max_length=255)
-    name = models.CharField(max_length=255)
-    has_children = models.BooleanField(default=False)
-    description = models.TextField(blank=True, null=True)
-    level_cache = models.IntegerField(default=0)
-    system_generated = models.BooleanField(default=False)
-    parent_cache = ArrayField(models.IntegerField(), default=list)
-    parent = models.ForeignKey(
-        "self", related_name="children", on_delete=models.CASCADE, null=True, blank=True
-    )
     metadata = models.JSONField(default=dict)
     cached_parent_json = models.JSONField(default=dict)
     cache_expiry_days = 15
@@ -69,6 +49,22 @@ class Organization(EMRBaseModel):
             self.save(update_fields=["cached_parent_json"])
             return self.cached_parent_json
         return {}
+
+
+    class Meta:
+        abstract = True
+
+
+class FacilityOrganization(OrganizationCommonBase):
+
+    facility = models.ForeignKey("facility.Facility", on_delete=models.CASCADE)
+
+
+
+class Organization(OrganizationCommonBase):
+
+
+    pass
 
 
 class OrganizationUser(EMRBaseModel):
