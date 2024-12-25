@@ -163,7 +163,7 @@ router.register("organization", OrganizationViewSet, basename="organization")
 
 router.register("role", RoleViewSet, basename="role")
 
-router.register("new/patient", NewPatientViewSet, basename="new-patient")
+router.register("new/patients", NewPatientViewSet, basename="new-patient")
 
 organization_nested_router = NestedSimpleRouter(
     router, r"organization", lookup="organization"
