@@ -27,16 +27,27 @@ GEO_ADMIN = Role(
     name="Geo Admin",
     description="Administrator restricted with geographical boundaries",
 )
-ADMIN_ROLE = Role(
+FACILITY_ADMIN_ROLE = Role(
     name="Facility Admin",
     description="Administrator of a facility, associated to the person creating the facility.",
+)
+ADMIN_ROLE = Role(
+    name="Admin",
+    description="Administrator",
 )
 
 
 class RoleController:
     override_roles = []
     # Override Permission Controllers will be defined from plugs
-    internal_roles = [DOCTOR_ROLE, STAFF_ROLE, NURSE_ROLE, GEO_ADMIN, ADMIN_ROLE]
+    internal_roles = [
+        DOCTOR_ROLE,
+        STAFF_ROLE,
+        NURSE_ROLE,
+        GEO_ADMIN,
+        FACILITY_ADMIN_ROLE,
+        ADMIN_ROLE,
+    ]
 
     @classmethod
     def get_roles(cls):

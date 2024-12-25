@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from care.emr.models import EMRBaseModel
 
+
 class OrganizationCommonBase(EMRBaseModel):
     active = models.BooleanField(default=True)
     root_org = models.ForeignKey(
@@ -50,20 +51,15 @@ class OrganizationCommonBase(EMRBaseModel):
             return self.cached_parent_json
         return {}
 
-
     class Meta:
         abstract = True
 
 
 class FacilityOrganization(OrganizationCommonBase):
-
     facility = models.ForeignKey("facility.Facility", on_delete=models.CASCADE)
 
 
-
 class Organization(OrganizationCommonBase):
-
-
     pass
 
 

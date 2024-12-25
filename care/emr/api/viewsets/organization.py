@@ -9,7 +9,7 @@ from care.emr.api.viewsets.base import EMRModelViewSet
 from care.emr.models.organziation import Organization, OrganizationUser
 from care.emr.resources.organization.organization_user_spec import (
     OrganizationUserReadSpec,
-    OrganizationUserWriteSpec,
+    OrganizationUserWriteSpec, OrganizationUserUpdateSpec,
 )
 from care.emr.resources.organization.spec import (
     OrganizationReadSpec,
@@ -69,6 +69,7 @@ class OrganizationUsersViewSet(EMRModelViewSet):
     database_model = OrganizationUser
     pydantic_model = OrganizationUserWriteSpec
     pydantic_read_model = OrganizationUserReadSpec
+    pydantic_update_model = OrganizationUserUpdateSpec
 
     def get_organization_obj(self):
         return get_object_or_404(
@@ -77,9 +78,12 @@ class OrganizationUsersViewSet(EMRModelViewSet):
 
     def perform_create(self, instance):
         instance.organization = self.get_organization_obj()
+
         super().perform_create(instance)
 
     def validate_data(self, instance, model_obj=None):
+        if model_obj:
+            return
         organization = self.get_organization_obj()
         if (
             OrganizationUser.objects.filter(

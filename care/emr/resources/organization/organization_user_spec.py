@@ -11,18 +11,10 @@ from care.users.models import User
 class OrganizationUserBaseSpec(EMRResource):
     __model__ = OrganizationUser
     __exclude__ = ["user", "role"]
+    id : UUID4
 
-
-class OrganizationUserWriteSpec(OrganizationUserBaseSpec):
-    user: UUID4
+class OrganizationUserUpdateSpec(OrganizationUserBaseSpec):
     role: UUID4
-
-    @field_validator("user")
-    @classmethod
-    def validate_user(cls, user):
-        if User.objects.filter(external_id=user).exists():
-            return user
-        raise ValueError("User does not exist")
 
     @field_validator("role")
     @classmethod
@@ -30,6 +22,20 @@ class OrganizationUserWriteSpec(OrganizationUserBaseSpec):
         if RoleModel.objects.filter(external_id=role).exists():
             return role
         raise ValueError("Role does not exist")
+
+    def perform_extra_deserialization(self, is_update, obj):
+        obj.role = RoleModel.objects.get(external_id=self.role)
+
+
+class OrganizationUserWriteSpec(OrganizationUserUpdateSpec):
+    user: UUID4
+
+    @field_validator("user")
+    @classmethod
+    def validate_user(cls, user):
+        if User.objects.filter(external_id=user).exists():
+            return user
+        raise ValueError("User does not exist")
 
     def perform_extra_deserialization(self, is_update, obj):
         if not is_update:
@@ -43,6 +49,7 @@ class OrganizationUserReadSpec(OrganizationUserBaseSpec):
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
+        mapping["id"] = obj.external_id
         mapping["user"] = UserSpec.serialize(obj.user).to_json()
         mapping["role"] = RoleSpec.serialize(obj.role).to_json()
         return mapping

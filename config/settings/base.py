@@ -368,6 +368,7 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
+        "care.security.utils.permission_class.CareAuthentication",
     ],
     "DEFAULT_PAGINATION_CLASS": "care.utils.pagination.care_pagination.CareLimitOffsetPagination",
     "PAGE_SIZE": 14,
