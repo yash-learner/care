@@ -1,7 +1,7 @@
-from pydantic import UUID4, BaseModel
+from pydantic import UUID4
 
 from care.emr.resources.base import EMRResource
-from care.security.models import RoleModel, PermissionModel
+from care.security.models import PermissionModel, RoleModel
 
 
 class PermissionSpec(EMRResource):
