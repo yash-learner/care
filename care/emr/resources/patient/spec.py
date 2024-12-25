@@ -27,16 +27,16 @@ class PatientListSpec(PatientBaseSpec):
     date_of_birth: datetime.date
     year_of_birth: int
     death_datetime: datetime.datetime
-    nationality: str
-    passport_no: str | None = None
-    blood_group: str
+    blood_group: str | None = None
+
     geo_organization: dict | None = None
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
         mapping["gender"] = REVERSE_GENDER_CHOICES[obj.gender]
-        mapping["blood_group"] = REVERSE_BLOOD_GROUP_CHOICES[obj.blood_group]
+        if obj.blood_group:
+            mapping["blood_group"] = REVERSE_BLOOD_GROUP_CHOICES[obj.blood_group]
         if obj.geo_organization:
             mapping["geo_organization"] = OrganizationReadSpec.serialize(
                 obj.geo_organization
@@ -45,6 +45,8 @@ class PatientListSpec(PatientBaseSpec):
 
 class PatientRetrieveSpec(PatientListSpec):
     created_by: UserSpec | None = None
+    nationality: str
+    passport_no: str | None = None
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):

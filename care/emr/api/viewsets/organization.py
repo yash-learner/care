@@ -18,18 +18,8 @@ from care.emr.resources.organization.spec import (
 from care.security.models import RoleModel
 
 
-class ParentFilter(filters.UUIDFilter):
-    def filter(self, qs, value):
-        queryset = qs
-        if value:
-            queryset = queryset.filter(parent__external_id=value)
-        else:
-            queryset = queryset.filter(parent__isnull=True)
-        return queryset
-
-
 class OrganizationFilter(filters.FilterSet):
-    parent = ParentFilter(field_name="parent__external_id")
+    parent = filters.UUIDFilter(field_name="parent__external_id")
     name = filters.CharFilter(field_name="name", lookup_expr="icontains")
     org_type = filters.CharFilter(field_name="org_type", lookup_expr="iexact")
 
@@ -56,9 +46,12 @@ class OrganizationViewSet(EMRModelViewSet):
             )
 
     def get_queryset(self):
-        return (
+        queryset = (
             super().get_queryset().select_related("parent", "created_by", "updated_by")
         )
+        if "parent" in self.request.GET and not self.request.GET.get("parent"):
+            queryset = queryset.filter(parent__isnull=True)
+        return queryset
 
     @action(detail=False, methods=["GET"])
     def mine(self, request, *args, **kwargs):
