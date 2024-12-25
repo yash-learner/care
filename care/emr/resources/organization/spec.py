@@ -25,6 +25,7 @@ class OrganizationBaseSpec(EMRResource):
     parent: UUID4 | None = None
     metadata: dict = {}
 
+
 class OrganizationWriteSpec(OrganizationBaseSpec):
     @model_validator(mode="after")
     def validate_parent_organization(self):

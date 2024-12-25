@@ -22,6 +22,7 @@ class FacilityOrganization(EMRBaseModel):
     parent_cache = ArrayField(models.IntegerField(), default=list)
     metadata = models.JSONField(default=dict)
 
+
 class Organization(EMRBaseModel):
     active = models.BooleanField(default=True)
     root_org = models.ForeignKey(

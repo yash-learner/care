@@ -50,13 +50,18 @@ class OrganizationViewSet(EMRModelViewSet):
             super().get_queryset().select_related("parent", "created_by", "updated_by")
         )
 
-    @action(detail=False , methods=["GET"])
-    def mine(self , request, *args , **kwargs):
-        orgusers = OrganizationUser.objects.filter(user = request.user).select_related("organization")
+    @action(detail=False, methods=["GET"])
+    def mine(self, request, *args, **kwargs):
+        orgusers = OrganizationUser.objects.filter(user=request.user).select_related(
+            "organization"
+        )
         data = [
-            self.get_read_pydantic_model().serialize(orguser.organization).to_json() for orguser in orgusers
+            self.get_read_pydantic_model().serialize(orguser.organization).to_json()
+            for orguser in orgusers
         ]
-        return Response({ "count" : len(data) ,  "results" : data})
+        return Response({"count": len(data), "results": data})
+
+
 class OrganizationUsersViewSet(EMRModelViewSet):
     database_model = OrganizationUser
     pydantic_model = OrganizationUserWriteSpec

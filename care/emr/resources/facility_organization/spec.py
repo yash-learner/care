@@ -25,6 +25,7 @@ class FacilityOrganizationBaseSpec(EMRResource):
     parent: UUID4 | None = None
     metadata: dict = {}
 
+
 class FacilityOrganizationWriteSpec(FacilityOrganizationBaseSpec):
     facility: UUID4
 
@@ -77,6 +78,7 @@ class FacilityOrganizationReadSpec(FacilityOrganizationBaseSpec):
     system_generated: bool
     level_cache: int = 0
     has_children: bool
+
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id

@@ -34,6 +34,11 @@ def emr_exception_handler(exc, context):
         if type(exc.detail) is dict:  # noqa SIM102
             if "errors" in exc.detail:
                 return Response(exc.detail, status=400)
+        if type(exc.detail) is list:
+            errors = " , ".join([str(e) for e in exc.detail])
+            return Response(
+                {"errors": {"type": "validation_error", "msg": errors}}, status=400
+            )
         return Response(
             {"errors": {"type": "validation_error", "msg": exc.detail}}, status=400
         )
