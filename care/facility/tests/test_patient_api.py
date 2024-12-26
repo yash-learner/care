@@ -6,10 +6,6 @@ from rest_framework.test import APITestCase
 
 from care.facility.models import PatientNoteThreadChoices, ShiftingRequest
 from care.facility.models.file_upload import FileUpload
-from care.facility.models.icd11_diagnosis import (
-    ConditionVerificationStatus,
-    ICD11Diagnosis,
-)
 from care.facility.models.patient_base import NewDischargeReasonEnum
 from care.facility.models.patient_consultation import ConsentType, PatientCodeStatusType
 from care.utils.tests.test_utils import TestUtils
@@ -45,6 +41,7 @@ class ExpectedFacilityKeys(Enum):
     FEATURES = "features"
     PATIENT_COUNT = "patient_count"
     BED_COUNT = "bed_count"
+    DESCRIPTION = "description"
 
 
 class ExpectedWardObjectKeys(Enum):
@@ -80,6 +77,7 @@ class ExpectedFacilityTypeKeys(Enum):
 
 class ExpectedCreatedByObjectKeys(Enum):
     ID = "id"
+    EXTERNAL_ID = "external_id"
     FIRST_NAME = "first_name"
     USERNAME = "username"
     EMAIL = "email"
@@ -522,27 +520,6 @@ class PatientFilterTestCase(TestUtils, APITestCase):
         cls.consultation.save()
         cls.patient.last_consultation = cls.consultation
         cls.patient.save()
-        cls.diagnoses = ICD11Diagnosis.objects.filter(is_leaf=True)[10:15]
-        cls.create_consultation_diagnosis(
-            cls.consultation,
-            cls.diagnoses[0],
-            verification_status=ConditionVerificationStatus.CONFIRMED,
-        )
-        cls.create_consultation_diagnosis(
-            cls.consultation,
-            cls.diagnoses[1],
-            verification_status=ConditionVerificationStatus.DIFFERENTIAL,
-        )
-        cls.create_consultation_diagnosis(
-            cls.consultation,
-            cls.diagnoses[2],
-            verification_status=ConditionVerificationStatus.PROVISIONAL,
-        )
-        cls.create_consultation_diagnosis(
-            cls.consultation,
-            cls.diagnoses[3],
-            verification_status=ConditionVerificationStatus.UNCONFIRMED,
-        )
 
         cls.consent = cls.create_patient_consent(
             cls.consultation,
@@ -617,64 +594,6 @@ class PatientFilterTestCase(TestUtils, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["count"], 3)
         self.assertContains(response, str(self.patient.external_id))
-
-    def test_filter_by_diagnoses(self):
-        self.client.force_authenticate(user=self.user)
-        res = self.client.get(
-            self.get_base_url(),
-            {"diagnoses": ",".join([str(x.id) for x in self.diagnoses])},
-        )
-        self.assertContains(res, self.patient.external_id)
-        res = self.client.get(self.get_base_url(), {"diagnoses": self.diagnoses[4].id})
-        self.assertNotContains(res, self.patient.external_id)
-
-    def test_filter_by_diagnoses_unconfirmed(self):
-        self.client.force_authenticate(user=self.user)
-        res = self.client.get(
-            self.get_base_url(),
-            {"diagnoses_unconfirmed": self.diagnoses[3].id},
-        )
-        self.assertContains(res, self.patient.external_id)
-        res = self.client.get(
-            self.get_base_url(), {"diagnoses_unconfirmed": self.diagnoses[2].id}
-        )
-        self.assertNotContains(res, self.patient.external_id)
-
-    def test_filter_by_diagnoses_provisional(self):
-        self.client.force_authenticate(user=self.user)
-        res = self.client.get(
-            self.get_base_url(),
-            {"diagnoses_provisional": self.diagnoses[2].id},
-        )
-        self.assertContains(res, self.patient.external_id)
-        res = self.client.get(
-            self.get_base_url(), {"diagnoses_provisional": self.diagnoses[3].id}
-        )
-        self.assertNotContains(res, self.patient.external_id)
-
-    def test_filter_by_diagnoses_differential(self):
-        self.client.force_authenticate(user=self.user)
-        res = self.client.get(
-            self.get_base_url(),
-            {"diagnoses_differential": self.diagnoses[1].id},
-        )
-        self.assertContains(res, self.patient.external_id)
-        res = self.client.get(
-            self.get_base_url(), {"diagnoses_differential": self.diagnoses[0].id}
-        )
-        self.assertNotContains(res, self.patient.external_id)
-
-    def test_filter_by_diagnoses_confirmed(self):
-        self.client.force_authenticate(user=self.user)
-        res = self.client.get(
-            self.get_base_url(),
-            {"diagnoses_confirmed": self.diagnoses[0].id},
-        )
-        self.assertContains(res, self.patient.external_id)
-        res = self.client.get(
-            self.get_base_url(), {"diagnoses_confirmed": self.diagnoses[2].id}
-        )
-        self.assertNotContains(res, self.patient.external_id)
 
     def test_filter_by_review_missed(self):
         self.client.force_authenticate(user=self.user)
