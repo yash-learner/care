@@ -14,10 +14,12 @@ from care.emr.resources.organization.organization_user_spec import (
 )
 from care.emr.resources.organization.spec import (
     OrganizationReadSpec,
-    OrganizationWriteSpec,
+    OrganizationWriteSpec, OrganizationUpdateSpec,
 )
 from care.security.models import PermissionModel, RoleModel, RolePermission
+from config.patient_otp_authentication import JWTTokenPatientAuthentication
 
+from rest_framework.settings import api_settings
 
 class OrganizationFilter(filters.FilterSet):
     parent = filters.UUIDFilter(field_name="parent__external_id")
@@ -29,11 +31,23 @@ class OrganizationViewSet(EMRModelViewSet):
     database_model = Organization
     pydantic_model = OrganizationWriteSpec
     pydantic_read_model = OrganizationReadSpec
+    pydantic_update_model = OrganizationUpdateSpec
     filterset_class = OrganizationFilter
     filter_backends = [filters.DjangoFilterBackend]
+    authentication_classes = [JWTTokenPatientAuthentication] +api_settings.DEFAULT_AUTHENTICATION_CLASSES
+
+    def permissions_controller(self, request):
+        if self.action in ["list", "retrieve"]:
+            # All users including otp users can view the list of organizations
+            return True
+        if getattr(request.user , "is_alternative_login", False):
+            # Deny all other permissions in OTP mode
+            return False
+        return request.user.is_authenticated
 
     def authorize_create(self, instance):
         """
+        - TODO
         - Root Organizations can only be created by the superadmin
         - Organizations can only be created if the parent is accessible by the user
         - Organization creates require the Organization Create Permission
@@ -52,7 +66,10 @@ class OrganizationViewSet(EMRModelViewSet):
         )
         if "parent" in self.request.GET and not self.request.GET.get("parent"):
             queryset = queryset.filter(parent__isnull=True)
-        if "permission" in self.request.GET and not self.request.user.is_superuser:
+        if "permission" in self.request.GET and (
+            not self.request.user.is_superuser
+            or not getattr(self.request.user, "is_alternative_login", False)
+        ):
             permission = get_object_or_404(
                 PermissionModel, slug=self.request.GET.get("permission")
             )
@@ -83,6 +100,7 @@ class OrganizationUsersViewSet(EMRModelViewSet):
     pydantic_model = OrganizationUserWriteSpec
     pydantic_read_model = OrganizationUserReadSpec
     pydantic_update_model = OrganizationUserUpdateSpec
+
 
     def get_organization_obj(self):
         return get_object_or_404(

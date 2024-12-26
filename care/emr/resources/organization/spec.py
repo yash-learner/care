@@ -24,6 +24,8 @@ class OrganizationBaseSpec(EMRResource):
     description: str = ""
     metadata: dict = {}
 
+class OrganizationUpdateSpec(OrganizationBaseSpec):
+    pass
 
 class OrganizationWriteSpec(OrganizationBaseSpec):
     parent: UUID4 | None = None
