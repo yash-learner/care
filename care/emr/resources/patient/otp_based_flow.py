@@ -28,20 +28,20 @@ class PatientOTPReadSpec(PatientOTPBaseSpec):
     emergency_phone_number: str
     address: str
     pincode: int
-    state_id: str
-    district_id: str
-    local_body_id: str
-    ward_id: str
+    state: str
+    district: str
+    local_body: str
+    ward: str
     date_of_birth: datetime.date
     year_of_birth: int
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
-        mapping["state_id"] = obj.state and obj.state.id
-        mapping["district_id"] = obj.district and obj.district.id
-        mapping["local_body_id"] = obj.local_body and obj.local_body.id
-        mapping["ward_id"] = obj.ward and obj.ward.id
+        mapping["state"] = obj.state.name if obj.state else None
+        mapping["district"] = obj.district.name if obj.district else None
+        mapping["local_body"] = obj.local_body.name if obj.local_body else None
+        mapping["ward"] = obj.ward.name if obj.ward else None
 
 
 class PatientOTPWriteSpec(PatientOTPBaseSpec):
