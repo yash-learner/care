@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
+from rest_framework.settings import api_settings
 
 from care.emr.api.viewsets.base import EMRModelViewSet
 from care.emr.models.organziation import Organization, OrganizationUser
@@ -14,12 +15,12 @@ from care.emr.resources.organization.organization_user_spec import (
 )
 from care.emr.resources.organization.spec import (
     OrganizationReadSpec,
-    OrganizationWriteSpec, OrganizationUpdateSpec,
+    OrganizationUpdateSpec,
+    OrganizationWriteSpec,
 )
 from care.security.models import PermissionModel, RoleModel, RolePermission
 from config.patient_otp_authentication import JWTTokenPatientAuthentication
 
-from rest_framework.settings import api_settings
 
 class OrganizationFilter(filters.FilterSet):
     parent = filters.UUIDFilter(field_name="parent__external_id")
@@ -34,13 +35,16 @@ class OrganizationViewSet(EMRModelViewSet):
     pydantic_update_model = OrganizationUpdateSpec
     filterset_class = OrganizationFilter
     filter_backends = [filters.DjangoFilterBackend]
-    authentication_classes = [JWTTokenPatientAuthentication] +api_settings.DEFAULT_AUTHENTICATION_CLASSES
+    authentication_classes = [
+        JWTTokenPatientAuthentication,
+        *api_settings.DEFAULT_AUTHENTICATION_CLASSES,
+    ]
 
     def permissions_controller(self, request):
         if self.action in ["list", "retrieve"]:
             # All users including otp users can view the list of organizations
             return True
-        if getattr(request.user , "is_alternative_login", False):
+        if getattr(request.user, "is_alternative_login", False):
             # Deny all other permissions in OTP mode
             return False
         return request.user.is_authenticated
@@ -100,7 +104,6 @@ class OrganizationUsersViewSet(EMRModelViewSet):
     pydantic_model = OrganizationUserWriteSpec
     pydantic_read_model = OrganizationUserReadSpec
     pydantic_update_model = OrganizationUserUpdateSpec
-
 
     def get_organization_obj(self):
         return get_object_or_404(

@@ -1,4 +1,3 @@
-from django.contrib.auth.models import AnonymousUser
 from django.utils.translation import gettext_lazy as _
 from rest_framework.permissions import BasePermission
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -33,7 +32,7 @@ class CustomJWTAuthentication(JWTAuthentication):
             return None
         try:
             validated_token = self.get_validated_token(raw_token)
-        except:
+        except Exception:
             return None
         return self.get_user(validated_token), validated_token
 
