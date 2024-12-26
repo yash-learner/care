@@ -47,7 +47,6 @@ from care.facility.api.serializers.patient import (
     PatientSearchSerializer,
     PatientTransferSerializer,
 )
-from care.facility.api.serializers.patient_icmr import PatientICMRSerializer
 from care.facility.api.viewsets.mixins.history import HistoryMixin
 from care.facility.models import (
     CATEGORY_CHOICES,
@@ -521,8 +520,6 @@ class PatientViewSet(
     def get_serializer_class(self):
         if self.action == "list":
             return PatientListSerializer
-        if self.action == "icmr_sample":
-            return PatientICMRSerializer
         if self.action == "transfer":
             return PatientTransferSerializer
         return self.serializer_class
