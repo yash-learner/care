@@ -3,7 +3,7 @@ from enum import Enum
 
 from pydantic import UUID4, BaseModel, Field, field_validator
 
-from care.emr.fhir.schema.base import Coding, Period, Quantity
+from care.emr.fhir.schema.base import Coding, Quantity
 from care.emr.models.medication_administration import MedicationAdministration
 from care.emr.models.medication_request import MedicationRequest
 from care.emr.resources.base import EMRResource
@@ -124,9 +124,12 @@ class BaseMedicationAdministrationSpec(EMRResource):
         None,
         description="When request was initially authored",
     )
-    occurrence_period: Period | None = Field(
+    occurrence_period_start: datetime = Field(
+        description="When the medication was administration started",
+    )
+    occurrence_period_end: datetime | None = Field(
         None,
-        description="The period during which the medication was administered, end time is optional if ongoing",
+        description="When the medication administration ended. If not provided, it is assumed to be ongoing",
     )
     recorded: datetime | None = Field(
         None,

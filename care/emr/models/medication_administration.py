@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.db import models
 
 from care.emr.models.base import EMRBaseModel
@@ -18,7 +20,8 @@ class MedicationAdministration(EMRBaseModel):
         "emr.MedicationRequest", on_delete=models.CASCADE, null=True, blank=True
     )
     authored_on = models.DateTimeField(null=True, blank=True)
-    occurrence_period = models.JSONField(default=dict)
+    occurrence_period_start = models.DateTimeField(default=datetime.now)
+    occurrence_period_end = models.DateTimeField(null=True, blank=True)
     recorded = models.DateTimeField(null=True, blank=True)
     performer = models.JSONField(default=list)
     dosage = models.JSONField(null=True, blank=True)
