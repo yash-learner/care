@@ -55,16 +55,8 @@ class FacilityBasicInfoSerializer(serializers.ModelSerializer):
         child=serializers.ChoiceField(choices=FEATURE_CHOICES),
         required=False,
     )
-    patient_count = serializers.SerializerMethodField()
-    bed_count = serializers.SerializerMethodField()
 
-    def get_bed_count(self, facility):
-        return Bed.objects.filter(facility=facility).count()
 
-    def get_patient_count(self, facility):
-        return PatientRegistration.objects.filter(
-            facility=facility, is_active=True
-        ).count()
 
     def get_facility_type(self, facility):
         return {
@@ -88,8 +80,6 @@ class FacilityBasicInfoSerializer(serializers.ModelSerializer):
             "facility_type",
             "read_cover_image_url",
             "features",
-            "patient_count",
-            "bed_count",
         )
 
 
@@ -102,7 +92,6 @@ class FacilitySerializer(FacilityBasicInfoSerializer):
         child=serializers.ChoiceField(choices=FEATURE_CHOICES),
         required=False,
     )
-    bed_count = serializers.SerializerMethodField()
 
     facility_flags = serializers.SerializerMethodField()
 
@@ -143,8 +132,6 @@ class FacilitySerializer(FacilityBasicInfoSerializer):
             "expected_type_c_cylinders",
             "expected_type_d_cylinders",
             "read_cover_image_url",
-            "patient_count",
-            "bed_count",
             "facility_flags",
         ]
         read_only_fields = ("modified_date", "created_date")

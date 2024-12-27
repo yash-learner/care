@@ -78,8 +78,6 @@ class PatientListSerializer(serializers.ModelSerializer):
     district_object = DistrictSerializer(source="district", read_only=True)
     state_object = StateSerializer(source="state", read_only=True)
 
-    last_consultation = PatientConsultationSerializer(read_only=True)
-
     blood_group = ChoiceField(choices=BLOOD_GROUP_CHOICES, required=True)
     disease_status = ChoiceField(
         choices=DISEASE_STATUS_CHOICES, default=DiseaseStatusEnum.SUSPECTED.value
@@ -140,7 +138,6 @@ class PatientDetailSerializer(PatientListSerializer):
         child=MedicalHistorySerializer(), required=False
     )
 
-    last_consultation = PatientConsultationSerializer(read_only=True)
     facility_object = FacilitySerializer(source="facility", read_only=True)
 
     source = ChoiceField(

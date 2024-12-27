@@ -149,7 +149,6 @@ class PatientConsultationSerializer(serializers.ModelSerializer):
 
     last_edited_by = UserBaseMinimumSerializer(read_only=True)
     created_by = UserBaseMinimumSerializer(read_only=True)
-    last_daily_round = DailyRoundSerializer(read_only=True)
 
     current_bed = ConsultationBedSerializer(read_only=True)
 
