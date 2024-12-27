@@ -64,7 +64,7 @@ class NoteThreadViewSet(
             # TODO Authorise Patient
             queryset = queryset.filter(encounter__isnull=True)
 
-        return queryset
+        return queryset.order_by("-created_date")
 
 
 class NoteMessageViewSet(
@@ -91,5 +91,5 @@ class NoteMessageViewSet(
         return (
             super()
             .get_queryset()
-            .filter(thread__external_id=self.kwargs["thread_external_id"])
+            .filter(thread__external_id=self.kwargs["thread_external_id"]).order_by("-created_date")
         )
