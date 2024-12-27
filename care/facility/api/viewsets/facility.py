@@ -4,7 +4,7 @@ from django.utils.decorators import method_decorator
 from django_filters import rest_framework as filters
 from djqscsv import render_to_csv_response
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from dry_rest_permissions.generics import DRYPermissionFiltersBase, DRYPermissions
+from dry_rest_permissions.generics import DRYPermissions
 from rest_framework import filters as drf_filters
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action, parser_classes
@@ -12,6 +12,7 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from care.emr.models.organziation import FacilityOrganizationUser
 from care.facility.api.serializers.facility import (
     FacilityBasicInfoSerializer,
     FacilityImageUploadSerializer,
@@ -51,20 +52,6 @@ class FacilityFilter(filters.FilterSet):
         return queryset
 
 
-class FacilityQSPermissions(DRYPermissionFiltersBase):
-    def filter_queryset(self, request, queryset, view):
-        if request.user.is_superuser:
-            pass
-        elif request.user.user_type >= User.TYPE_VALUE_MAP["StateLabAdmin"]:
-            queryset = queryset.filter(state=request.user.state)
-        elif request.user.user_type >= User.TYPE_VALUE_MAP["DistrictLabAdmin"]:
-            queryset = queryset.filter(district=request.user.district)
-        else:
-            queryset = queryset.filter(users__id__exact=request.user.id)
-
-        return queryset
-
-
 class FacilityViewSet(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
@@ -78,9 +65,7 @@ class FacilityViewSet(
     queryset = Facility.objects.all().select_related(
         "ward", "local_body", "district", "state"
     )
-    permission_classes = (IsAuthenticated, DRYPermissions)
     filter_backends = (
-        FacilityQSPermissions,
         filters.DjangoFilterBackend,
         drf_filters.SearchFilter,
     )
@@ -93,9 +78,17 @@ class FacilityViewSet(
     FACILITY_DOCTORS_CSV_KEY = "doctors"
     FACILITY_TRIAGE_CSV_KEY = "triage"
 
-    def initialize_request(self, request, *args, **kwargs):
-        self.action = self.action_map.get(request.method.lower())
-        return super().initialize_request(request, *args, **kwargs)
+    def get_queryset(self):
+        # TODO Add Permission checks
+        return (
+            super()
+            .get_queryset()
+            .filter(
+                id__in=FacilityOrganizationUser.objects.filter(
+                    user=self.request.user
+                ).values_list("organization__facility_id")
+            )
+        )
 
     def get_serializer_class(self):
         if self.request.query_params.get("all") == "true":

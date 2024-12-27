@@ -11,9 +11,7 @@ class Observation(EMRBaseModel):
     alternate_coding = models.JSONField(default=list)
     subject_type = models.CharField(max_length=255)
     subject_id = models.UUIDField()
-    patient = models.ForeignKey(
-        "facility.PatientRegistration", on_delete=models.CASCADE
-    )
+    patient = models.ForeignKey("emr.Patient", on_delete=models.CASCADE)
     encounter = models.ForeignKey("emr.Encounter", on_delete=models.CASCADE)
     effective_datetime = models.DateTimeField()
     data_entered_by = models.ForeignKey(

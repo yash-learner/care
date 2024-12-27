@@ -22,7 +22,7 @@ from care.emr.api.viewsets.organization import (
     OrganizationUsersViewSet,
     OrganizationViewSet,
 )
-from care.emr.api.viewsets.patient import NewPatientViewSet
+from care.emr.api.viewsets.patient import PatientViewSet
 from care.emr.api.viewsets.questionnaire import QuestionnaireViewSet
 from care.emr.api.viewsets.questionnaire_response import QuestionnaireResponseViewSet
 from care.emr.api.viewsets.roles import RoleViewSet
@@ -72,8 +72,6 @@ from care.facility.api.viewsets.patient import (
     FacilityDischargedPatientViewSet,
     PatientNotesEditViewSet,
     PatientNotesViewSet,
-    PatientSearchViewSet,
-    PatientViewSet,
 )
 from care.facility.api.viewsets.resources import (
     ResourceRequestCommentViewSet,
@@ -132,8 +130,6 @@ router.register("questionnaire", QuestionnaireViewSet, basename="questionnaire")
 router.register("organization", OrganizationViewSet, basename="organization")
 
 router.register("role", RoleViewSet, basename="role")
-
-router.register("new/patients", NewPatientViewSet, basename="new-patient")
 
 organization_nested_router = NestedSimpleRouter(
     router, r"organization", lookup="organization"
@@ -256,7 +252,7 @@ assetbed_nested_router.register(
     r"camera_presets", AssetBedCameraPresetViewSet, basename="assetbed-camera-presets"
 )
 
-router.register("patient/search", PatientSearchViewSet, basename="patient-search")
+# router.register("patient/search", PatientSearchViewSet, basename="patient-search")
 router.register("patient", PatientViewSet, basename="patient")
 patient_nested_router = NestedSimpleRouter(router, r"patient", lookup="patient")
 patient_nested_router.register(r"notes", PatientNotesViewSet, basename="patient-notes")

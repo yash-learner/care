@@ -28,9 +28,7 @@ class QuestionnaireResponse(EMRBaseModel):
     responses = models.JSONField(default=list)
     structured_responses = models.JSONField(default=dict)
     structured_response_type = models.CharField(default=None, blank=True, null=True)
-    patient = models.ForeignKey(
-        "facility.PatientRegistration", on_delete=models.CASCADE
-    )
+    patient = models.ForeignKey("emr.Patient", on_delete=models.CASCADE)
     encounter = models.ForeignKey(
         "emr.Encounter", on_delete=models.CASCADE, null=True, blank=True
     )

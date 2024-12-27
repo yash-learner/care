@@ -91,5 +91,6 @@ class NoteMessageViewSet(
         return (
             super()
             .get_queryset()
-            .filter(thread__external_id=self.kwargs["thread_external_id"]).order_by("-created_date")
+            .filter(thread__external_id=self.kwargs["thread_external_id"])
+            .order_by("-created_date")
         )

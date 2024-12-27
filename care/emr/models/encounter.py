@@ -7,9 +7,7 @@ from care.emr.models import EMRBaseModel, FacilityOrganization, TokenBooking
 class Encounter(EMRBaseModel):
     status = models.CharField(max_length=100, null=True, blank=True)
     encounter_class = models.CharField(max_length=100, null=True, blank=True)
-    patient = models.ForeignKey(
-        "facility.PatientRegistration", on_delete=models.CASCADE
-    )
+    patient = models.ForeignKey("emr.Patient", on_delete=models.CASCADE)
     period = models.JSONField(default=dict)
     facility = models.ForeignKey("facility.Facility", on_delete=models.PROTECT)
     appointment = models.ForeignKey(

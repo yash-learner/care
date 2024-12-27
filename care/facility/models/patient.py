@@ -451,19 +451,6 @@ class PatientRegistration(PatientBaseModel, PatientPermissionMixin):
 
     objects = BaseManager()
 
-    def rebuild_organization_cache(self):
-        organization_parents = []
-        if self.geo_organization:
-            organization_parents.extend(self.geo_organization.parent_cache)
-        if self.id:
-            for patient_organization in PatientOrganizations.objects.filter(
-                patient_id=self.id
-            ):
-                organization_parents.extend(
-                    patient_organization.organization.parent_cache
-                )
-        self.organization_cache = list(set(organization_parents))
-
     @property
     def is_expired(self) -> bool:
         return self.death_datetime is not None
@@ -496,8 +483,6 @@ class PatientRegistration(PatientBaseModel, PatientPermissionMixin):
             self.district = self.local_body.district
         if self.district is not None:
             self.state = self.district.state
-
-        self.rebuild_organization_cache()
 
         if self.date_of_birth and not self.year_of_birth:
             self.year_of_birth = self.date_of_birth.year
@@ -618,17 +603,6 @@ class PatientRegistration(PatientBaseModel, PatientPermissionMixin):
         "last_consultation__discharge_date": format_as_date,
         "last_consultation__discharge_date__time": format_as_time,
     }
-
-
-class PatientOrganizations(BaseModel):
-    patient = models.ForeignKey(PatientRegistration, on_delete=models.CASCADE)
-    organization = models.ForeignKey("emr.Organization", on_delete=models.CASCADE)
-    # TODO : Add Role here to deny certain permissions for certain organizations
-
-    def save(self, *args, **kwargs) -> None:
-        super().save(*args, **kwargs)
-        self.patient.rebuild_organization_cache()
-        self.patient.save(update_fields=["organization_cache"])
 
 
 class PatientMetaInfo(models.Model):

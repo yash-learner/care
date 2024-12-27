@@ -7,9 +7,7 @@ class MedicationStatement(EMRBaseModel):
     status = models.CharField(max_length=100)
     reason = models.CharField(max_length=100, null=True, blank=True)
     medication = models.JSONField(default=dict)
-    patient = models.ForeignKey(
-        "facility.PatientRegistration", on_delete=models.CASCADE
-    )
+    patient = models.ForeignKey("emr.Patient", on_delete=models.CASCADE)
     encounter = models.ForeignKey("emr.Encounter", on_delete=models.CASCADE)
     effective_period = models.JSONField(default=dict)
     information_source = models.CharField(max_length=100)

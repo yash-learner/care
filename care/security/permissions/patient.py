@@ -10,7 +10,7 @@ from care.security.roles.role import (
 )
 
 
-class FacilityPermissions(enum.Enum):
+class PatientPermissions(enum.Enum):
     can_list_patients = Permission(
         "Can list patients",
         "",

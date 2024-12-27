@@ -1,22 +1,16 @@
 import datetime
-from enum import Enum
 
 from django.utils import timezone
 from pydantic import UUID4, field_validator, model_validator
 
 from care.emr.models import Organization
+from care.emr.models.patient import Patient
 from care.emr.resources.base import EMRResource
-from care.facility.models import PatientRegistration
-
-
-class GenderChoices(str, Enum):
-    Male = 1
-    Female = 2
-    Non_Binary = 3
+from care.emr.resources.patient.spec import BloodGroupChoices, GenderChoices
 
 
 class PatientOTPBaseSpec(EMRResource):
-    __model__ = PatientRegistration
+    __model__ = Patient
     __exclude__ = ["geo_organization"]
     id: UUID4 = None
 
@@ -31,6 +25,7 @@ class PatientOTPReadSpec(PatientOTPBaseSpec):
     date_of_birth: datetime.date
     year_of_birth: int
     geo_organization: dict | None = None
+    blood_group: BloodGroupChoices | None = None
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -47,6 +42,7 @@ class PatientOTPWriteSpec(PatientOTPBaseSpec):
     address: str
     pincode: int
     geo_organization: UUID4
+    blood_group: BloodGroupChoices | None = None
 
     @model_validator(mode="after")
     def validate_age(self):
