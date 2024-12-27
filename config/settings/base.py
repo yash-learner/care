@@ -279,7 +279,7 @@ X_FRAME_OPTIONS = "DENY"
 CSRF_TRUSTED_ORIGINS = env.json("CSRF_TRUSTED_ORIGINS", default=[])
 
 # https://github.com/adamchainz/django-cors-headers#cors_allowed_origin_regexes-sequencestr--patternstr
-# CORS_URLS_REGEX = r"^/api/.*$"  # noqa: ERA001
+# CORS_URLS_REGEX = r"^/api/.*$"
 
 # EMAIL
 # ------------------------------------------------------------------------------
@@ -305,11 +305,11 @@ EMAIL_SUBJECT_PREFIX = env("DJANGO_EMAIL_SUBJECT_PREFIX", default="[Care]")
 # ADMIN
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#server-email
-# SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)  # noqa F405
+# SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
 # https://docs.djangoproject.com/en/dev/ref/settings/#admins
-# ADMINS = [("""👪""", "admin@ohc.network")]  # noqa: ERA001
+# ADMINS = [("""👪""", "admin@ohc.network")]
 # https://docs.djangoproject.com/en/dev/ref/settings/#managers
-# MANAGERS = ADMINS  # noqa: ERA001
+# MANAGERS = ADMINS
 
 # Django Admin URL.
 ADMIN_URL = env("DJANGO_ADMIN_URL", default="admin")

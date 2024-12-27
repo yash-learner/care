@@ -17,7 +17,6 @@ from care.facility.api.serializers.consultation_diagnosis import (
     ConsultationCreateDiagnosisSerializer,
     ConsultationDiagnosisSerializer,
 )
-from care.facility.api.serializers.daily_round import DailyRoundSerializer
 from care.facility.api.serializers.encounter_symptom import (
     EncounterCreateSymptomSerializer,
     EncounterSymptomSerializer,

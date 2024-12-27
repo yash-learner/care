@@ -5,13 +5,13 @@ from dateutil import parser
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
+from care.emr.models.encounter import Encounter
 from care.emr.models.observation import Observation
 from care.emr.models.questionnaire import Questionnaire, QuestionnaireResponse
 from care.emr.registries.care_valueset.care_valueset import validate_valueset
 from care.emr.resources.observation.spec import ObservationSpec, ObservationStatus
 from care.emr.resources.questionnaire.spec import QuestionType
 from care.facility.models import PatientRegistration
-from care.facility.models.patient_consultation import PatientConsultation
 
 
 def check_required(questionnaire, questionnaire_ref):
@@ -259,9 +259,7 @@ def handle_response(questionnaire_obj: Questionnaire, results, user):
     if questionnaire_obj.subject_type == "patient":
         encounter = None
     else:
-        encounter = PatientConsultation.objects.filter(
-            external_id=results.encounter
-        ).first()
+        encounter = Encounter.objects.filter(external_id=results.encounter).first()
         if not encounter:
             raise ValidationError(
                 {"type": "object_not_found", "msg": "Encounter not found"}

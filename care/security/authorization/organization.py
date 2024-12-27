@@ -11,7 +11,7 @@ class OrganizationAccess(AuthorizationHandler):
         Check if the user has permission to create organizations under the given organization
         """
         return self.check_permission_in_organization(
-            [OrganizationPermissions.can_create_organization.value],
+            [OrganizationPermissions.can_create_organization.name],
             user,
             [*organization.parent_cache, organization.id],
         )
@@ -21,7 +21,7 @@ class OrganizationAccess(AuthorizationHandler):
         Check if the user has permission to manage given organization.
         """
         return self.check_permission_in_organization(
-            [OrganizationPermissions.can_manage_organization.value],
+            [OrganizationPermissions.can_manage_organization.name],
             user,
             [*organization.parent_cache, organization.id],
         )
@@ -31,7 +31,7 @@ class OrganizationAccess(AuthorizationHandler):
         Check if the user has permission to create organizations under the given organization
         """
         return self.check_permission_in_organization(
-            [OrganizationPermissions.can_manage_organization_users.value],
+            [OrganizationPermissions.can_manage_organization_users.name],
             user,
             [*organization.parent_cache, organization.id],
         )
@@ -41,7 +41,7 @@ class OrganizationAccess(AuthorizationHandler):
         Check if the user has permission to create organizations under the given organization
         """
         return self.check_permission_in_organization(
-            [OrganizationPermissions.can_list_organization_users.value],
+            [OrganizationPermissions.can_list_organization_users.name],
             user,
             [*organization.parent_cache, organization.id],
         )

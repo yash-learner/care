@@ -32,7 +32,6 @@ from care.emr.api.viewsets.scheduling.availability_exceptions import (
 from care.emr.api.viewsets.scheduling.booking import TokenBookingViewSet
 from care.emr.api.viewsets.units import UnitsView
 from care.emr.api.viewsets.valueset import ValueSetViewSet
-from care.facility.api.viewsets.ambulance import AmbulanceViewSet
 from care.facility.api.viewsets.asset import (
     AssetLocationViewSet,
     AssetPublicQRViewSet,
@@ -59,10 +58,8 @@ from care.facility.api.viewsets.facility import (
     FacilitySpokesViewSet,
     FacilityViewSet,
 )
-from care.facility.api.viewsets.facility_capacity import FacilityCapacityViewSet
 from care.facility.api.viewsets.facility_users import FacilityUserViewSet
 from care.facility.api.viewsets.file_upload import FileUploadViewSet
-from care.facility.api.viewsets.hospital_doctor import HospitalDoctorViewSet
 from care.facility.api.viewsets.inventory import (
     FacilityInventoryItemViewSet,
     FacilityInventoryLogViewSet,
@@ -76,10 +73,6 @@ from care.facility.api.viewsets.patient import (
     PatientNotesViewSet,
     PatientSearchViewSet,
     PatientViewSet,
-)
-from care.facility.api.viewsets.patient_consultation import (
-    PatientConsentViewSet,
-    PatientConsultationViewSet,
 )
 from care.facility.api.viewsets.resources import (
     ResourceRequestCommentViewSet,
@@ -118,8 +111,6 @@ router.register("local_body", LocalBodyViewSet, basename="local-body")
 router.register("ward", WardViewSet, basename="ward")
 
 router.register("files", FileUploadViewSet, basename="files")
-
-router.register("ambulance", AmbulanceViewSet, basename="ambulance")
 
 router.register("otp", OTPLoginView, basename="otp-login")
 
@@ -170,12 +161,6 @@ router.register("getallfacilities", AllFacilityViewSet, basename="getallfaciliti
 facility_nested_router = NestedSimpleRouter(router, r"facility", lookup="facility")
 facility_nested_router.register(
     r"get_users", FacilityUserViewSet, basename="facility-users"
-)
-facility_nested_router.register(
-    r"hospital_doctor", HospitalDoctorViewSet, basename="hospital-doctor"
-)
-facility_nested_router.register(
-    r"capacity", FacilityCapacityViewSet, basename="facility-capacity"
 )
 facility_nested_router.register(
     r"inventory", FacilityInventoryLogViewSet, basename="facility-inventory"
@@ -289,7 +274,7 @@ patient_nested_router.register(r"symptom", SymptomViewSet, basename="symptom")
 patient_nested_router.register(r"diagnosis", DiagnosisViewSet, basename="diagnosis")
 
 
-patient_nested_router.register(r"encounter", EncounterViewSet, basename="encounter")
+facility_nested_router.register(r"encounter", EncounterViewSet, basename="encounter")
 
 patient_nested_router.register(
     "observation", ObservationViewSet, basename="observation"
@@ -313,16 +298,16 @@ patient_nested_router.register(
     basename="medication-statement",
 )
 
-router.register(
-    "consultation", PatientConsultationViewSet, basename="patient-consultation"
-)
-consultation_nested_router = NestedSimpleRouter(
-    router, r"consultation", lookup="consultation"
-)
-
-consultation_nested_router.register(
-    r"consents", PatientConsentViewSet, basename="consultation-consents"
-)
+# router.register(
+#     "consultation", PatientConsultationViewSet, basename="patient-consultation"
+# )
+# consultation_nested_router = NestedSimpleRouter(
+#     router, r"consultation", lookup="consultation"
+# )
+#
+# consultation_nested_router.register(
+#     r"consents", PatientConsentViewSet, basename="consultation-consents"
+# )
 
 # Public endpoints
 router.register("public/asset", AssetPublicViewSet, basename="public-asset")
@@ -339,7 +324,7 @@ urlpatterns = [
     path("", include(assetbed_nested_router.urls)),
     path("", include(patient_nested_router.urls)),
     path("", include(patient_notes_nested_router.urls)),
-    path("", include(consultation_nested_router.urls)),
+    # path("", include(consultation_nested_router.urls)),
     path("", include(resource_nested_router.urls)),
     path("", include(shifting_nested_router.urls)),
     path("", include(organization_nested_router.urls)),

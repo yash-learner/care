@@ -11,7 +11,7 @@ class MedicationStatement(EMRBaseModel):
         "facility.PatientRegistration", on_delete=models.CASCADE
     )
     encounter = models.ForeignKey(
-        "facility.PatientConsultation", on_delete=models.CASCADE
+        "emr.Encounter", on_delete=models.CASCADE
     )
     effective_period = models.JSONField(default=dict)
     information_source = models.CharField(max_length=100)

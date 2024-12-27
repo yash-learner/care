@@ -1,6 +1,96 @@
-from care.emr.api.viewsets.base import EMRModelViewSet
-from care.facility.models import PatientConsultation
+from django.db import transaction
+from django_filters import rest_framework as filters
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.generics import get_object_or_404
+
+from care.emr.api.viewsets.base import (
+    EMRBaseViewSet,
+    EMRCreateMixin,
+    EMRListMixin,
+    EMRRetrieveMixin,
+    EMRUpdateMixin,
+)
+from care.emr.models import Encounter, EncounterOrganization, FacilityOrganization
+from care.emr.resources.encounter.constants import COMPLETED_CHOICES
+from care.emr.resources.encounter.spec import (
+    EncounterCreateSpec,
+    EncounterListSpec,
+    EncounterRetrieveSpec,
+    EncounterUpdateSpec,
+)
+from care.facility.models import Facility
+from care.security.authorization import AuthorizationController
 
 
-class EncounterViewSet(EMRModelViewSet):
-    database_model = PatientConsultation
+class LiveFilter(filters.BooleanFilter):
+    def filter(self, qs, value):
+        queryset = qs
+        if value is True:
+            queryset = queryset.filter(status__in=COMPLETED_CHOICES)
+        elif value is False:
+            queryset = queryset.exclude(status__in=COMPLETED_CHOICES)
+        return queryset
+
+
+class EncounterFilters(filters.FilterSet):
+    patient = filters.UUIDFilter(field_name="patient__external_id")
+    status = filters.CharFilter(field_name="status", lookup_expr="iexact")
+    encounter_class = filters.CharFilter(
+        field_name="encounter_class", lookup_expr="iexact"
+    )
+    priority = filters.CharFilter(field_name="priority", lookup_expr="iexact")
+    external_identifier = filters.CharFilter(
+        field_name="priority", lookup_expr="icontains"
+    )
+    live = LiveFilter()
+
+
+class EncounterViewSet(
+    EMRCreateMixin, EMRRetrieveMixin, EMRUpdateMixin, EMRListMixin, EMRBaseViewSet
+):
+    database_model = Encounter
+    pydantic_model = EncounterCreateSpec
+    pydantic_update_model = EncounterUpdateSpec
+    pydantic_read_model = EncounterListSpec
+    pydantic_retrieve_model = EncounterRetrieveSpec
+    filterset_class = EncounterFilters
+    filter_backends = [filters.DjangoFilterBackend]
+
+    def get_facility_obj(self):
+        return get_object_or_404(
+            Facility, external_id=self.kwargs["facility_external_id"]
+        )
+
+    def perform_create(self, instance):
+        facility = self.get_facility_obj()
+        with transaction.atomic():
+            organizations = getattr(instance, "_organizations", [])
+            instance.facility = facility
+            super().perform_create(instance)
+            for organization in organizations:
+                EncounterOrganization.objects.create(
+                    encounter=instance,
+                    organization=FacilityOrganization.objects.get(
+                        external_id=organization, facility=facility
+                    ),
+                )
+            if not organizations:
+                instance.sync_organization_cache()
+
+    def authorize_update(self, request_obj, model_instance):
+        self.authorize_create(request_obj)
+
+    def authorize_create(self, instance):
+        # Check if encounter create permission exists on Facility Organization
+        facility = self.get_facility_obj()
+        if not AuthorizationController.call(
+            "can_create_encounter_obj", self.request.user, facility
+        ):
+            raise PermissionDenied("You do not have permission to create encounter")
+
+    def get_queryset(self):
+        facility = self.get_facility_obj()
+        queryset = super().get_queryset().filter(facility=facility)
+        return AuthorizationController.call(
+            "get_filtered_encounters", queryset, self.request.user, facility
+        )

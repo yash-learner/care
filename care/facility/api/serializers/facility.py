@@ -3,9 +3,7 @@ from django.db.models import Q
 from rest_framework import serializers
 
 from care.facility.models import FACILITY_TYPES, Facility, FacilityLocalGovtBody
-from care.facility.models.bed import Bed
 from care.facility.models.facility import FEATURE_CHOICES, FacilityHubSpoke
-from care.facility.models.patient import PatientRegistration
 from care.users.api.serializers.lsg import (
     DistrictSerializer,
     LocalBodySerializer,
@@ -55,8 +53,6 @@ class FacilityBasicInfoSerializer(serializers.ModelSerializer):
         child=serializers.ChoiceField(choices=FEATURE_CHOICES),
         required=False,
     )
-
-
 
     def get_facility_type(self, facility):
         return {

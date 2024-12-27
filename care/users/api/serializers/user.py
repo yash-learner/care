@@ -4,7 +4,7 @@ from django.utils.timezone import now
 from rest_framework import exceptions, serializers
 
 from care.emr.models import Organization
-from care.emr.models.organziation import OrganizationUser
+from care.emr.models.organziation import FacilityOrganizationUser, OrganizationUser
 from care.emr.resources.organization.spec import OrganizationReadSpec
 from care.emr.resources.role.spec import PermissionSpec
 from care.facility.api.serializers.facility import FacilityBareMinimumSerializer
@@ -309,6 +309,8 @@ class UserSerializer(SignUpSerializer):
 
     permissions = serializers.SerializerMethodField()
 
+    facilities = serializers.SerializerMethodField()
+
     def get_organizations(self, user):
         organizations = Organization.objects.filter(
             id__in=OrganizationUser.objects.filter(user=user).values_list(
@@ -325,6 +327,14 @@ class UserSerializer(SignUpSerializer):
         ).select_related("permission")
         return [
             PermissionSpec.serialize(obj.permission).to_json() for obj in permissions
+        ]
+
+    def get_facilities(self, user):
+        return [
+            FacilityBareMinimumSerializer(obj.organization.facility).data
+            for obj in FacilityOrganizationUser.objects.filter(
+                user=user
+            ).select_related("organization__facility")
         ]
 
     def get_user_flags(self, user) -> tuple[str]:
@@ -368,6 +378,7 @@ class UserSerializer(SignUpSerializer):
             "last_login",
             "organizations",
             "permissions",
+            "facilities",
         )
         read_only_fields = (
             "is_superuser",

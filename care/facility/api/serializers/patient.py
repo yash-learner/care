@@ -9,9 +9,6 @@ from care.facility.api.serializers.facility import (
     FacilityBasicInfoSerializer,
     FacilitySerializer,
 )
-from care.facility.api.serializers.patient_consultation import (
-    PatientConsultationSerializer,
-)
 from care.facility.models import (
     DISEASE_CHOICES,
     GENDER_CHOICES,

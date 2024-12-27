@@ -15,7 +15,7 @@ class Observation(EMRBaseModel):
         "facility.PatientRegistration", on_delete=models.CASCADE
     )
     encounter = models.ForeignKey(
-        "facility.PatientConsultation", on_delete=models.CASCADE
+        "emr.Encounter", on_delete=models.CASCADE
     )
     effective_datetime = models.DateTimeField()
     data_entered_by = models.ForeignKey(

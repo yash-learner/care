@@ -32,11 +32,10 @@ class QuestionnaireResponse(EMRBaseModel):
         "facility.PatientRegistration", on_delete=models.CASCADE
     )
     encounter = models.ForeignKey(
-        "facility.PatientConsultation", on_delete=models.CASCADE, null=True, blank=True
+        "emr.Encounter", on_delete=models.CASCADE, null=True, blank=True
     )
 
     # TODO : Add index for subject_id and subject_type in descending order
-
 
 class QuestionnaireOrganization(EMRBaseModel):
     questionnaire = models.ForeignKey(Questionnaire, on_delete=models.CASCADE)

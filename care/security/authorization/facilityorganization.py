@@ -13,11 +13,9 @@ class FacilityOrganizationAccess(AuthorizationHandler):
         Check if the user has permission to create organizations under the given organization
         """
         return self.check_permission_in_facility_organization(
-            [
-                FacilityOrganizationPermissions.can_list_facility_organization_users.value
-            ],
+            [FacilityOrganizationPermissions.can_list_facility_organization_users.name],
             user,
-            [*organization.parent_cache, organization.id],
+            orgs=[*organization.parent_cache, organization.id],
         )
 
 
