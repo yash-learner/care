@@ -64,11 +64,7 @@ class NoteThreadViewSet(
             # TODO Authorise Patient
             queryset = queryset.filter(encounter__isnull=True)
 
-        return (
-            super()
-            .get_queryset()
-            .filter(patient__external_id=self.kwargs["patient_external_id"])
-        )
+        return queryset
 
 
 class NoteMessageViewSet(
