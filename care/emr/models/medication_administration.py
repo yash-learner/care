@@ -7,7 +7,7 @@ from care.emr.models.base import EMRBaseModel
 
 class MedicationAdministration(EMRBaseModel):
     status = models.CharField(max_length=100)
-    status_reason = models.CharField(max_length=100, null=True, blank=True)
+    status_reason = models.JSONField(null=True, blank=True)
     category = models.CharField(max_length=100, null=True, blank=True)
     medication = models.JSONField(default=dict)
     patient = models.ForeignKey(

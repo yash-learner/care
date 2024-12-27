@@ -28,20 +28,6 @@ class MedicationAdministrationStatus(str, Enum):
     cancelled = "cancelled"
 
 
-# https://build.fhir.org/valueset-reason-medication-not-given-codes.html#4.4.1.194
-class MedicationAdministrationStatusReason(str, Enum):
-    drug_not_available = "242990004"
-    drug_declined_by_patient = "182895007"
-    drug_declined_by_patient_dislikes_taste = "182896008"
-    drug_declined_by_patient_side_effects = "182897004"
-    drug_declined_by_patient_inconvenient = "182898009"
-    drug_declined_by_patient_problem_swallowing = "182899001"
-    drug_declined_by_patient_patient_beliefs = "182900006"
-    drug_declined_by_patient_alternative_therapy = "182901005"
-    drug_declined_by_patient_cannot_pay_script = "182902003"
-    drug_declined_by_patient_reason_unknown = "182903008"
-
-
 class MedicationAdministrationCategory(str, Enum):
     inpatient = "inpatient"
     outpatient = "outpatient"
@@ -105,9 +91,10 @@ class BaseMedicationAdministrationSpec(EMRResource):
         ...,
         description="Represents the current status of the medication administration",
     )
-    status_reason: MedicationAdministrationStatusReason | None = Field(
+    status_reason: Coding | None = Field(
         None,
         description="The reason why the medication was not administered",
+        json_schema_extra={"slug": CARE_MEDICATION_VALUESET.slug},
     )
     category: MedicationAdministrationCategory | None = Field(
         None,
