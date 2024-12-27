@@ -1,5 +1,9 @@
 from care.security.models import RoleAssociation, RolePermission
 from care.security.permissions.facility import FacilityPermissions
+from care.security.permissions.facility_organization import (
+    FacilityOrganizationPermissions,
+)
+from care.security.permissions.organization import OrganizationPermissions
 from care.security.permissions.questionnaire import QuestionnairePermissions
 
 
@@ -16,7 +20,12 @@ class PermissionController:
     override_permission_handlers = []
     # Override Permission Controllers will be defined from plugs
 
-    internal_permission_handlers = [FacilityPermissions, QuestionnairePermissions]
+    internal_permission_handlers = [
+        FacilityPermissions,
+        QuestionnairePermissions,
+        OrganizationPermissions,
+        FacilityOrganizationPermissions,
+    ]
 
     cache = {}
 

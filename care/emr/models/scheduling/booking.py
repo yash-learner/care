@@ -2,7 +2,6 @@ from django.db import models
 
 from care.emr.models import EMRBaseModel
 from care.emr.models.scheduling.schedule import Availability, SchedulableUserResource
-from care.facility.models import PatientRegistration
 from care.users.models import User
 
 
@@ -24,7 +23,10 @@ class TokenBooking(EMRBaseModel):
         TokenSlot, on_delete=models.CASCADE, null=False, blank=False
     )
     patient = models.ForeignKey(
-        PatientRegistration, on_delete=models.CASCADE, null=False, blank=False
+        "facility.PatientRegistration",
+        on_delete=models.CASCADE,
+        null=False,
+        blank=False,
     )
     booked_on = models.DateTimeField(auto_now_add=True)
     booked_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
