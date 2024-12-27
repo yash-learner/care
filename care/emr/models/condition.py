@@ -13,9 +13,7 @@ class Condition(EMRBaseModel):
     patient = models.ForeignKey(
         "facility.PatientRegistration", on_delete=models.CASCADE
     )
-    encounter = models.ForeignKey(
-        "emr.Encounter", on_delete=models.CASCADE
-    )
+    encounter = models.ForeignKey("emr.Encounter", on_delete=models.CASCADE)
     onset = models.JSONField(default=dict)
     recorded_date = models.DateTimeField(null=True, blank=True)
     note = models.TextField(null=True, blank=True)

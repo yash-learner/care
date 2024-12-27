@@ -12,7 +12,6 @@ from care.emr.fhir.schema.base import Coding
 class EMRResource(BaseModel):
     __model__ = None
     __exclude__ = []
-
     meta: dict = {}
     __questionnaire_cache__ = {}
 
@@ -70,7 +69,11 @@ class EMRResource(BaseModel):
         meta = {}
         dump = self.model_dump(mode="json", exclude_defaults=True)
         for field in dump:
-            if field in database_fields and field not in self.__exclude__:
+            if (
+                field in database_fields
+                and field not in self.__exclude__
+                and field not in ["id", "external_id"]
+            ):
                 obj.__setattr__(field, dump[field])
             elif field not in self.__exclude__:
                 meta[field] = dump[field]

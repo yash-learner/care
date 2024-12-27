@@ -37,6 +37,7 @@ class QuestionnaireResponse(EMRBaseModel):
 
     # TODO : Add index for subject_id and subject_type in descending order
 
+
 class QuestionnaireOrganization(EMRBaseModel):
     questionnaire = models.ForeignKey(Questionnaire, on_delete=models.CASCADE)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)

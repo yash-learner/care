@@ -1,0 +1,20 @@
+from django.db import models
+
+from care.emr.models import EMRBaseModel
+
+
+class NoteThread(EMRBaseModel):
+    title = models.CharField(max_length=255, null=True, blank=True)
+    patient = models.ForeignKey(
+        "facility.PatientRegistration", on_delete=models.CASCADE
+    )
+    encounter = models.ForeignKey(
+        "emr.Encounter", on_delete=models.CASCADE, null=True, blank=True
+    )
+    # TODO Add organizations to further restrict access
+
+
+class NoteMessage(EMRBaseModel):
+    thread = models.ForeignKey(NoteThread, on_delete=models.CASCADE)
+    message = models.TextField()
+    message_history = models.JSONField(default=dict)

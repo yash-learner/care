@@ -16,6 +16,7 @@ from care.emr.api.viewsets.facility_organization import (
 )
 from care.emr.api.viewsets.medication_request import MedicationRequestViewSet
 from care.emr.api.viewsets.medication_statement import MedicationStatementViewSet
+from care.emr.api.viewsets.notes import NoteMessageViewSet, NoteThreadViewSet
 from care.emr.api.viewsets.observation import ObservationViewSet
 from care.emr.api.viewsets.organization import (
     OrganizationUsersViewSet,
@@ -298,6 +299,22 @@ patient_nested_router.register(
     basename="medication-statement",
 )
 
+patient_nested_router.register(
+    r"thread",
+    NoteThreadViewSet,
+    basename="thread",
+)
+
+thread_nested_router = NestedSimpleRouter(
+    patient_nested_router, r"thread", lookup="thread"
+)
+
+thread_nested_router.register(
+    r"note",
+    NoteMessageViewSet,
+    basename="note",
+)
+
 # router.register(
 #     "consultation", PatientConsultationViewSet, basename="patient-consultation"
 # )
@@ -323,6 +340,7 @@ urlpatterns = [
     path("", include(bed_nested_router.urls)),
     path("", include(assetbed_nested_router.urls)),
     path("", include(patient_nested_router.urls)),
+    path("", include(thread_nested_router.urls)),
     path("", include(patient_notes_nested_router.urls)),
     # path("", include(consultation_nested_router.urls)),
     path("", include(resource_nested_router.urls)),
