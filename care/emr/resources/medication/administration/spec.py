@@ -142,7 +142,7 @@ class BaseMedicationAdministrationSpec(EMRResource):
         description="The medication request under which the administration was made",
     )
 
-    performer: MedicationAdministrationPerformer | None = Field(
+    performer: list[MedicationAdministrationPerformer] | None = Field(
         None,
         description="Who administered the medication",
     )
