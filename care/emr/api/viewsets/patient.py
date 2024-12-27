@@ -42,22 +42,20 @@ class PatientViewSet(EMRModelViewSet):
         )
 
     class SearchRequestSpec(BaseModel):
-        name: str
+        name: str = ""
         phone_number: str
         date_of_birth: datetime.date | None = None
-        year_of_birth: int
+        year_of_birth: int | None = None
 
     @action(detail=False, methods=["POST"])
     def search(self, request, *args, **kwargs):
         max_page_size = 200
         request_data = self.SearchRequestSpec(**request.data)
-        search_filters = {
-            "year_of_birth": request_data.year_of_birth,
-            "phone_number": request_data.phone_number,
-        }
+        queryset = Patient.objects.filter(phone_number=request_data.phone_number)
         if request_data.date_of_birth:
-            search_filters["date_of_birth"] = request_data.date_of_birth
-        queryset = Patient.objects.filter(**search_filters)
+            queryset = queryset.filter(date_of_birth=request_data.date_of_birth)
+        if request_data.year_of_birth:
+            queryset = queryset.filter(year_of_birth=request_data.year_of_birth)
         if request_data.name:
             queryset = (queryset.filter(name__icontains=request_data.name))[
                 :max_page_size
