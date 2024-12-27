@@ -15,6 +15,7 @@ from care.emr.resources.medication.valueset.medication import CARE_MEDICATION_VA
 from care.emr.resources.medication.valueset.route import CARE_ROUTE_VALUESET
 from care.emr.resources.user.spec import UserSpec
 from care.facility.models.patient_consultation import PatientConsultation
+from care.users.models import User
 
 
 class MedicationAdministrationStatus(str, Enum):
@@ -50,6 +51,14 @@ class MedicationAdministrationPerformer(BaseModel):
         ...,
         description="The function of the performer",
     )
+
+    @field_validator("actor")
+    @classmethod
+    def validate_actor_exists(cls, actor):
+        if not User.objects.filter(external_id=actor).exists():
+            err = "User not found"
+            raise ValueError(err)
+        return actor
 
 
 class Dosage(BaseModel):
