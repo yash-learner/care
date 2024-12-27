@@ -9,12 +9,12 @@ from care.emr.api.viewsets.scheduling import (
     SlotsForDayRequestSpec,
     SlotViewSet,
 )
+from care.emr.models.patient import Patient
 from care.emr.models.scheduling import TokenBooking, TokenSlot
 from care.emr.resources.scheduling.slot.spec import (
     TokenBookingReadSpec,
     TokenSlotBaseSpec,
 )
-from care.facility.models import PatientRegistration
 from config.patient_otp_authentication import (
     JWTTokenPatientAuthentication,
     OTPAuthenticatedPermission,
@@ -41,7 +41,7 @@ class OTPSlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
     @action(detail=True, methods=["POST"])
     def create_appointment(self, request, *args, **kwargs):
         request_data = AppointmentBookingSpec(**request.data)
-        if not PatientRegistration.objects.filter(
+        if not Patient.objects.filter(
             external_id=request_data.patient, phone_number=request.user.phone_number
         ).exists():
             raise ValidationError("Patient not allowed ")

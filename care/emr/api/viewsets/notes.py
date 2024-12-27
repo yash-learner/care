@@ -9,6 +9,7 @@ from care.emr.api.viewsets.base import (
     EMRUpdateMixin,
 )
 from care.emr.models.notes import NoteMessage, NoteThread
+from care.emr.models.patient import Patient
 from care.emr.resources.notes.notes_spec import (
     NoteMessageCreateSpec,
     NoteMessageReadSpec,
@@ -19,7 +20,6 @@ from care.emr.resources.notes.thread_spec import (
     NoteThreadReadSpec,
     NoteThreadUpdateSpec,
 )
-from care.facility.models import PatientRegistration
 
 
 class NoteThreadViewSet(
@@ -36,7 +36,7 @@ class NoteThreadViewSet(
 
     def get_patient(self):
         return get_object_or_404(
-            PatientRegistration, external_id=self.kwargs["patient_external_id"]
+            Patient, external_id=self.kwargs["patient_external_id"]
         )
 
     def perform_create(self, instance):

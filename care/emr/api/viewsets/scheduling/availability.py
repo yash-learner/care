@@ -12,6 +12,7 @@ from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import EMRBaseViewSet, EMRRetrieveMixin
 from care.emr.models import AvailabilityException, Schedule, TokenBooking
+from care.emr.models.patient import Patient
 from care.emr.models.scheduling.booking import TokenSlot
 from care.emr.models.scheduling.schedule import Availability, SchedulableUserResource
 from care.emr.resources.scheduling.schedule.spec import SlotTypeOptions
@@ -19,7 +20,6 @@ from care.emr.resources.scheduling.slot.spec import (
     TokenBookingReadSpec,
     TokenSlotBaseSpec,
 )
-from care.facility.models import PatientRegistration
 from care.users.models import User
 from care.utils.lock import Lock
 
@@ -182,9 +182,7 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
     @classmethod
     def create_appointment_handler(cls, obj, request_data, user):
         request_data = AppointmentBookingSpec(**request_data)
-        patient = PatientRegistration.objects.filter(
-            external_id=request_data.patient
-        ).first()
+        patient = Patient.objects.filter(external_id=request_data.patient).first()
         if not patient:
             raise ValidationError({"Patient not found"})
         appointment = lock_create_appointment(

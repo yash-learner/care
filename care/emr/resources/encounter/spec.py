@@ -4,6 +4,7 @@ import datetime
 from pydantic import UUID4, BaseModel, model_validator
 
 from care.emr.models import Encounter, TokenBooking
+from care.emr.models.patient import Patient
 from care.emr.resources.base import EMRResource
 from care.emr.resources.encounter.constants import (
     AdmitSourcesChoices,
@@ -16,7 +17,6 @@ from care.emr.resources.encounter.constants import (
 from care.emr.resources.patient.spec import PatientListSpec
 from care.emr.resources.scheduling.slot.spec import TokenBookingReadSpec
 from care.emr.resources.user.spec import UserSpec
-from care.facility.models import PatientRegistration
 
 
 class PeriodSpec(BaseModel):
@@ -44,8 +44,8 @@ class EncounterSpecBase(EMRResource):
     id: UUID4 = None
     status: StatusChoices
     encounter_class: ClassChoices
-    period: PeriodSpec
-    hospitalization: HospitalizationSpec | None = None
+    period: PeriodSpec = {}
+    hospitalization: HospitalizationSpec | None = {}
     priority: EncounterPriorityChoices
     external_identifier: str | None = None
 
@@ -57,7 +57,7 @@ class EncounterCreateSpec(EncounterSpecBase):
 
     def perform_extra_deserialization(self, is_update, obj):
         if not is_update:
-            obj.patient = PatientRegistration.objects.get(external_id=self.patient)
+            obj.patient = Patient.objects.get(external_id=self.patient)
             if self.appointment:
                 obj.appointment = TokenBooking.objects.get(external_id=self.appointment)
             obj._organizations = list(set(self.organizations))  # noqa SLF001

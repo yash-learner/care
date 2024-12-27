@@ -7,11 +7,11 @@ from rest_framework.exceptions import ValidationError
 
 from care.emr.models.encounter import Encounter
 from care.emr.models.observation import Observation
+from care.emr.models.patient import Patient
 from care.emr.models.questionnaire import Questionnaire, QuestionnaireResponse
 from care.emr.registries.care_valueset.care_valueset import validate_valueset
 from care.emr.resources.observation.spec import ObservationSpec, ObservationStatus
 from care.emr.resources.questionnaire.spec import QuestionType
-from care.facility.models import PatientRegistration
 
 
 def check_required(questionnaire, questionnaire_ref):
@@ -265,7 +265,7 @@ def handle_response(questionnaire_obj: Questionnaire, results, user):
                 {"type": "object_not_found", "msg": "Encounter not found"}
             )
 
-    patient = PatientRegistration.objects.filter(external_id=results.patient).first()
+    patient = Patient.objects.filter(external_id=results.patient).first()
     if not patient:
         raise ValidationError({"type": "object_not_found", "msg": "Patient not found"})
 
