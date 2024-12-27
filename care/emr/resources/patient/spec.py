@@ -20,7 +20,7 @@ class BloodGroupChoices(str, Enum):
     AB_positive = "AB_positive"
     O_negative = "O_negative"
     O_positive = "O_positive"
-
+    unknown = "unknown"
 
 class GenderChoices(str, Enum):
     male = "male"
