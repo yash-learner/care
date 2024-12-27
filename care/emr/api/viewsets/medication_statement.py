@@ -1,6 +1,6 @@
 from django_filters import rest_framework as filters
 
-from care.emr.api.viewsets.base import EMRModelViewSet
+from care.emr.api.viewsets.base import EMRModelViewSet, EMRQuestionnaireResponseMixin
 from care.emr.models.medication_statement import MedicationStatement
 from care.emr.registries.system_questionnaire.system_questionnaire import (
     InternalQuestionnaireRegistry,
@@ -16,7 +16,7 @@ class MedicationStatementFilter(filters.FilterSet):
     encounter = filters.UUIDFilter(field_name="encounter__external_id")
 
 
-class MedicationStatementViewSet(EMRModelViewSet):
+class MedicationStatementViewSet(EMRQuestionnaireResponseMixin, EMRModelViewSet):
     database_model = MedicationStatement
     pydantic_model = MedicationStatementSpec
     pydantic_read_model = MedicationStatementReadSpec

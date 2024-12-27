@@ -23,6 +23,7 @@ class FacilityOrganizationBaseSpec(EMRResource):
     name: str
     description: str = ""
     parent: UUID4 | None = None
+    metadata: dict = {}
 
 
 class FacilityOrganizationWriteSpec(FacilityOrganizationBaseSpec):
@@ -59,6 +60,14 @@ class FacilityOrganizationWriteSpec(FacilityOrganizationBaseSpec):
                 obj.parent = FacilityOrganization.objects.get(
                     facility=obj.facility, external_id=self.parent
                 )
+                obj.level_cache = obj.parent.level_cache + 1
+                obj.parent_cache = [*obj.parent.parent_cache, obj.parent.id]
+                if obj.parent.root_org is None:
+                    obj.root_org = obj.parent
+                else:
+                    obj.root_org = obj.parent.root_org
+                obj.parent.has_children = True
+                obj.parent.save(update_fields=["has_children"])
             else:
                 obj.parent = None
 
@@ -66,11 +75,14 @@ class FacilityOrganizationWriteSpec(FacilityOrganizationBaseSpec):
 class FacilityOrganizationReadSpec(FacilityOrganizationBaseSpec):
     created_by: UserSpec = dict
     updated_by: UserSpec = dict
+    system_generated: bool
+    level_cache: int = 0
+    has_children: bool
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
-        mapping["parent"] = obj.parent.external_id if obj.parent else None
+        mapping["parent"] = obj.get_parent_json()
 
         if obj.created_by:
             mapping["created_by"] = UserSpec.serialize(obj.created_by)

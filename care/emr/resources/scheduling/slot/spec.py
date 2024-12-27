@@ -5,11 +5,9 @@ from pydantic import UUID4
 
 from care.emr.models import TokenBooking
 from care.emr.models.scheduling.booking import TokenSlot
-from care.emr.models.scheduling.schedule import (
-    Availability,
-)
+from care.emr.models.scheduling.schedule import Availability
 from care.emr.resources.base import EMRResource
-from care.emr.resources.patient.otp_based_flow import PatientOTPWriteSpec
+from care.emr.resources.patient.otp_based_flow import PatientOTPReadSpec
 from care.emr.resources.user.spec import UserSpec
 from care.users.models import User
 
@@ -68,11 +66,12 @@ class TokenBookingReadSpec(TokenBookingBaseSpec):
     id: UUID4 | None = None
 
     token_slot: TokenSlotBaseSpec
-    patient: PatientOTPWriteSpec
+    patient: PatientOTPReadSpec
     booked_on: datetime.datetime
     booked_by: UserSpec
     status: str
     reason_for_visit: str
+    resource: dict = {}
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -80,20 +79,9 @@ class TokenBookingReadSpec(TokenBookingBaseSpec):
         mapping["token_slot"] = TokenSlotBaseSpec.serialize(obj.token_slot).model_dump(
             exclude=["meta"]
         )
-        mapping["patient"] = PatientOTPWriteSpec.serialize(obj.patient).model_dump(
+        mapping["patient"] = PatientOTPReadSpec.serialize(obj.patient).model_dump(
             exclude=["meta"]
         )
-
-
-class TokenBookingRetrieveSpec(TokenBookingReadSpec):
-    id: UUID4 | None = None
-
-    resource: dict = {}
-
-    @classmethod
-    def perform_extra_serialization(cls, mapping, obj):
-        super().perform_extra_serialization(mapping, obj)
-        if obj.token_slot.resource.resource_type == "user":
-            mapping["resource"] = UserSpec.serialize(
-                User.objects.get(id=obj.token_slot.resource.resource_id)
-            ).model_dump(exclude=["meta"])
+        mapping["resource"] = UserSpec.serialize(
+            User.objects.get(id=obj.token_slot.resource.resource_id)
+        ).model_dump(exclude=["meta"])

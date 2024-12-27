@@ -3,6 +3,7 @@ from datetime import date
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.postgres.aggregates import ArrayAgg
+from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Case, F, Func, JSONField, Value, When
@@ -36,7 +37,6 @@ from care.facility.models.patient_base import (
     REVERSE_ROUTE_TO_FACILITY_CHOICES,
 )
 from care.facility.models.patient_consultation import PatientConsultation
-from care.facility.static_data.icd11 import get_icd11_diagnoses_objects_by_ids
 from care.users.models import GENDER_CHOICES, REVERSE_GENDER_CHOICES, User
 from care.utils.models.base import BaseManager, BaseModel
 from care.utils.models.validators import mobile_or_landline_number_validator
@@ -441,9 +441,28 @@ class PatientRegistration(PatientBaseModel, PatientPermissionMixin):
         related_name="root_patient_assigned_to",
     )
 
+    geo_organization = models.ForeignKey(
+        "emr.Organization", on_delete=models.SET_NULL, null=True, blank=True
+    )
+
+    organization_cache = ArrayField(models.IntegerField(), default=list)
+
     history = HistoricalRecords(excluded_fields=["meta_info"])
 
     objects = BaseManager()
+
+    def rebuild_organization_cache(self):
+        organization_parents = []
+        if self.geo_organization:
+            organization_parents.extend(self.geo_organization.parent_cache)
+        if self.id:
+            for patient_organization in PatientOrganizations.objects.filter(
+                patient_id=self.id
+            ):
+                organization_parents.extend(
+                    patient_organization.organization.parent_cache
+                )
+        self.organization_cache = list(set(organization_parents))
 
     @property
     def is_expired(self) -> bool:
@@ -477,6 +496,8 @@ class PatientRegistration(PatientBaseModel, PatientPermissionMixin):
             self.district = self.local_body.district
         if self.district is not None:
             self.state = self.district.state
+
+        self.rebuild_organization_cache()
 
         if self.date_of_birth and not self.year_of_birth:
             self.year_of_birth = self.date_of_birth.year
@@ -570,7 +591,7 @@ class PatientRegistration(PatientBaseModel, PatientPermissionMixin):
         return self.strftime("%H:%M")
 
     def format_diagnoses(self):
-        diagnoses = get_icd11_diagnoses_objects_by_ids(self)
+        diagnoses = []
         return ", ".join([diagnosis["label"] for diagnosis in diagnoses])
 
     CSV_MAKE_PRETTY = {
@@ -597,6 +618,17 @@ class PatientRegistration(PatientBaseModel, PatientPermissionMixin):
         "last_consultation__discharge_date": format_as_date,
         "last_consultation__discharge_date__time": format_as_time,
     }
+
+
+class PatientOrganizations(BaseModel):
+    patient = models.ForeignKey(PatientRegistration, on_delete=models.CASCADE)
+    organization = models.ForeignKey("emr.Organization", on_delete=models.CASCADE)
+    # TODO : Add Role here to deny certain permissions for certain organizations
+
+    def save(self, *args, **kwargs) -> None:
+        super().save(*args, **kwargs)
+        self.patient.rebuild_organization_cache()
+        self.patient.save(update_fields=["organization_cache"])
 
 
 class PatientMetaInfo(models.Model):

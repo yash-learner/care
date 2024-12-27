@@ -3,8 +3,13 @@ from django.db import transaction
 from django.utils.timezone import now
 from rest_framework import exceptions, serializers
 
+from care.emr.models import Organization
+from care.emr.models.organziation import OrganizationUser
+from care.emr.resources.organization.spec import OrganizationReadSpec
+from care.emr.resources.role.spec import PermissionSpec
 from care.facility.api.serializers.facility import FacilityBareMinimumSerializer
 from care.facility.models import Facility, FacilityUser
+from care.security.models import RolePermission
 from care.users.api.serializers.lsg import (
     DistrictSerializer,
     LocalBodySerializer,
@@ -300,6 +305,28 @@ class UserSerializer(SignUpSerializer):
 
     user_flags = serializers.SerializerMethodField()
 
+    organizations = serializers.SerializerMethodField()
+
+    permissions = serializers.SerializerMethodField()
+
+    def get_organizations(self, user):
+        organizations = Organization.objects.filter(
+            id__in=OrganizationUser.objects.filter(user=user).values_list(
+                "organization_id", flat=True
+            )
+        )
+        return [OrganizationReadSpec.serialize(obj).to_json() for obj in organizations]
+
+    def get_permissions(self, user):
+        permissions = RolePermission.objects.filter(
+            role_id__in=OrganizationUser.objects.filter(user=user).values_list(
+                "role_id", flat=True
+            )
+        ).select_related("permission")
+        return [
+            PermissionSpec.serialize(obj.permission).to_json() for obj in permissions
+        ]
+
     def get_user_flags(self, user) -> tuple[str]:
         return user.get_all_flags()
 
@@ -339,6 +366,8 @@ class UserSerializer(SignUpSerializer):
             "read_profile_picture_url",
             "user_flags",
             "last_login",
+            "organizations",
+            "permissions",
         )
         read_only_fields = (
             "is_superuser",

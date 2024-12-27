@@ -22,10 +22,16 @@ class OrganizationBaseSpec(EMRResource):
     org_type: OrganizationTypeChoices
     name: str
     description: str = ""
-    parent: UUID4 | None = None
+    metadata: dict = {}
+
+
+class OrganizationUpdateSpec(OrganizationBaseSpec):
+    pass
 
 
 class OrganizationWriteSpec(OrganizationBaseSpec):
+    parent: UUID4 | None = None
+
     @model_validator(mode="after")
     def validate_parent_organization(self):
         if (
@@ -40,6 +46,14 @@ class OrganizationWriteSpec(OrganizationBaseSpec):
         if not is_update:
             if self.parent:
                 obj.parent = Organization.objects.get(external_id=self.parent)
+                obj.level_cache = obj.parent.level_cache + 1
+                obj.parent_cache = [*obj.parent.parent_cache, obj.parent.id]
+                if obj.parent.root_org is None:
+                    obj.root_org = obj.parent
+                else:
+                    obj.root_org = obj.parent.root_org
+                obj.parent.has_children = True
+                obj.parent.save(update_fields=["has_children"])
             else:
                 obj.parent = None
 
@@ -47,11 +61,15 @@ class OrganizationWriteSpec(OrganizationBaseSpec):
 class OrganizationReadSpec(OrganizationBaseSpec):
     created_by: UserSpec = dict
     updated_by: UserSpec = dict
+    level_cache: int = 0
+    system_generated: bool
+    has_children: bool
+    parent: dict
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
-        mapping["parent"] = obj.parent.external_id if obj.parent else None
+        mapping["parent"] = obj.get_parent_json()
 
         if obj.created_by:
             mapping["created_by"] = UserSpec.serialize(obj.created_by)

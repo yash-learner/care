@@ -47,7 +47,7 @@ class BaseMedicationStatementSpec(EMRResource):
         description="The medication that was taken",
         json_schema_extra={"slug": CARE_MEDICATION_VALUESET.slug},
     )
-    dosage: str | None = Field(
+    dosage_text: str | None = Field(
         None,
         description="The dosage of the medication",
     )  # consider using Dosage from MedicationRequest

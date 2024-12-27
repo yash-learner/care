@@ -3,18 +3,17 @@ from django.db import models
 from care.emr.models import EMRBaseModel
 
 
-class SchedulableResource(EMRBaseModel):
+class SchedulableUserResource(EMRBaseModel):
     """A resource that can be scheduled for appointments."""
 
     facility = models.ForeignKey("facility.Facility", on_delete=models.CASCADE)
-    resource_id = models.IntegerField()
-    resource_type = models.CharField(max_length=255)
+    resource = models.ForeignKey("users.User", on_delete=models.CASCADE)
 
-    # TODO : Index with resource_id and resource_type and facility
+    # TODO : Index with resource and facility
 
 
 class Schedule(EMRBaseModel):
-    resource = models.ForeignKey(SchedulableResource, on_delete=models.CASCADE)
+    resource = models.ForeignKey(SchedulableUserResource, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     valid_from = models.DateTimeField()
     valid_to = models.DateTimeField()
@@ -32,7 +31,7 @@ class Availability(EMRBaseModel):
 
 
 class AvailabilityException(EMRBaseModel):
-    resource = models.ForeignKey(SchedulableResource, on_delete=models.CASCADE)
+    resource = models.ForeignKey(SchedulableUserResource, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     reason = models.TextField(null=True, blank=True)
     valid_from = models.DateField(null=False, blank=False)

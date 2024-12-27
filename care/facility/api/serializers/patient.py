@@ -3,6 +3,7 @@ from django.db import transaction
 from django.utils.timezone import now
 from rest_framework import serializers
 
+from care.emr.models.organziation import Organization
 from care.facility.api.serializers import TIMESTAMP_FIELDS
 from care.facility.api.serializers.facility import (
     FacilityBasicInfoSerializer,
@@ -97,6 +98,7 @@ class PatientListSerializer(serializers.ModelSerializer):
             "countries_travelled_old",
             "allergies",
             "external_id",
+            "organization_cache",
         )
         read_only = (*TIMESTAMP_FIELDS, "death_datetime")
 
@@ -172,6 +174,11 @@ class PatientDetailSerializer(PatientListSerializer):
         queryset=User.objects.all(), required=False, allow_null=True
     )
 
+    geo_organization = ExternalIdSerializerField(
+        queryset=Organization.objects.filter(org_type="govt"),
+        required=False,
+    )
+
     allow_transfer = serializers.BooleanField(default=settings.PEACETIME_MODE)
 
     class Meta:
@@ -180,6 +187,7 @@ class PatientDetailSerializer(PatientListSerializer):
             "deleted",
             "countries_travelled_old",
             "external_id",
+            "organization_cache",
         )
         include = ("contacted_patients",)
         read_only = (

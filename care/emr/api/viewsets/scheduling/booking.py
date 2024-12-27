@@ -10,10 +10,9 @@ from care.emr.api.viewsets.base import (
     EMRRetrieveMixin,
     EMRUpdateMixin,
 )
-from care.emr.models import SchedulableResource, TokenBooking
+from care.emr.models.scheduling import SchedulableUserResource, TokenBooking
 from care.emr.resources.scheduling.slot.spec import (
     TokenBookingReadSpec,
-    TokenBookingRetrieveSpec,
     TokenBookingUpdateSpec,
 )
 from care.emr.resources.user.spec import UserSpec
@@ -22,6 +21,7 @@ from care.facility.models import Facility, FacilityUser
 
 class TokenBookingFilters(FilterSet):
     status = CharFilter(field_name="status")
+    slot = UUIDFilter(field_name="token_slot__external_id")
     patient = UUIDFilter(field_name="patient__external_id")
 
 
@@ -32,7 +32,6 @@ class TokenBookingViewSet(
     pydantic_model = TokenBookingReadSpec
     pydantic_read_model = TokenBookingReadSpec
     pydantic_update_model = TokenBookingUpdateSpec
-    pydantic_retrieve_model = TokenBookingRetrieveSpec
 
     filterset_class = TokenBookingFilters
     filter_backends = [DjangoFilterBackend]
@@ -60,9 +59,9 @@ class TokenBookingViewSet(
     def available_doctors(self, request, *args, **kwargs):
         facility = Facility.objects.get(external_id=self.kwargs["facility_external_id"])
         facility_users = FacilityUser.objects.filter(
-            user_id__in=SchedulableResource.objects.filter(facility=facility).values(
-                "resource_id"
-            ),
+            user_id__in=SchedulableUserResource.objects.filter(
+                facility=facility
+            ).values("resource_id"),
             facility=facility,
         )
 

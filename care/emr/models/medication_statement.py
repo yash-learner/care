@@ -15,5 +15,5 @@ class MedicationStatement(EMRBaseModel):
     )
     effective_period = models.JSONField(default=dict)
     information_source = models.CharField(max_length=100)
-    dosage = models.TextField(null=True, blank=True)
+    dosage_text = models.TextField(null=True, blank=True)
     note = models.TextField(null=True, blank=True)

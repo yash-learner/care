@@ -192,6 +192,7 @@ class QuestionnaireSpec(QuestionnaireBaseSpec):
         {}, description="Styling requirements without validation"
     )
     questions: list[Question]
+    organizations: list[UUID4] = Field(min_length=1)
 
     @field_validator("slug")
     @classmethod
@@ -233,6 +234,9 @@ class QuestionnaireSpec(QuestionnaireBaseSpec):
             err = "Question IDs must be unique"
             raise ValueError(err)
         return self
+
+    def perform_extra_deserialization(self, is_update, obj):
+        obj._organizations = self.organizations  # noqa SLF001
 
 
 class QuestionnaireReadSpec(QuestionnaireBaseSpec):

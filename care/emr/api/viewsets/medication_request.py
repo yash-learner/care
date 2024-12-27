@@ -5,7 +5,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from care.emr.api.viewsets.base import EMRModelViewSet
+from care.emr.api.viewsets.base import EMRModelViewSet, EMRQuestionnaireResponseMixin
 from care.emr.models.medication_request import MedicationRequest
 from care.emr.registries.system_questionnaire.system_questionnaire import (
     InternalQuestionnaireRegistry,
@@ -32,7 +32,7 @@ class MedicationRequestFilter(filters.FilterSet):
         )
 
 
-class MedicationRequestViewSet(EMRModelViewSet):
+class MedicationRequestViewSet(EMRQuestionnaireResponseMixin, EMRModelViewSet):
     database_model = MedicationRequest
     pydantic_model = MedicationRequestSpec
     pydantic_read_model = MedicationRequestReadSpec

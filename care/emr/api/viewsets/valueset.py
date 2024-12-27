@@ -20,7 +20,6 @@ class ValueSetViewSet(EMRModelViewSet):
     pydantic_model = ValueSetSpec
     pydantic_read_model = ValueSetReadSpec
     lookup_field = "slug"
-    CREATE_QUESTIONNAIRE_RESPONSE = False
 
     def get_queryset(self):
         return ValueSet.objects.all().select_related("created_by", "updated_by")

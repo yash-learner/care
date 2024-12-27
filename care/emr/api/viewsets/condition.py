@@ -2,7 +2,7 @@ from django_filters import CharFilter, FilterSet, UUIDFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.exceptions import PermissionDenied
 
-from care.emr.api.viewsets.base import EMRModelViewSet
+from care.emr.api.viewsets.base import EMRModelViewSet, EMRQuestionnaireResponseMixin
 from care.emr.models.condition import Condition
 from care.emr.registries.system_questionnaire.system_questionnaire import (
     InternalQuestionnaireRegistry,
@@ -25,23 +25,25 @@ class ConditionFilters(FilterSet):
     severity = CharFilter(field_name="severity", lookup_expr="iexact")
 
 
-class SymptomViewSet(EMRModelViewSet):
+class SymptomViewSet(EMRQuestionnaireResponseMixin, EMRModelViewSet):
     database_model = Condition
     pydantic_model = ConditionSpec
     pydantic_read_model = ConditionSpecRead
+    # Filters
+    filterset_class = ConditionFilters
+    filter_backends = [DjangoFilterBackend]
+    # Questionnaire Spec
     questionnaire_type = "symptom"
     questionnaire_title = "Symptom"
     questionnaire_description = "Symptom"
     questionnaire_subject_type = SubjectType.patient.value
-    filterset_class = ConditionFilters
-    filter_backends = [DjangoFilterBackend]
 
     def perform_create(self, instance):
         instance.category = CategoryChoices.problem_list_item.value
         super().perform_create(instance)
 
-    def authorize_create(self, request, request_model: ConditionSpec):
-        encounter = PatientConsultation.objects.get(external_id=request_model.encounter)
+    def authorize_create(self, instance: ConditionSpec):
+        encounter = PatientConsultation.objects.get(external_id=instance.encounter)
         if str(encounter.patient.external_id) != self.kwargs["patient_external_id"]:
             err = "Malformed request"
             raise PermissionDenied(err)
@@ -63,23 +65,25 @@ class SymptomViewSet(EMRModelViewSet):
 InternalQuestionnaireRegistry.register(SymptomViewSet)
 
 
-class DiagnosisViewSet(EMRModelViewSet):
+class DiagnosisViewSet(EMRQuestionnaireResponseMixin, EMRModelViewSet):
     database_model = Condition
     pydantic_model = ConditionSpec
     pydantic_read_model = ConditionSpecRead
+    # Filters
+    filterset_class = ConditionFilters
+    filter_backends = [DjangoFilterBackend]
+    # Questionnaire Spec
     questionnaire_type = "diagnosis"
     questionnaire_title = "Diagnosis"
     questionnaire_description = "Diagnosis"
     questionnaire_subject_type = SubjectType.patient.value
-    filterset_class = ConditionFilters
-    filter_backends = [DjangoFilterBackend]
 
     def perform_create(self, instance):
         instance.category = CategoryChoices.encounter_diagnosis.value
         super().perform_create(instance)
 
-    def authorize_create(self, request, request_model: ConditionSpec):
-        encounter = PatientConsultation.objects.get(external_id=request_model.encounter)
+    def authorize_create(self, instance: ConditionSpec):
+        encounter = PatientConsultation.objects.get(external_id=instance.encounter)
         if str(encounter.patient.external_id) != self.kwargs["patient_external_id"]:
             err = "Malformed request"
             raise PermissionDenied(err)

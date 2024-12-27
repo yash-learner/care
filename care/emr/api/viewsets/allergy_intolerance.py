@@ -3,7 +3,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework.exceptions import PermissionDenied
 
-from care.emr.api.viewsets.base import EMRModelViewSet
+from care.emr.api.viewsets.base import EMRModelViewSet, EMRQuestionnaireResponseMixin
 from care.emr.models.allergy_intolerance import AllergyIntolerance
 from care.emr.registries.system_questionnaire.system_questionnaire import (
     InternalQuestionnaireRegistry,
@@ -24,7 +24,7 @@ class AllergyIntoleranceFilters(FilterSet):
 @extend_schema_view(
     create=extend_schema(request=AllergyIntoleranceSpec),
 )
-class AllergyIntoleranceViewSet(EMRModelViewSet):
+class AllergyIntoleranceViewSet(EMRQuestionnaireResponseMixin, EMRModelViewSet):
     database_model = AllergyIntolerance
     pydantic_model = AllergyIntoleranceSpec
     pydantic_read_model = AllergyIntrolanceSpecRead
@@ -36,8 +36,8 @@ class AllergyIntoleranceViewSet(EMRModelViewSet):
     filterset_class = AllergyIntoleranceFilters
     filter_backends = [DjangoFilterBackend]
 
-    def authorize_create(self, request, request_model: AllergyIntoleranceSpec):
-        encounter = PatientConsultation.objects.get(external_id=request_model.encounter)
+    def authorize_create(self, instance: AllergyIntoleranceSpec):
+        encounter = PatientConsultation.objects.get(external_id=instance.encounter)
         if str(encounter.patient.external_id) != self.kwargs["patient_external_id"]:
             err = "Malformed request"
             raise PermissionDenied(err)
