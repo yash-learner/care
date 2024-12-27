@@ -31,10 +31,16 @@ class AuthorizationHandler:
         filters = {"role_id__in": roles, "user": user}
         if orgs:
             filters["organization_id__in"] = orgs
-        return (
-            OrganizationUser.objects.filter(**filters).exists()
-            or FacilityOrganizationUser.objects.filter(**filters).exists()
-        )
+        return OrganizationUser.objects.filter(**filters).exists()
+
+    def check_permission_in_facility_organization(self, permissions, user, orgs=None):
+        if user.is_superuser:
+            return True
+        roles = self.get_role_from_permissions(permissions)
+        filters = {"role_id__in": roles, "user": user}
+        if orgs:
+            filters["organization_id__in"] = orgs
+        return FacilityOrganizationUser.objects.filter(**filters).exists()
 
     def get_role_from_permissions(self, permissions):
         # TODO Cache this endpoint

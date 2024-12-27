@@ -9,12 +9,16 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from simple_history.models import HistoricalRecords
 
+from care.emr.models import FacilityOrganization
+from care.emr.models.organziation import FacilityOrganizationUser
 from care.facility.models import FacilityBaseModel, reverse_choices
 from care.facility.models.facility_flag import FacilityFlag
 from care.facility.models.mixins.permissions.facility import (
     FacilityPermissionMixin,
     FacilityRelatedPermissionMixin,
 )
+from care.security.models import RoleModel
+from care.security.roles.role import FACILITY_ADMIN_ROLE
 from care.users.models import District, LocalBody, State, Ward
 from care.utils.models.base import BaseModel
 from care.utils.models.validators import mobile_or_landline_number_validator
@@ -244,6 +248,20 @@ class Facility(FacilityBaseModel, FacilityPermissionMixin):
     )
     state = models.ForeignKey(State, on_delete=models.SET_NULL, null=True, blank=True)
 
+    geo_organization = models.ForeignKey(
+        "emr.Organization", on_delete=models.SET_NULL, null=True, blank=True
+    )
+    geo_organization_cache = ArrayField(models.IntegerField(), default=list)
+
+    default_internal_organization = models.ForeignKey(
+        "emr.FacilityOrganization",
+        on_delete=models.SET_NULL,
+        related_name="default_facilities",
+        null=True,
+        blank=True,
+    )
+    internal_organization_cache = ArrayField(models.IntegerField(), default=list)
+
     oxygen_capacity = models.IntegerField(default=0)
     type_b_cylinders = models.IntegerField(default=0)
     type_c_cylinders = models.IntegerField(default=0)
@@ -285,6 +303,28 @@ class Facility(FacilityBaseModel, FacilityPermissionMixin):
     def __str__(self):
         return f"{self.name}"
 
+    def sync_cache(self):
+        self.geo_organization_cache = []
+        if self.geo_organization:
+            self.geo_organization_cache = [
+                *self.geo_organization.parent_cache,
+                self.geo_organization.id,
+            ]
+
+        facility_organizations = FacilityOrganization.objects.filter(facility=self)
+        cache = []
+        for facility_organization in facility_organizations:
+            cache = [
+                *cache,
+                *facility_organization.parent_cache,
+                facility_organization.id,
+            ]
+        cache = list(set(cache))
+        self.internal_organization_cache = cache
+        super().save(
+            update_fields=["geo_organization_cache", "internal_organization_cache"]
+        )
+
     def save(self, *args, **kwargs) -> None:
         """
         While saving, if the local body is not null, then district will be local body's district
@@ -299,9 +339,22 @@ class Facility(FacilityBaseModel, FacilityPermissionMixin):
         super().save(*args, **kwargs)
 
         if is_create:
+            facility_organization = FacilityOrganization.objects.create(
+                org_type="root",
+                name="Root Organization",
+                system_generated=True,
+                facility=self,
+            )
+            FacilityOrganizationUser.objects.create(
+                organization=facility_organization,
+                user=self.created_by,
+                role=RoleModel.objects.get(name=FACILITY_ADMIN_ROLE.name),
+            )
             FacilityUser.objects.create(
                 facility=self, user=self.created_by, created_by=self.created_by
             )
+
+        self.sync_cache()
 
     @transaction.atomic
     def delete(self, *args):

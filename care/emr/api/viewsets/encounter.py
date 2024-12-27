@@ -1,5 +1,6 @@
-from care.emr.api.viewsets.base import EMRBaseViewSet
+from care.emr.api.viewsets.base import EMRModelViewSet
+from care.facility.models import PatientConsultation
 
 
-class EncounterViewSet(EMRBaseViewSet):
-    lookup_field = "external_id"
+class EncounterViewSet(EMRModelViewSet):
+    database_model = PatientConsultation

@@ -175,12 +175,16 @@ class EMRUpdateMixin:
 
 
 class EMRDeleteMixin:
+    def authorize_delete(self, instance):
+        pass
+
     def perform_delete(self, instance):
         instance.deleted = True
         instance.save(update_fields=["deleted"])
 
     def delete(self, request, *args, **kwargs):
         instance = self.get_object()
+        self.authorize_delete(instance)
         self.perform_delete(instance)
         return Response(status=204)
 

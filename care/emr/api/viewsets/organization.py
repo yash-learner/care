@@ -15,9 +15,11 @@ from care.emr.resources.organization.organization_user_spec import (
 )
 from care.emr.resources.organization.spec import (
     OrganizationReadSpec,
+    OrganizationTypeChoices,
     OrganizationUpdateSpec,
     OrganizationWriteSpec,
 )
+from care.security.authorization import AuthorizationController
 from care.security.models import PermissionModel, RoleModel, RolePermission
 from config.patient_otp_authentication import JWTTokenPatientAuthentication
 
@@ -49,20 +51,41 @@ class OrganizationViewSet(EMRModelViewSet):
             return False
         return request.user.is_authenticated
 
+    def authorize_update(self, request_obj, model_instance):
+        if not AuthorizationController.call(
+            "can_manage_organization_obj", self.request.user, model_instance
+        ):
+            raise PermissionDenied(
+                "User does not have the required permissions to update organizations"
+            )
+
     def authorize_create(self, instance):
-        """
-        - TODO
-        - Root Organizations can only be created by the superadmin
-        - Organizations can only be created if the parent is accessible by the user
-        - Organization creates require the Organization Create Permission
-        - Certain types of Organizations like geo, user role etc.. can only be
-            maintained by the superadmin
-        - Deletes are not allowed if there are child organizations
-        """
-        if not instance.parent and not self.request.user.is_superuser:
+        if self.request.user.is_superuser:
+            return True
+        # Root Organizations can only be created by the superadmin
+        if not instance.parent:
             raise PermissionDenied(
                 "Root Organizations can only be created by the superadmin"
             )
+        # Some types of organization cannot be created by regular users
+        if instance.org_type in [
+            OrganizationTypeChoices.govt.value,
+            OrganizationTypeChoices.role.value,
+        ]:
+            raise PermissionDenied("Organization Type cannot be created")
+        # Organizations can only be created if the parent is accessible by the user
+        # Organization creates require the Organization Create Permission
+
+        parent = get_object_or_404(Organization, external_id=instance.parent)
+
+        if not AuthorizationController.call(
+            "can_create_organization_obj", self.request.user, parent
+        ):
+            raise PermissionDenied(
+                "User does not have the required permissions to create organizations"
+            )
+        # TODO Deletes are not allowed if there are child organizations
+        return True
 
     def get_queryset(self):
         queryset = (
@@ -112,7 +135,6 @@ class OrganizationUsersViewSet(EMRModelViewSet):
 
     def perform_create(self, instance):
         instance.organization = self.get_organization_obj()
-
         super().perform_create(instance)
 
     def validate_data(self, instance, model_obj=None):
@@ -130,7 +152,11 @@ class OrganizationUsersViewSet(EMRModelViewSet):
             raise ValidationError("User association already exists")
 
     def authorize_update(self, request_obj, model_instance):
+        # TODO : This logic is flawed, the users current permissions needs to be checks to understand
+        #        if the user is capable of the edit, lower permission person should not move high permission user lower
         self.authorize_create(request_obj)
+
+    # TODO Deletes needs to be authorized, we cannot delete a user higher in prvilage than the user
 
     def authorize_create(self, instance):
         """
@@ -142,10 +168,9 @@ class OrganizationUsersViewSet(EMRModelViewSet):
             return
         organization = self.get_organization_obj()
         organization_parents = [*organization.parent_cache, organization.id]
-        if not OrganizationUser.objects.filter(
-            organization__in=organization_parents, user=self.request.user
-        ).exists():
-            raise PermissionDenied("User does not have access to organization")
+        AuthorizationController.call(
+            "can_manage_organization_users_obj", self.request.user, organization
+        )
         user_roles = RoleModel.objects.filter(
             id__in=OrganizationUser.objects.filter(
                 organization_id__in=organization_parents, user=self.request.user
@@ -173,12 +198,10 @@ class OrganizationUsersViewSet(EMRModelViewSet):
         Only users part of the organization can access its users
         """
         organization = self.get_organization_obj()
-        organization_parents = [*organization.parent_cache, organization.id]
-        if (
-            not self.request.user.is_superuser
-            and not OrganizationUser.objects.filter(
-                organization_id__in=organization_parents, user=self.request.user
-            ).exists()
+        if not AuthorizationController.call(
+            "can_list_organization_users_obj", self.request.user, organization
         ):
-            raise PermissionDenied("User does not have access to organization")
+            raise PermissionDenied(
+                "User does not have the required permissions to list users"
+            )
         return OrganizationUser.objects.filter(organization=organization)

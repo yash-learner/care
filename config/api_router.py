@@ -14,6 +14,10 @@ from care.emr.api.viewsets.facility_organization import FacilityOrganizationView
 from care.emr.api.viewsets.medication_administration import (
     MedicationAdministrationViewSet,
 )
+from care.emr.api.viewsets.facility_organization import (
+    FacilityOrganizationUsersViewSet,
+    FacilityOrganizationViewSet,
+)
 from care.emr.api.viewsets.medication_request import MedicationRequestViewSet
 from care.emr.api.viewsets.medication_statement import MedicationStatementViewSet
 from care.emr.api.viewsets.observation import ObservationViewSet
@@ -219,6 +223,15 @@ facility_nested_router.register(r"hubs", FacilityHubsViewSet, basename="facility
 facility_nested_router.register(
     r"organizations", FacilityOrganizationViewSet, basename="facility-organization"
 )
+
+facility_organization_nested_router = NestedSimpleRouter(
+    facility_nested_router, r"organizations", lookup="facility_organizations"
+)
+
+facility_organization_nested_router.register(
+    "users", FacilityOrganizationUsersViewSet, basename="facility-organization-users"
+)
+
 facility_nested_router.register(r"schedule", ScheduleViewSet, basename="schedule")
 
 facility_nested_router.register(r"slots", SlotViewSet, basename="slot")
@@ -339,4 +352,5 @@ urlpatterns = [
     path("", include(resource_nested_router.urls)),
     path("", include(shifting_nested_router.urls)),
     path("", include(organization_nested_router.urls)),
+    path("", include(facility_organization_nested_router.urls)),
 ]

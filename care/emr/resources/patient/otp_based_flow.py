@@ -2,11 +2,11 @@ import datetime
 from enum import Enum
 
 from django.utils import timezone
-from pydantic import UUID4, model_validator
+from pydantic import UUID4, field_validator, model_validator
 
+from care.emr.models import Organization
 from care.emr.resources.base import EMRResource
 from care.facility.models import PatientRegistration
-from care.users.models import District, LocalBody, State, Ward
 
 
 class GenderChoices(str, Enum):
@@ -17,7 +17,7 @@ class GenderChoices(str, Enum):
 
 class PatientOTPBaseSpec(EMRResource):
     __model__ = PatientRegistration
-    __exclude__ = ["state", "district", "local_body", "ward"]
+    __exclude__ = ["geo_organization"]
     id: UUID4 = None
 
 
@@ -28,20 +28,15 @@ class PatientOTPReadSpec(PatientOTPBaseSpec):
     emergency_phone_number: str
     address: str
     pincode: int
-    state: str
-    district: str
-    local_body: str
-    ward: str
     date_of_birth: datetime.date
     year_of_birth: int
+    geo_organization: dict | None = None
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
-        mapping["state"] = obj.state.name if obj.state else None
-        mapping["district"] = obj.district.name if obj.district else None
-        mapping["local_body"] = obj.local_body.name if obj.local_body else None
-        mapping["ward"] = obj.ward.name if obj.ward else None
+        if obj.geo_organization:
+            mapping["geo_organization"] = obj.geo_organization.get_parent_json()
 
 
 class PatientOTPWriteSpec(PatientOTPBaseSpec):
@@ -51,44 +46,28 @@ class PatientOTPWriteSpec(PatientOTPBaseSpec):
     age: int | None = None
     address: str
     pincode: int
-    state: int
-    district: int
-    local_body: int
-    ward: int | None = None
+    geo_organization: UUID4
 
     @model_validator(mode="after")
-    def validage_age(self):
+    def validate_age(self):
         if not (self.age or self.date_of_birth):
             raise ValueError("Either age or date of birth is required")
         return self
 
-    @model_validator(mode="after")
-    def validate_governance(self):
-        state = State.objects.filter(id=self.state).first()
-        if not state:
-            raise ValueError("Invalid State")
-        district = District.objects.filter(id=self.district, state=self.state).first()
-        if not district:
-            raise ValueError("Invalid District")
-        local_body = LocalBody.objects.filter(
-            id=self.local_body, district=self.district
-        ).first()
-        if not local_body:
-            raise ValueError("Invalid Local Body")
-        if (
-            self.ward
-            and not Ward.objects.filter(id=self.ward, local_body=local_body).exists()
-        ):
-            raise ValueError("Invalid Ward")
-        return self
+    @field_validator("geo_organization")
+    @classmethod
+    def validate_geo_organization(cls, geo_organization):
+        if not Organization.objects.filter(
+            org_type="govt", external_id=geo_organization
+        ).exists():
+            raise ValueError("Geo Organization does not exist")
+        return geo_organization
 
     def perform_extra_deserialization(self, is_update, obj):
         if not is_update:
-            obj.state = State.objects.get(id=self.state)
-            obj.district = District.objects.get(id=self.district)
-            obj.local_body = LocalBody.objects.get(id=self.local_body)
-            if self.ward:
-                obj.ward = Ward.objects.get(id=self.ward)
+            obj.geo_organization = Organization.objects.get(
+                external_id=self.geo_organization
+            )
             if self.age:
                 obj.year_of_birth = timezone.now().date().year - self.age
             else:

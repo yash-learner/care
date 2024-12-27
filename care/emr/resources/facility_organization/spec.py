@@ -11,6 +11,7 @@ from care.facility.models import Facility
 class FacilityOrganizationTypeChoices(str, Enum):
     dept = "dept"
     team = "team"
+    root = "root"
     other = "other"
 
 
