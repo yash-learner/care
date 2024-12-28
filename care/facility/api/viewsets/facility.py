@@ -15,6 +15,7 @@ from rest_framework.response import Response
 
 from care.emr.models import Organization
 from care.emr.models.organziation import FacilityOrganizationUser, OrganizationUser
+from care.emr.resources.user.spec import UserSpec
 from care.facility.api.serializers.facility import (
     FacilityBasicInfoSerializer,
     FacilityImageUploadSerializer,
@@ -170,6 +171,18 @@ class FacilityViewSet(
         facility.cover_image_url = None
         facility.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=["GET"])
+    def users(self, request, *args, **kwargs):
+        facility = self.get_object()
+        facility_orgs = FacilityOrganizationUser.objects.filter(
+            organization__facility=facility
+        )
+        users = User.objects.filter(id__in=facility_orgs.values("user_id"))
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(users, request)
+        data = [UserSpec.serialize(obj).to_json() for obj in page]
+        return paginator.get_paginated_response(data)
 
 
 @extend_schema_view(

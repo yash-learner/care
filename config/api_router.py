@@ -59,7 +59,6 @@ from care.facility.api.viewsets.facility import (
     FacilitySpokesViewSet,
     FacilityViewSet,
 )
-from care.facility.api.viewsets.facility_users import FacilityUserViewSet
 from care.facility.api.viewsets.file_upload import FileUploadViewSet
 from care.facility.api.viewsets.inventory import (
     FacilityInventoryItemViewSet,
@@ -158,9 +157,9 @@ resource_nested_router.register(
 router.register("facility", FacilityViewSet, basename="facility")
 router.register("getallfacilities", AllFacilityViewSet, basename="getallfacilities")
 facility_nested_router = NestedSimpleRouter(router, r"facility", lookup="facility")
-facility_nested_router.register(
-    r"get_users", FacilityUserViewSet, basename="facility-users"
-)
+# facility_nested_router.register(
+#     r"get_users", FacilityUserViewSet, basename="facility-users"
+# )
 facility_nested_router.register(
     r"inventory", FacilityInventoryLogViewSet, basename="facility-inventory"
 )
