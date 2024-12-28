@@ -5,3 +5,4 @@ from .questionnaire import *  # noqa F403
 from .valueset import *  # noqa F403
 from .scheduling import *  # noqa F403
 from .encounter import *  # noqa F403
+from .patient import * # noqa F403
