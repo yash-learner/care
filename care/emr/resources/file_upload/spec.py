@@ -28,7 +28,7 @@ class FileUploadBaseSpec(EMRResource):
 
 
 class FileUploadUpdateSpec(FileUploadBaseSpec):
-    pass
+    upload_completed: bool
 
 
 class FileUploadCreateSpec(FileUploadBaseSpec):
