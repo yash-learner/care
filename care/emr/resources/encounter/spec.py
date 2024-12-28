@@ -1,6 +1,7 @@
 # Not Being used
 import datetime
 
+from django.utils import timezone
 from pydantic import UUID4, BaseModel, model_validator
 
 from care.emr.models import Encounter, TokenBooking
@@ -65,15 +66,36 @@ class EncounterCreateSpec(EncounterSpecBase):
             if self.appointment:
                 obj.appointment = TokenBooking.objects.get(external_id=self.appointment)
             obj._organizations = list(set(self.organizations))  # noqa SLF001
+            obj.status_history = {
+                "history": [{"status": obj.status, "moved_at": str(timezone.now())}]
+            }
+            obj.encounter_class_history = {
+                "history": [
+                    {"status": obj.encounter_class, "moved_at": str(timezone.now())}
+                ]
+            }
 
 
 class EncounterUpdateSpec(EncounterSpecBase):
-    pass
+    def perform_extra_deserialization(self, is_update, obj):
+        old_instance = Encounter.objects.get(id=obj.id)
+        if old_instance.status != self.status:
+            obj.status_history["history"].append(
+                {"status": self.status, "moved_at": str(timezone.now())}
+            )
+        if old_instance.encounter_class != self.encounter_class:
+            obj.encounter_class_history["history"].append(
+                {"status": self.status, "moved_at": str(timezone.now())}
+            )
 
 
 class EncounterListSpec(EncounterSpecBase):
     patient: dict
     facility: dict
+    status_history: dict
+    encounter_class_history: dict
+    created_at: datetime.datetime
+    modified_date: datetime.datetime
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):

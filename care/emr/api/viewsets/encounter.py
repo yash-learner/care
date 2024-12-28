@@ -77,7 +77,10 @@ class EncounterViewSet(
                 instance.sync_organization_cache()
 
     def authorize_update(self, request_obj, model_instance):
-        self.authorize_create(request_obj)
+        if not AuthorizationController.call(
+            "can_create_encounter_obj", self.request.user, model_instance.facility
+        ):
+            raise PermissionDenied("You do not have permission to create encounter")
 
     def authorize_create(self, instance):
         # Check if encounter create permission exists on Facility Organization
