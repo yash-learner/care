@@ -150,6 +150,8 @@ class Command(BaseCommand):
             "metadata": {
                 "country": "india",
                 "govt_org_type": "state",
+            },
+            "meta": {
                 "migration_id": self.migration_id,
             },
         }
@@ -184,6 +186,8 @@ class Command(BaseCommand):
                 "metadata": {
                     "country": "india",
                     "govt_org_type": "district",
+                },
+                "meta": {
                     "migration_id": self.migration_id,
                 },
             }
@@ -245,6 +249,8 @@ class Command(BaseCommand):
                             "lsg_code": local_body.get(
                                 "lsg_code", local_body.get("localbody_code")
                             ),
+                        },
+                        meta={
                             "migration_id": self.migration_id,
                         },
                     )
@@ -296,6 +302,8 @@ class Command(BaseCommand):
                                         "country": "india",
                                         "govt_org_type": "ward",
                                         "ward_number": get_ward_number(ward),
+                                    },
+                                    meta={
                                         "migration_id": self.migration_id,
                                     },
                                 )
