@@ -45,16 +45,13 @@ class FacilityBareMinimumSerializer(serializers.ModelSerializer):
 
 class FacilityBasicInfoSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(source="external_id", read_only=True)
-    ward_object = WardSerializer(source="ward", read_only=True)
-    local_body_object = LocalBodySerializer(source="local_body", read_only=True)
-    district_object = DistrictSerializer(source="district", read_only=True)
-    state_object = StateSerializer(source="state", read_only=True)
     facility_type = serializers.SerializerMethodField()
     read_cover_image_url = serializers.CharField(read_only=True)
     features = serializers.ListField(
         child=serializers.ChoiceField(choices=FEATURE_CHOICES),
         required=False,
     )
+    geo_organization_obj = serializers.SerializerMethodField(read_only=True)
 
     def get_facility_type(self, facility):
         return {
@@ -62,22 +59,21 @@ class FacilityBasicInfoSerializer(serializers.ModelSerializer):
             "name": facility.get_facility_type_display(),
         }
 
+    def get_geo_organization_obj(self, facility):
+        if facility.geo_organization:
+            return OrganizationReadSpec.serialize(facility.geo_organization).to_json()
+        return None
+
     class Meta:
         model = Facility
         fields = (
             "id",
             "name",
             "description",
-            "local_body",
-            "district",
-            "state",
-            "ward_object",
-            "local_body_object",
-            "district_object",
-            "state_object",
             "facility_type",
             "read_cover_image_url",
             "features",
+            "geo_organization_obj",
         )
 
 
