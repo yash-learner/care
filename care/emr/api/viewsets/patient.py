@@ -4,6 +4,7 @@ from django_filters import CharFilter, FilterSet
 from django_filters.rest_framework import DjangoFilterBackend
 from pydantic import BaseModel
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import EMRModelViewSet
@@ -11,6 +12,7 @@ from care.emr.models.patient import Patient
 from care.emr.resources.patient.spec import (
     PatientCreateSpec,
     PatientListSpec,
+    PatientPartialSpec,
     PatientRetrieveSpec,
 )
 from care.security.authorization import AuthorizationController
@@ -60,7 +62,20 @@ class PatientViewSet(EMRModelViewSet):
             queryset = (queryset.filter(name__icontains=request_data.name))[
                 :max_page_size
             ]
-        data = [
-            self.get_read_pydantic_model().serialize(obj).to_json() for obj in queryset
-        ]
+        data = [PatientPartialSpec.serialize(obj).to_json() for obj in queryset]
         return Response({"results": data})
+
+    class SearchRetrieveRequestSpec(BaseModel):
+        phone_number: str
+        year_of_birth: int
+        partial_id: str
+
+    @action(detail=False, methods=["POST"])
+    def search_retrieve(self, request, *args, **kwargs):
+        request_data = self.SearchRetrieveRequestSpec(**request.data)
+        queryset = Patient.objects.filter(phone_number=request_data.phone_number)
+        queryset = queryset.filter(year_of_birth=request_data.year_of_birth)
+        for patient in queryset:
+            if str(patient.external_id)[:5] == request_data.partial_id:
+                return Response(PatientRetrieveSpec.serialize(patient).to_json())
+        raise PermissionDenied("No valid patients found")

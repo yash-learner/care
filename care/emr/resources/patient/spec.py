@@ -1,4 +1,5 @@
 import datetime
+import uuid
 from enum import Enum
 
 from django.utils import timezone
@@ -21,6 +22,7 @@ class BloodGroupChoices(str, Enum):
     O_negative = "O_negative"
     O_positive = "O_positive"
     unknown = "unknown"
+
 
 class GenderChoices(str, Enum):
     male = "male"
@@ -80,6 +82,21 @@ class PatientListSpec(PatientBaseSpec):
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
+
+
+class PatientPartialSpec(EMRResource):
+    __model__ = Patient
+
+    id: UUID4 | None = None
+    name: str
+    gender: GenderChoices
+    phone_number: str
+    partial_id: str
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        mapping["partial_id"] = str(obj.external_id)[:5]
+        mapping["id"] = str(uuid.uuid4())
 
 
 class PatientRetrieveSpec(PatientListSpec):
