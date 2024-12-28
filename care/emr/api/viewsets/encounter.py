@@ -22,12 +22,14 @@ from care.facility.models import Facility
 from care.security.authorization import AuthorizationController
 
 
-class LiveFilter(filters.BooleanFilter):
+class LiveFilter(filters.CharFilter):
     def filter(self, qs, value):
         queryset = qs
-        if value is True:
+        if not value:
+            return queryset
+        if value.lower() == "true":
             queryset = queryset.filter(status__in=COMPLETED_CHOICES)
-        elif value is False:
+        elif value.lower() == "false":
             queryset = queryset.exclude(status__in=COMPLETED_CHOICES)
         return queryset
 
