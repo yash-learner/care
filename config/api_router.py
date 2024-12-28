@@ -14,6 +14,7 @@ from care.emr.api.viewsets.facility_organization import (
     FacilityOrganizationUsersViewSet,
     FacilityOrganizationViewSet,
 )
+from care.emr.api.viewsets.file_upload import FileUploadViewSet
 from care.emr.api.viewsets.medication_request import MedicationRequestViewSet
 from care.emr.api.viewsets.medication_statement import MedicationStatementViewSet
 from care.emr.api.viewsets.notes import NoteMessageViewSet, NoteThreadViewSet
@@ -59,7 +60,6 @@ from care.facility.api.viewsets.facility import (
     FacilitySpokesViewSet,
     FacilityViewSet,
 )
-from care.facility.api.viewsets.file_upload import FileUploadViewSet
 from care.facility.api.viewsets.inventory import (
     FacilityInventoryItemViewSet,
     FacilityInventoryLogViewSet,

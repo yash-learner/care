@@ -22,8 +22,7 @@ from care.utils.models.validators import (
     cover_image_validator,
     custom_image_extension_validator,
 )
-from care.utils.queryset.facility import get_home_facility_queryset
-from care.utils.serializers.fields import ChoiceField, ExternalIdSerializerField
+from care.utils.serializers.fields import ChoiceField
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -102,10 +101,6 @@ class UserCreateSerializer(SignUpSerializer):
         required=False,
         allow_empty=True,
         write_only=True,
-    )
-    home_facility = ExternalIdSerializerField(
-        queryset=Facility.objects.all(),
-        required=False,
     )
 
     class Meta:
@@ -195,14 +190,6 @@ class UserCreateSerializer(SignUpSerializer):
 
     def validate(self, attrs):
         validated = super().validate(attrs)
-        if "home_facility" in validated:
-            allowed_facilities = get_home_facility_queryset(self.context["created_by"])
-            if not allowed_facilities.filter(id=validated["home_facility"].id).exists():
-                raise exceptions.ValidationError(
-                    {
-                        "home_facility": "Cannot create users with different Home Facility",
-                    },
-                )
 
         if (
             self.context["created_by"].user_type in User.READ_ONLY_TYPES
@@ -293,13 +280,8 @@ class UserSerializer(SignUpSerializer):
     local_body_object = LocalBodySerializer(source="local_body", read_only=True)
     district_object = DistrictSerializer(source="district", read_only=True)
     state_object = StateSerializer(source="state", read_only=True)
-    home_facility_object = FacilityBareMinimumSerializer(
-        source="home_facility",
-        read_only=True,
-    )
-    read_profile_picture_url = serializers.URLField(read_only=True)
 
-    home_facility = ExternalIdSerializerField(queryset=Facility.objects.all())
+    read_profile_picture_url = serializers.URLField(read_only=True)
 
     date_of_birth = serializers.DateField(required=True)
 
@@ -355,7 +337,6 @@ class UserSerializer(SignUpSerializer):
             "doctor_experience_commenced_on",
             "doctor_medical_council_registration",
             "created_by",
-            "home_facility",
             "weekly_working_hours",
             "local_body",
             "district",
@@ -366,7 +347,6 @@ class UserSerializer(SignUpSerializer):
             "date_of_birth",
             "is_superuser",
             "verified",
-            "home_facility_object",
             "local_body_object",
             "district_object",
             "state_object",
@@ -403,20 +383,6 @@ class UserSerializer(SignUpSerializer):
 
         return value
 
-    def validate(self, attrs):
-        validated = super().validate(attrs)
-        if "home_facility" in validated:
-            allowed_facilities = get_home_facility_queryset(
-                self.context["request"].user,
-            )
-            if not allowed_facilities.filter(id=validated["home_facility"].id).exists():
-                raise exceptions.ValidationError(
-                    {
-                        "home_facility": "Cannot create users with different Home Facility",
-                    },
-                )
-        return validated
-
 
 class UserBaseMinimumSerializer(serializers.ModelSerializer):
     user_type = ChoiceField(choices=User.TYPE_CHOICES, read_only=True)
@@ -440,10 +406,7 @@ class UserBaseMinimumSerializer(serializers.ModelSerializer):
 
 class UserAssignedSerializer(serializers.ModelSerializer):
     user_type = ChoiceField(choices=User.TYPE_CHOICES, read_only=True)
-    home_facility_object = FacilityBareMinimumSerializer(
-        source="home_facility",
-        read_only=True,
-    )
+
     skills = UserSkillSerializer(many=True, read_only=True)
     external_id = serializers.UUIDField(read_only=True)
 
@@ -460,7 +423,6 @@ class UserAssignedSerializer(serializers.ModelSerializer):
             "user_type",
             "last_login",
             "gender",
-            "home_facility_object",
             "qualification",
             "doctor_experience_commenced_on",
             "video_connect_link",
@@ -475,11 +437,7 @@ class UserListSerializer(serializers.ModelSerializer):
     state_object = StateSerializer(source="state", read_only=True)
     user_type = ChoiceField(choices=User.TYPE_CHOICES, read_only=True)
     created_by = serializers.CharField(source="created_by_user", read_only=True)
-    home_facility_object = FacilityBareMinimumSerializer(
-        source="home_facility",
-        read_only=True,
-    )
-    home_facility = ExternalIdSerializerField(queryset=Facility.objects.all())
+
     read_profile_picture_url = serializers.URLField(read_only=True)
     external_id = serializers.UUIDField(read_only=True)
 
@@ -502,8 +460,6 @@ class UserListSerializer(serializers.ModelSerializer):
             "weekly_working_hours",
             "created_by",
             "last_login",
-            "home_facility_object",
-            "home_facility",
             "video_connect_link",
             "read_profile_picture_url",
         )
