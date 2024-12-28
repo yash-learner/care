@@ -1,7 +1,10 @@
 from django.db import transaction
 from django_filters import rest_framework as filters
-from rest_framework.exceptions import PermissionDenied
+from pydantic import UUID4, BaseModel
+from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
+from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import (
     EMRBaseViewSet,
@@ -18,6 +21,7 @@ from care.emr.resources.encounter.spec import (
     EncounterRetrieveSpec,
     EncounterUpdateSpec,
 )
+from care.emr.resources.facility_organization.spec import FacilityOrganizationReadSpec
 from care.facility.models import Facility
 from care.security.authorization import AuthorizationController
 
@@ -99,3 +103,58 @@ class EncounterViewSet(
             .select_related("patient", "facility", "appointment")
             .order_by("-created_date")
         )
+
+    @action(detail=True, methods=["GET"])
+    def organizations(self, request, *args, **kwargs):
+        instance = self.get_object()
+        encounter_organizations = EncounterOrganization.objects.filter(
+            encounter=instance
+        ).select_related("organization")
+        data = [
+            FacilityOrganizationReadSpec.serialize(
+                encounter_organization.organization
+            ).to_json()
+            for encounter_organization in encounter_organizations
+        ]
+        return Response({"results": data})
+
+    class EncounterOrganizationManageSpec(BaseModel):
+        organization: UUID4
+
+    @action(detail=True, methods=["POST"])
+    def organizations_add(self, request, *args, **kwargs):
+        instance = self.get_object()
+        request_data = self.EncounterOrganizationManageSpec(**request.data)
+        organization = get_object_or_404(
+            FacilityOrganization, external_id=request_data.organization
+        )
+        if organization.facility.id != instance.facility.id:
+            raise PermissionDenied("Organization Incompatible with Encounter")
+        encounter_organization = EncounterOrganization.objects.filter(
+            encounter=instance, organization=organization
+        )
+        if encounter_organization.exists():
+            raise ValidationError("Organization already exists")
+        EncounterOrganization.objects.create(
+            encounter=instance, organization=organization
+        )
+        return Response(FacilityOrganizationReadSpec.serialize(organization).to_json())
+
+    @action(detail=True, methods=["DELETE"])
+    def organizations_remove(self, request, *args, **kwargs):
+        instance = self.get_object()
+        request_data = self.EncounterOrganizationManageSpec(**request.data)
+        organization = get_object_or_404(
+            FacilityOrganization, external_id=request_data.organization
+        )
+        if organization.facility.id != instance.facility.id:
+            raise PermissionDenied("Organization Incompatible with Encounter")
+        encounter_organization = EncounterOrganization.objects.filter(
+            encounter=instance, organization=organization
+        )
+        if not encounter_organization.exists():
+            raise ValidationError("Organization does not exist")
+        EncounterOrganization.objects.filter(
+            encounter=instance, organization=organization
+        ).delete()
+        return Response({}, status=204)

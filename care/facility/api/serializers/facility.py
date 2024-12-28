@@ -9,8 +9,6 @@ from care.facility.models.facility import FEATURE_CHOICES, FacilityHubSpoke
 from care.users.api.serializers.lsg import (
     DistrictSerializer,
     LocalBodySerializer,
-    StateSerializer,
-    WardSerializer,
 )
 from care.utils.file_uploads.cover_image import upload_cover_image
 from care.utils.models.validators import (
