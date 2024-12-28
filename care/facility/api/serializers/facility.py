@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q
 from rest_framework import serializers
 
+from care.emr.models import Organization
+from care.emr.resources.organization.spec import OrganizationReadSpec
 from care.facility.models import FACILITY_TYPES, Facility, FacilityLocalGovtBody
 from care.facility.models.facility import FEATURE_CHOICES, FacilityHubSpoke
 from care.users.api.serializers.lsg import (
@@ -88,11 +90,21 @@ class FacilitySerializer(FacilityBasicInfoSerializer):
         child=serializers.ChoiceField(choices=FEATURE_CHOICES),
         required=False,
     )
+    geo_organization = ExternalIdSerializerField(
+        Organization.objects.filter(org_type="govt"), write_only=True
+    )
+
+    geo_organization_obj = serializers.SerializerMethodField(read_only=True)
 
     facility_flags = serializers.SerializerMethodField()
 
     def get_facility_flags(self, facility):
         return facility.get_facility_flags()
+
+    def get_geo_organization_obj(self, facility):
+        if facility.geo_organization:
+            return OrganizationReadSpec.serialize(facility.geo_organization).to_json()
+        return None
 
     class Meta:
         model = Facility
@@ -100,35 +112,20 @@ class FacilitySerializer(FacilityBasicInfoSerializer):
             "id",
             "name",
             "description",
-            "ward",
-            "local_body",
-            "district",
-            "state",
             "facility_type",
             "address",
             "longitude",
             "latitude",
             "features",
             "pincode",
-            "oxygen_capacity",
             "phone_number",
-            "ward_object",
-            "local_body_object",
-            "district_object",
-            "state_object",
             "modified_date",
             "created_date",
-            "kasp_empanelled",
             "middleware_address",
-            "expected_oxygen_requirement",
-            "type_b_cylinders",
-            "type_c_cylinders",
-            "type_d_cylinders",
-            "expected_type_b_cylinders",
-            "expected_type_c_cylinders",
-            "expected_type_d_cylinders",
             "read_cover_image_url",
             "facility_flags",
+            "geo_organization",
+            "geo_organization_obj",
         ]
         read_only_fields = ("modified_date", "created_date")
 

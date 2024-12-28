@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django_filters import rest_framework as filters
@@ -12,7 +13,7 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from care.emr.models.organziation import FacilityOrganizationUser
+from care.emr.models.organziation import FacilityOrganizationUser, OrganizationUser
 from care.facility.api.serializers.facility import (
     FacilityBasicInfoSerializer,
     FacilityImageUploadSerializer,
@@ -80,13 +81,21 @@ class FacilityViewSet(
 
     def get_queryset(self):
         # TODO Add Permission checks
+        organization_ids = list(
+            OrganizationUser.objects.filter(user=self.request.user).values_list(
+                "organization_id", flat=True
+            )
+        )
         return (
             super()
             .get_queryset()
             .filter(
-                id__in=FacilityOrganizationUser.objects.filter(
-                    user=self.request.user
-                ).values_list("organization__facility_id")
+                Q(
+                    id__in=FacilityOrganizationUser.objects.filter(
+                        user=self.request.user
+                    ).values_list("organization__facility_id")
+                )
+                | Q(geo_organization_cache__overlap=organization_ids)
             )
         )
 
