@@ -13,6 +13,7 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from care.emr.models import Organization
 from care.emr.models.organziation import FacilityOrganizationUser, OrganizationUser
 from care.facility.api.serializers.facility import (
     FacilityBasicInfoSerializer,
@@ -30,6 +31,13 @@ from care.users.models import User
 from care.utils.file_uploads.cover_image import delete_cover_image
 from care.utils.queryset.facility import get_facility_queryset
 
+class GeoOrganizationFilter(filters.UUIDFilter):
+
+    def filter(self, qs, value):
+        if value:
+            organization = Organization.objects.get(external_id=value , org_type="govt")
+            return qs.filter(geo_organization_cache__overlap=[organization.id])
+        return qs
 
 class FacilityFilter(filters.FilterSet):
     name = filters.CharFilter(field_name="name", lookup_expr="icontains")
@@ -46,6 +54,8 @@ class FacilityFilter(filters.FilterSet):
     state_name = filters.CharFilter(field_name="state__name", lookup_expr="icontains")
     kasp_empanelled = filters.BooleanFilter(field_name="kasp_empanelled")
     exclude_user = filters.CharFilter(method="filter_exclude_user")
+    geo_organization = GeoOrganizationFilter()
+
 
     def filter_exclude_user(self, queryset, name, value):
         if value:
