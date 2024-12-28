@@ -47,8 +47,12 @@ class EncounterFilters(filters.FilterSet):
     )
     priority = filters.CharFilter(field_name="priority", lookup_expr="iexact")
     external_identifier = filters.CharFilter(
-        field_name="priority", lookup_expr="icontains"
+        field_name="external_identifier", lookup_expr="icontains"
     )
+    phone_number = filters.CharFilter(
+        field_name="patient__phone_number", lookup_expr="icontains"
+    )
+    name = filters.CharFilter(field_name="patient__name", lookup_expr="icontains")
     live = LiveFilter()
 
 
