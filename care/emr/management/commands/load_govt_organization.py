@@ -29,24 +29,53 @@ districts_cache = defaultdict(dict)
 
 def get_state(state_name):
     if state_name not in state_cache:
-        state_cache[state_name] = Organization.objects.get(
-            name=state_name, root_org=None
-        )
+        try:
+            state_cache[state_name] = Organization.objects.get(
+                name=state_name, root_org=None
+            )
+        except Organization.DoesNotExist:
+            logger.error("State not found: '%s'", state_name)
+            state_cache[state_name] = None
+            # raise e
     return state_cache[state_name]
 
 
 def get_district(state_name, district_name):
     state = get_state(state_name)
+    if not state:
+        return None
     if district_name not in districts_cache[state_name]:
-        districts_cache[state_name][district_name] = Organization.objects.get(
-            name=district_name, parent=state
-        )
+        try:
+            districts_cache[state_name][district_name] = Organization.objects.get(
+                name=district_name, parent=state
+            )
+        except Organization.DoesNotExist:
+            logger.error(
+                "District not found: %s, '%s'",
+                state_name,
+                district_name,
+            )
+            districts_cache[state_name][district_name] = None
+            # raise e
     return districts_cache[state_name][district_name]
 
 
 def get_local_body(state_name, district_name, local_body_name):
     district = get_district(state_name, district_name)
-    return Organization.objects.get(name=local_body_name, parent=district)
+    if not district:
+        return None
+    try:
+        return Organization.objects.filter(
+            name=local_body_name, parent=district
+        ).first()
+    except Organization.DoesNotExist:
+        logger.error(
+            "Local Body not found: %s, %s, '%s'",
+            state_name,
+            district_name,
+            local_body_name,
+        )
+        # raise e
 
 
 def int_or_zero(value):
@@ -67,6 +96,10 @@ def get_ward_name(ward):
     if "ward_name" in ward:
         return ward["ward_name"]
     return ward["name"]
+
+
+def get_local_body_name(local_body):
+    return local_body["name"].replace("  ", " ").replace("\n", "")  # noqa: RUF001
 
 
 class Command(BaseCommand):
@@ -131,6 +164,7 @@ class Command(BaseCommand):
 
             state, created = Organization.objects.get_or_create(
                 name__iexact=state_name,
+                metadata__govt_org_type="state",
                 defaults={**state_defaults, "name": state_name},
             )
             state_cache[state_name] = state
@@ -187,14 +221,18 @@ class Command(BaseCommand):
             )
             local_body_objs = []
             for local_body in local_body_list:
+                if not local_body["district"]:
+                    continue
                 dist_obj: Organization = get_district(
                     local_body["state"], local_body["district"]
                 )
+                if not dist_obj:
+                    continue
                 body_type = local_body.get("localbody_code", " ")[0]
                 local_body_objs.append(
                     Organization(
                         root_org=dist_obj.parent,
-                        name=local_body["name"],
+                        name=get_local_body_name(local_body),
                         parent=dist_obj,
                         org_type="govt",
                         level_cache=2,
@@ -232,13 +270,15 @@ class Command(BaseCommand):
                 with f.open() as data_f:
                     data = json.load(data_f)
                     wards = data.pop("wards", None)
-                    if wards is None:
-                        logger.info("Ward Data not Found")
+                    if not wards:
+                        logger.info("Ward Data not Found for %s", f)
                         continue
                     if data.get("district") is not None:
                         local_body = get_local_body(
-                            data["state"], data["district"], data["name"]
+                            data["state"], data["district"], get_local_body_name(data)
                         )
+                        if not local_body:
+                            continue
                         wards.sort(
                             key=lambda x: get_ward_name(x) + str(get_ward_number(x))
                         )
