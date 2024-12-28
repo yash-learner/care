@@ -131,6 +131,8 @@ router.register("organization", OrganizationViewSet, basename="organization")
 
 router.register("role", RoleViewSet, basename="role")
 
+router.register("encounter", EncounterViewSet, basename="encounter")
+
 organization_nested_router = NestedSimpleRouter(
     router, r"organization", lookup="organization"
 )
@@ -269,9 +271,6 @@ patient_nested_router.register(
 
 patient_nested_router.register(r"symptom", SymptomViewSet, basename="symptom")
 patient_nested_router.register(r"diagnosis", DiagnosisViewSet, basename="diagnosis")
-
-
-facility_nested_router.register(r"encounter", EncounterViewSet, basename="encounter")
 
 patient_nested_router.register(
     "observation", ObservationViewSet, basename="observation"

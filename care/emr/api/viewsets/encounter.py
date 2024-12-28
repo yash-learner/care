@@ -34,6 +34,7 @@ class LiveFilter(filters.BooleanFilter):
 
 class EncounterFilters(filters.FilterSet):
     patient = filters.UUIDFilter(field_name="patient__external_id")
+    facility = filters.UUIDFilter(field_name="facility__external_id")
     status = filters.CharFilter(field_name="status", lookup_expr="iexact")
     encounter_class = filters.CharFilter(
         field_name="encounter_class", lookup_expr="iexact"
@@ -62,16 +63,14 @@ class EncounterViewSet(
         )
 
     def perform_create(self, instance):
-        facility = self.get_facility_obj()
         with transaction.atomic():
             organizations = getattr(instance, "_organizations", [])
-            instance.facility = facility
             super().perform_create(instance)
             for organization in organizations:
                 EncounterOrganization.objects.create(
                     encounter=instance,
                     organization=FacilityOrganization.objects.get(
-                        external_id=organization, facility=facility
+                        external_id=organization, facility=instance.facility
                     ),
                 )
             if not organizations:
@@ -82,15 +81,16 @@ class EncounterViewSet(
 
     def authorize_create(self, instance):
         # Check if encounter create permission exists on Facility Organization
-        facility = self.get_facility_obj()
+        facility = get_object_or_404(Facility, external_id=instance.facility)
         if not AuthorizationController.call(
             "can_create_encounter_obj", self.request.user, facility
         ):
             raise PermissionDenied("You do not have permission to create encounter")
 
     def get_queryset(self):
-        facility = self.get_facility_obj()
-        queryset = super().get_queryset().filter(facility=facility)
-        return AuthorizationController.call(
-            "get_filtered_encounters", queryset, self.request.user, facility
+        return (
+            super()
+            .get_queryset()
+            .select_related("patient", "facility", "appointment")
+            .order_by("-created_date")
         )

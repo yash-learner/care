@@ -14,9 +14,11 @@ from care.emr.resources.encounter.constants import (
     EncounterPriorityChoices,
     StatusChoices,
 )
+from care.emr.resources.facility.spec import FacilityBareMinimumSpec
 from care.emr.resources.patient.spec import PatientListSpec
 from care.emr.resources.scheduling.slot.spec import TokenBookingReadSpec
 from care.emr.resources.user.spec import UserSpec
+from care.facility.models import Facility
 
 
 class PeriodSpec(BaseModel):
@@ -52,12 +54,14 @@ class EncounterSpecBase(EMRResource):
 
 class EncounterCreateSpec(EncounterSpecBase):
     patient: UUID4
+    facility: UUID4
     organizations: list[UUID4] = []
     appointment: UUID4 | None = None
 
     def perform_extra_deserialization(self, is_update, obj):
         if not is_update:
             obj.patient = Patient.objects.get(external_id=self.patient)
+            obj.facility = Facility.objects.get(external_id=self.facility)
             if self.appointment:
                 obj.appointment = TokenBooking.objects.get(external_id=self.appointment)
             obj._organizations = list(set(self.organizations))  # noqa SLF001
@@ -69,15 +73,19 @@ class EncounterUpdateSpec(EncounterSpecBase):
 
 class EncounterListSpec(EncounterSpecBase):
     patient: dict
+    facility: dict
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
         mapping["patient"] = PatientListSpec.serialize(obj.patient).to_json()
+        mapping["facility"] = FacilityBareMinimumSpec.serialize(obj.facility).to_json()
 
 
 class EncounterRetrieveSpec(EncounterListSpec):
     appointment: dict = {}
+    created_by: dict = {}
+    updated_by: dict = {}
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
