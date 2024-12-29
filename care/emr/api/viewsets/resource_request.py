@@ -10,9 +10,10 @@ from care.emr.models.resource_request import ResourceRequest, ResourceRequestCom
 from care.emr.resources.resource_request.spec import (
     ResourceRequestCommentCreateSpec,
     ResourceRequestCommentListSpec,
+    ResourceRequestCommentRetrieveSpec,
     ResourceRequestCreateSpec,
     ResourceRequestListSpec,
-    ResourceRequestRetrieveSpec, ResourceRequestCommentRetrieveSpec,
+    ResourceRequestRetrieveSpec,
 )
 
 

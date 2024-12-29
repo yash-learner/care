@@ -144,5 +144,7 @@ class ResourceRequestCommentListSpec(ResourceRequestCommentBaseSpec):
         if obj.created_by:
             mapping["created_by"] = UserSpec.serialize(obj.created_by)
 
+
 class ResourceRequestCommentRetrieveSpec(ResourceRequestCommentListSpec):
     pass
+
