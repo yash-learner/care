@@ -49,4 +49,4 @@ class ResourceRequestCommentViewSet(
     def get_queryset(self):
         return ResourceRequestComment.objects.filter(
             request__external_id=self.kwargs["resource_external_id"]
-        )
+        ).select_related("created_by")
