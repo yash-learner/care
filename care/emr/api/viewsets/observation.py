@@ -1,13 +1,16 @@
 from django_filters import rest_framework as filters
 from pydantic import BaseModel, Field
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
+from care.emr.api.viewsets.authz_base import EncounterBasedAuthorizationBase
 from care.emr.api.viewsets.base import EMRModelReadOnlyViewSet
 from care.emr.models.observation import Observation
 from care.emr.resources.common.coding import Coding
 from care.emr.resources.observation.spec import ObservationReadSpec
 from care.emr.resources.questionnaire.spec import QuestionType
+from care.security.authorization import AuthorizationController
 
 
 class MultipleCodeFilter(filters.CharFilter):
@@ -36,13 +39,18 @@ class ObservationAnalyseRequest(BaseModel):
     page_size: int = Field(10, le=30)
 
 
-class ObservationViewSet(EMRModelReadOnlyViewSet):
+class ObservationViewSet(EncounterBasedAuthorizationBase, EMRModelReadOnlyViewSet):
     database_model = Observation
     pydantic_model = ObservationReadSpec
     filterset_class = ObservationFilter
     filter_backends = [filters.DjangoFilterBackend]
 
     def get_queryset(self):
+        if not AuthorizationController.call(
+            "can_view_clinical_data", self.request.user, self.get_patient_obj()
+        ):
+            raise PermissionDenied("Permission denied to user")
+
         queryset = (
             super()
             .get_queryset()

@@ -12,9 +12,8 @@ class EncounterBasedAuthorizationBase:
         )
 
     def authorize_update(self, request_obj, model_instance):
-        encounter = get_object_or_404(Encounter, external_id=model_instance.encounter)
         if not AuthorizationController.call(
-            "can_update_encounter_obj", self.request.user, encounter
+            "can_update_encounter_obj", self.request.user, model_instance.encounter
         ):
             raise PermissionDenied("You do not have permission to update encounter")
 
