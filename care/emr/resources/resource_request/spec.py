@@ -1,3 +1,4 @@
+import datetime
 from enum import Enum
 
 from pydantic import UUID4
@@ -91,6 +92,10 @@ class ResourceRequestRetrieveSpec(ResourceRequestBaseSpec):
     assigned_facility: dict | None = None
     related_patient: dict | None = None
     assigned_to: dict | None = None
+    created_by: dict | None = None
+    updated_by: dict | None = None
+    created_date: datetime.datetime
+    modified_date: datetime.datetime
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -112,6 +117,11 @@ class ResourceRequestRetrieveSpec(ResourceRequestBaseSpec):
             ).to_json()
         if obj.assigned_to:
             mapping["assigned_to"] = UserSpec.serialize(obj.assigned_to).to_json()
+
+        if obj.created_by:
+            mapping["created_by"] = UserSpec.serialize(obj.created_by)
+        if obj.updated_by:
+            mapping["updated_by"] = UserSpec.serialize(obj.updated_by)
 
 
 class ResourceRequestCommentBaseSpec(EMRResource):

@@ -16,7 +16,7 @@ from care.users.api.serializers.lsg import (
     StateSerializer,
 )
 from care.users.api.serializers.skill import UserSkillSerializer
-from care.users.models import GENDER_CHOICES, User
+from care.users.models import User
 from care.utils.file_uploads.cover_image import upload_cover_image
 from care.utils.models.validators import (
     cover_image_validator,
@@ -26,8 +26,6 @@ from care.utils.serializers.fields import ChoiceField
 
 
 class SignUpSerializer(serializers.ModelSerializer):
-    user_type = ChoiceField(choices=User.TYPE_CHOICES)
-    gender = ChoiceField(choices=GENDER_CHOICES)
     password = serializers.CharField(write_only=True)
 
     class Meta:
@@ -273,8 +271,6 @@ class UserCreateSerializer(SignUpSerializer):
 class UserSerializer(SignUpSerializer):
     external_id = serializers.UUIDField(read_only=True)
 
-    user_type = ChoiceField(choices=User.TYPE_CHOICES, read_only=True)
-    created_by = serializers.CharField(source="created_by_user", read_only=True)
     is_superuser = serializers.BooleanField(read_only=True)
 
     local_body_object = LocalBodySerializer(source="local_body", read_only=True)

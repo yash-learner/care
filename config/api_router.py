@@ -39,6 +39,7 @@ from care.emr.api.viewsets.scheduling.availability_exceptions import (
 )
 from care.emr.api.viewsets.scheduling.booking import TokenBookingViewSet
 from care.emr.api.viewsets.units import UnitsView
+from care.emr.api.viewsets.user import UserViewSet
 from care.emr.api.viewsets.valueset import ValueSetViewSet
 from care.facility.api.viewsets.facility import (
     AllFacilityViewSet,
@@ -56,7 +57,6 @@ from care.users.api.viewsets.lsg import (
 )
 from care.users.api.viewsets.plug_config import PlugConfigViewset
 from care.users.api.viewsets.skill import SkillViewSet
-from care.users.api.viewsets.users import UserViewSet
 from care.users.api.viewsets.userskill import UserSkillViewSet
 
 router = DefaultRouter() if settings.DEBUG else SimpleRouter()

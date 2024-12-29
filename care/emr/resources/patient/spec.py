@@ -8,8 +8,6 @@ from pydantic import UUID4, field_validator, model_validator
 from care.emr.models import Organization
 from care.emr.models.patient import Patient
 from care.emr.resources.base import EMRResource
-from care.emr.resources.organization.spec import OrganizationReadSpec
-from care.emr.resources.user.spec import UserSpec
 
 
 class BloodGroupChoices(str, Enum):
@@ -105,11 +103,14 @@ class PatientPartialSpec(EMRResource):
 class PatientRetrieveSpec(PatientListSpec):
     geo_organization: dict = {}
 
-    created_by: UserSpec | None = None
-    updated_by: UserSpec | None = None
+    created_by: dict | None = None
+    updated_by: dict | None = None
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
+        from care.emr.resources.organization.spec import OrganizationReadSpec
+        from care.emr.resources.user.spec import UserSpec
+
         super().perform_extra_serialization(mapping, obj)
         if obj.geo_organization:
             mapping["geo_organization"] = OrganizationReadSpec.serialize(
