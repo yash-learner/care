@@ -60,8 +60,6 @@ class OrganizationWriteSpec(OrganizationBaseSpec):
 
 
 class OrganizationReadSpec(OrganizationBaseSpec):
-    created_by: UserSpec = dict
-    updated_by: UserSpec = dict
     level_cache: int = 0
     system_generated: bool
     has_children: bool
@@ -72,11 +70,6 @@ class OrganizationReadSpec(OrganizationBaseSpec):
         mapping["id"] = obj.external_id
         mapping["parent"] = obj.get_parent_json()
 
-        if obj.created_by:
-            mapping["created_by"] = UserSpec.serialize(obj.created_by)
-        if obj.updated_by:
-            mapping["updated_by"] = UserSpec.serialize(obj.updated_by)
-
 
 class OrganizationRetrieveSpec(OrganizationReadSpec):
     permissions: list[str] = []
@@ -86,3 +79,7 @@ class OrganizationRetrieveSpec(OrganizationReadSpec):
         mapping["permissions"] = AuthorizationController.call(
             "get_permission_on_organization", obj, user
         )
+        if obj.created_by:
+            mapping["created_by"] = UserSpec.serialize(obj.created_by)
+        if obj.updated_by:
+            mapping["updated_by"] = UserSpec.serialize(obj.updated_by)

@@ -134,6 +134,7 @@ FACILITY_TYPES = [
 ]
 
 REVERSE_FACILITY_TYPES = reverse_choices(FACILITY_TYPES)
+REVERSE_REVERSE_FACILITY_TYPES = {v: k for k, v in REVERSE_FACILITY_TYPES.items()}
 
 DOCTOR_TYPES = [
     (1, "General Medicine"),

@@ -10,6 +10,7 @@ from care.emr.api.viewsets.allergy_intolerance import AllergyIntoleranceViewSet
 from care.emr.api.viewsets.batch_request import BatchRequestView
 from care.emr.api.viewsets.condition import DiagnosisViewSet, SymptomViewSet
 from care.emr.api.viewsets.encounter import EncounterViewSet
+from care.emr.api.viewsets.facility import FacilityViewSet
 from care.emr.api.viewsets.facility_organization import (
     FacilityOrganizationUsersViewSet,
     FacilityOrganizationViewSet,
@@ -20,6 +21,7 @@ from care.emr.api.viewsets.medication_statement import MedicationStatementViewSe
 from care.emr.api.viewsets.notes import NoteMessageViewSet, NoteThreadViewSet
 from care.emr.api.viewsets.observation import ObservationViewSet
 from care.emr.api.viewsets.organization import (
+    OrganizationPublicViewSet,
     OrganizationUsersViewSet,
     OrganizationViewSet,
 )
@@ -58,7 +60,6 @@ from care.facility.api.viewsets.facility import (
     AllFacilityViewSet,
     FacilityHubsViewSet,
     FacilitySpokesViewSet,
-    FacilityViewSet,
 )
 from care.facility.api.viewsets.inventory import (
     FacilityInventoryItemViewSet,
@@ -75,10 +76,6 @@ from care.facility.api.viewsets.patient import (
 from care.facility.api.viewsets.resources import (
     ResourceRequestCommentViewSet,
     ResourceRequestViewSet,
-)
-from care.facility.api.viewsets.shifting import (
-    ShifitngRequestCommentViewSet,
-    ShiftingViewSet,
 )
 from care.users.api.viewsets.lsg import (
     DistrictViewSet,
@@ -128,6 +125,10 @@ router.register("questionnaire", QuestionnaireViewSet, basename="questionnaire")
 
 router.register("organization", OrganizationViewSet, basename="organization")
 
+router.register(
+    "govt/organization", OrganizationPublicViewSet, basename="govt-organization"
+)
+
 router.register("role", RoleViewSet, basename="role")
 
 router.register("encounter", EncounterViewSet, basename="encounter")
@@ -142,11 +143,11 @@ organization_nested_router.register(
 
 router.register("items", FacilityInventoryItemViewSet, basename="items")
 
-router.register("shift", ShiftingViewSet, basename="patient-shift")
-shifting_nested_router = NestedSimpleRouter(router, r"shift", lookup="shift")
-shifting_nested_router.register(
-    r"comment", ShifitngRequestCommentViewSet, basename="patient-shift-comment"
-)
+# router.register("shift", ShiftingViewSet, basename="patient-shift")
+# shifting_nested_router = NestedSimpleRouter(router, r"shift", lookup="shift")
+# shifting_nested_router.register(
+#     r"comment", ShifitngRequestCommentViewSet, basename="patient-shift-comment"
+# )
 
 router.register("resource", ResourceRequestViewSet, basename="resource-request")
 resource_nested_router = NestedSimpleRouter(router, r"resource", lookup="resource")
@@ -155,6 +156,7 @@ resource_nested_router.register(
 )
 
 router.register("facility", FacilityViewSet, basename="facility")
+
 router.register("getallfacilities", AllFacilityViewSet, basename="getallfacilities")
 facility_nested_router = NestedSimpleRouter(router, r"facility", lookup="facility")
 # facility_nested_router.register(
@@ -338,7 +340,7 @@ urlpatterns = [
     path("", include(patient_notes_nested_router.urls)),
     # path("", include(consultation_nested_router.urls)),
     path("", include(resource_nested_router.urls)),
-    path("", include(shifting_nested_router.urls)),
+    # path("", include(shifting_nested_router.urls)),
     path("", include(organization_nested_router.urls)),
     path("", include(facility_organization_nested_router.urls)),
 ]

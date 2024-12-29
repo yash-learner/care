@@ -112,7 +112,7 @@ class PatientViewSet(EMRModelViewSet):
     class PatientUserDeleteSpec(BaseModel):
         user: UUID4
 
-    @action(detail=True, methods=["DELETE"])
+    @action(detail=True, methods=["POST"])
     def delete_user(self, request, *args, **kwargs):
         request_data = self.PatientUserDeleteSpec(**self.request.data)
         user = get_object_or_404(User, external_id=request_data.user)

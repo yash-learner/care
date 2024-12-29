@@ -6,7 +6,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
 
-from care.emr.api.viewsets.base import EMRModelViewSet
+from care.emr.api.viewsets.base import EMRModelReadOnlyViewSet, EMRModelViewSet
 from care.emr.models.organziation import Organization, OrganizationUser
 from care.emr.resources.organization.organization_user_spec import (
     OrganizationUserReadSpec,
@@ -29,6 +29,18 @@ class OrganizationFilter(filters.FilterSet):
     parent = filters.UUIDFilter(field_name="parent__external_id")
     name = filters.CharFilter(field_name="name", lookup_expr="icontains")
     org_type = filters.CharFilter(field_name="org_type", lookup_expr="iexact")
+
+
+class OrganizationPublicViewSet(EMRModelReadOnlyViewSet):
+    database_model = Organization
+    pydantic_read_model = OrganizationReadSpec
+    filterset_class = OrganizationFilter
+    filter_backends = [filters.DjangoFilterBackend]
+    authentication_classes = []
+    permission_classes = []
+
+    def get_queryset(self):
+        return Organization.objects.filter(org_type="govt")
 
 
 class OrganizationViewSet(EMRModelViewSet):

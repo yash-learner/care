@@ -27,7 +27,7 @@ from care.facility.models import (
     FacilityCapacity,
     HospitalDoctors,
 )
-from care.facility.models.facility import FacilityHubSpoke, FacilityUser
+from care.facility.models.facility import FacilityHubSpoke
 from care.users.models import User
 from care.utils.file_uploads.cover_image import delete_cover_image
 from care.utils.queryset.facility import get_facility_queryset
@@ -69,7 +69,6 @@ class FacilityViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
     """Viewset for facility CRUD operations."""
@@ -117,24 +116,6 @@ class FacilityViewSet(
             # Check DRYpermissions before updating
             return FacilityImageUploadSerializer
         return FacilitySerializer
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        if instance.patientregistration_set.filter(is_active=True).exists():
-            return Response(
-                {
-                    "facility": (
-                        "You cannot delete a facility with Live patients. "
-                        "Discharge all patients and try again"
-                    )
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        FacilityUser.objects.filter(facility=instance).delete()
-        User.objects.filter(home_facility=instance).update(home_facility=None)
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
         if settings.CSV_REQUEST_PARAMETER in request.GET:
