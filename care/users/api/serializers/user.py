@@ -294,11 +294,14 @@ class UserSerializer(SignUpSerializer):
     facilities = serializers.SerializerMethodField()
 
     def get_organizations(self, user):
-        organizations = Organization.objects.filter(
-            id__in=OrganizationUser.objects.filter(user=user).values_list(
-                "organization_id", flat=True
+        if user.is_superuser:
+            organizations = Organization.objects.filter(parent_is_null=True)
+        else:
+            organizations = Organization.objects.filter(
+                id__in=OrganizationUser.objects.filter(user=user).values_list(
+                    "organization_id", flat=True
+                )
             )
-        )
         return [OrganizationReadSpec.serialize(obj).to_json() for obj in organizations]
 
     def get_permissions(self, user):
