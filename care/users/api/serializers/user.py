@@ -295,7 +295,7 @@ class UserSerializer(SignUpSerializer):
 
     def get_organizations(self, user):
         if user.is_superuser:
-            organizations = Organization.objects.filter(parent__is_null=True)
+            organizations = Organization.objects.filter(parent__isnull=True)
         else:
             organizations = Organization.objects.filter(
                 id__in=OrganizationUser.objects.filter(user=user).values_list(
