@@ -79,6 +79,9 @@ class PatientCreateSpec(PatientBaseSpec):
 
 
 class PatientListSpec(PatientBaseSpec):
+    created_date : datetime.datetime
+    modified_date : datetime.datetime
+
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
