@@ -119,5 +119,19 @@ class FacilityOrganizationAccess(AuthorizationHandler):
             organization_parents,
         )
 
+    def get_permission_on_facility_organization(self, organization, user):
+        organization_parents = [*organization.parent_cache, organization.id]
+        user_roles = RoleModel.objects.filter(
+            id__in=FacilityOrganization.objects.filter(
+                organization_id__in=organization_parents, user=user
+            ).values("role_id")
+        )
+        merged_permissions = set()
+        for role in user_roles:
+            merged_permissions = merged_permissions.union(
+                set(role.get_permission_sk_for_role())
+            )
+        return merged_permissions
+
 
 AuthorizationController.register_internal_controller(FacilityOrganizationAccess)

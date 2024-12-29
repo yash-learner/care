@@ -12,6 +12,7 @@ from care.emr.resources.facility_organization.facility_orgnization_user_spec imp
 )
 from care.emr.resources.facility_organization.spec import (
     FacilityOrganizationReadSpec,
+    FacilityOrganizationRetrieveSpec,
     FacilityOrganizationWriteSpec,
 )
 from care.facility.models import Facility
@@ -29,6 +30,7 @@ class FacilityOrganizationViewSet(EMRModelViewSet):
     database_model = FacilityOrganization
     pydantic_model = FacilityOrganizationWriteSpec
     pydantic_read_model = FacilityOrganizationReadSpec
+    pydantic_retrieve_model = FacilityOrganizationRetrieveSpec
     filterset_class = FacilityOrganizationFilter
     filter_backends = [filters.DjangoFilterBackend]
 
