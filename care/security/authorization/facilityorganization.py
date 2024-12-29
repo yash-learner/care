@@ -122,7 +122,7 @@ class FacilityOrganizationAccess(AuthorizationHandler):
     def get_permission_on_facility_organization(self, organization, user):
         organization_parents = [*organization.parent_cache, organization.id]
         user_roles = RoleModel.objects.filter(
-            id__in=FacilityOrganization.objects.filter(
+            id__in=FacilityOrganizationUser.objects.filter(
                 organization_id__in=organization_parents, user=user
             ).values("role_id")
         )
