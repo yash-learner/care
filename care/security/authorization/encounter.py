@@ -12,14 +12,24 @@ class EncounterAccess(AuthorizationHandler):
         Check if the user has permission to create encounter under this facility
         """
         return self.check_permission_in_facility_organization(
-            [EncounterPermissions.can_write_encounter.name], user, facility=facility
+            [EncounterPermissions.can_create_encounter.name], user, facility=facility
+        )
+
+    def can_update_encounter_obj(self, user, encounter):
+        """
+        Check if the user has permission to create encounter under this facility
+        """
+        return self.check_permission_in_facility_organization(
+            [EncounterPermissions.can_write_encounter.name],
+            user,
+            orgs=encounter.facility_organization_cache,
         )
 
     def get_filtered_encounters(self, qs, user, facility):
         if user.is_superuser:
             return qs
         roles = self.get_role_from_permissions(
-            [EncounterPermissions.can_list_encoutners.name]
+            [EncounterPermissions.can_list_encounter.name]
         )
         organization_ids = list(
             FacilityOrganizationUser.objects.filter(

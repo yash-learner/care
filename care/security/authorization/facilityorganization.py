@@ -97,7 +97,7 @@ class FacilityOrganizationAccess(AuthorizationHandler):
         return self.check_permission_in_facility_organization(
             [FacilityOrganizationPermissions.can_list_facility_organization_users.name],
             user,
-            facility=organization.facility
+            facility=organization.facility,
         )
 
     def can_manage_facility_organization_users_obj(

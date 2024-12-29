@@ -1,12 +1,56 @@
-from care.emr.models.organziation import OrganizationUser
+from care.emr.models import Encounter, PatientUser
+from care.emr.models.organziation import FacilityOrganizationUser, OrganizationUser
 from care.security.authorization.base import (
     AuthorizationController,
     AuthorizationHandler,
 )
+from care.security.models import RolePermission
 from care.security.permissions.patient import PatientPermissions
 
 
 class PatientAccess(AuthorizationHandler):
+    def find_roles_on_patient(self, user, patient):
+        role_ids = set()
+        # Through Encounter
+        encounters = Encounter.objects.filter(patient=patient).values_list(
+            "facility_organization_cache", flat=True
+        )
+        encounter_set = set()
+        for encounter in encounters:
+            encounter_set = encounter_set.union(set(encounter))
+        roles = FacilityOrganizationUser.objects.filter(
+            organization_id__in=encounter_set, user=user
+        ).values_list("role_id", flat=True)
+        role_ids = role_ids.union(set(roles))
+        # Through Organization
+        roles = OrganizationUser.objects.filter(
+            organization_id__in=patient.organization_cache, user=user
+        ).values_list("role_id", flat=True)
+        role_ids = role_ids.union(set(roles))
+        # Through Direct association
+        roles = PatientUser.objects.filter(patient=patient, user=user).values_list(
+            "role_id", flat=True
+        )
+        return role_ids.union(set(roles))
+
+    def can_view_patient_obj(self, user, patient):
+        if user.is_superuser:
+            return True
+        user_roles = self.find_roles_on_patient(user, patient)
+        return RolePermission.objects.filter(
+            permission__slug__in=[PatientPermissions.can_list_patients.name],
+            role__in=user_roles,
+        ).exists()
+
+    def can_view_clinical_data(self, user, patient):
+        if user.is_superuser:
+            return True
+        user_roles = self.find_roles_on_patient(user, patient)
+        return RolePermission.objects.filter(
+            permission__slug__in=[PatientPermissions.can_view_clinical_data.name],
+            role__in=user_roles,
+        ).exists()
+
     def get_filtered_patients(self, qs, user):
         if user.is_superuser:
             return qs

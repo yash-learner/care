@@ -168,6 +168,7 @@ class EMRUpdateMixin:
         serializer_obj = pydantic_model.model_validate(
             clean_data, context={"is_update": True, "object": instance}
         )
+        self.validate_data(serializer_obj, instance)
         self.authorize_update(serializer_obj, instance)
         model_instance = serializer_obj.de_serialize(obj=instance)
         self.perform_update(model_instance)

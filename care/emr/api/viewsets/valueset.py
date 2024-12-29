@@ -22,7 +22,13 @@ class ValueSetViewSet(EMRModelViewSet):
     lookup_field = "slug"
 
     def permissions_controller(self, request):
-        if self.action in ["list", "retrieve"]:
+        if self.action in [
+            "list",
+            "retrieve",
+            "lookup_code",
+            "expand",
+            "validate_code",
+        ]:
             return True
         # Only superusers have write permission over valuesets
         return request.user.is_superuser

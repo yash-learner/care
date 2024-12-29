@@ -3,6 +3,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 
 from care.emr.models import EMRBaseModel
+from care.users.models import User
 from care.utils.models.validators import mobile_or_landline_number_validator
 
 
@@ -36,6 +37,8 @@ class Patient(EMRBaseModel):
 
     organization_cache = ArrayField(models.IntegerField(), default=list)
 
+    users_cache = ArrayField(models.IntegerField(), default=list)
+
     def rebuild_organization_cache(self):
         organization_parents = []
         if self.geo_organization:
@@ -48,6 +51,12 @@ class Patient(EMRBaseModel):
                     patient_organization.organization.parent_cache
                 )
         self.organization_cache = list(set(organization_parents))
+
+    def rebuild_users_cache(self):
+        users = list(
+            PatientUser.objects.filter(patient=self).values_list("user_id", flat=True)
+        )
+        self.users_cache = users
 
     def save(self, *args, **kwargs) -> None:
         self.rebuild_organization_cache()
@@ -65,3 +74,17 @@ class PatientOrganization(EMRBaseModel):
         super().save(*args, **kwargs)
         self.patient.rebuild_organization_cache()
         self.patient.save(update_fields=["organization_cache"])
+
+
+class PatientUser(EMRBaseModel):
+    """
+    Add a user that can access the patient
+    """
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    role = models.ForeignKey("security.RoleModel", on_delete=models.PROTECT)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.patient.save()
