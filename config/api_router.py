@@ -18,14 +18,16 @@ from care.emr.api.viewsets.facility_organization import (
     FacilityOrganizationUsersViewSet,
     FacilityOrganizationViewSet,
 )
+from care.emr.api.viewsets.file_upload import FileUploadViewSet
 from care.emr.api.viewsets.medication_request import MedicationRequestViewSet
 from care.emr.api.viewsets.medication_statement import MedicationStatementViewSet
+from care.emr.api.viewsets.notes import NoteMessageViewSet, NoteThreadViewSet
 from care.emr.api.viewsets.observation import ObservationViewSet
 from care.emr.api.viewsets.organization import (
     OrganizationUsersViewSet,
     OrganizationViewSet,
 )
-from care.emr.api.viewsets.patient import NewPatientViewSet
+from care.emr.api.viewsets.patient import PatientViewSet
 from care.emr.api.viewsets.questionnaire import QuestionnaireViewSet
 from care.emr.api.viewsets.questionnaire_response import QuestionnaireResponseViewSet
 from care.emr.api.viewsets.roles import RoleViewSet
@@ -36,7 +38,6 @@ from care.emr.api.viewsets.scheduling.availability_exceptions import (
 from care.emr.api.viewsets.scheduling.booking import TokenBookingViewSet
 from care.emr.api.viewsets.units import UnitsView
 from care.emr.api.viewsets.valueset import ValueSetViewSet
-from care.facility.api.viewsets.ambulance import AmbulanceViewSet
 from care.facility.api.viewsets.asset import (
     AssetLocationViewSet,
     AssetPublicQRViewSet,
@@ -63,10 +64,6 @@ from care.facility.api.viewsets.facility import (
     FacilitySpokesViewSet,
     FacilityViewSet,
 )
-from care.facility.api.viewsets.facility_capacity import FacilityCapacityViewSet
-from care.facility.api.viewsets.facility_users import FacilityUserViewSet
-from care.facility.api.viewsets.file_upload import FileUploadViewSet
-from care.facility.api.viewsets.hospital_doctor import HospitalDoctorViewSet
 from care.facility.api.viewsets.inventory import (
     FacilityInventoryItemViewSet,
     FacilityInventoryLogViewSet,
@@ -78,12 +75,6 @@ from care.facility.api.viewsets.patient import (
     FacilityDischargedPatientViewSet,
     PatientNotesEditViewSet,
     PatientNotesViewSet,
-    PatientSearchViewSet,
-    PatientViewSet,
-)
-from care.facility.api.viewsets.patient_consultation import (
-    PatientConsentViewSet,
-    PatientConsultationViewSet,
 )
 from care.facility.api.viewsets.resources import (
     ResourceRequestCommentViewSet,
@@ -123,8 +114,6 @@ router.register("ward", WardViewSet, basename="ward")
 
 router.register("files", FileUploadViewSet, basename="files")
 
-router.register("ambulance", AmbulanceViewSet, basename="ambulance")
-
 router.register("otp", OTPLoginView, basename="otp-login")
 
 router.register("otp/patient", PatientOTPView, basename="otp-patient")
@@ -145,7 +134,7 @@ router.register("organization", OrganizationViewSet, basename="organization")
 
 router.register("role", RoleViewSet, basename="role")
 
-router.register("new/patients", NewPatientViewSet, basename="new-patient")
+router.register("encounter", EncounterViewSet, basename="encounter")
 
 organization_nested_router = NestedSimpleRouter(
     router, r"organization", lookup="organization"
@@ -172,15 +161,9 @@ resource_nested_router.register(
 router.register("facility", FacilityViewSet, basename="facility")
 router.register("getallfacilities", AllFacilityViewSet, basename="getallfacilities")
 facility_nested_router = NestedSimpleRouter(router, r"facility", lookup="facility")
-facility_nested_router.register(
-    r"get_users", FacilityUserViewSet, basename="facility-users"
-)
-facility_nested_router.register(
-    r"hospital_doctor", HospitalDoctorViewSet, basename="hospital-doctor"
-)
-facility_nested_router.register(
-    r"capacity", FacilityCapacityViewSet, basename="facility-capacity"
-)
+# facility_nested_router.register(
+#     r"get_users", FacilityUserViewSet, basename="facility-users"
+# )
 facility_nested_router.register(
     r"inventory", FacilityInventoryLogViewSet, basename="facility-inventory"
 )
@@ -274,7 +257,7 @@ assetbed_nested_router.register(
     r"camera_presets", AssetBedCameraPresetViewSet, basename="assetbed-camera-presets"
 )
 
-router.register("patient/search", PatientSearchViewSet, basename="patient-search")
+# router.register("patient/search", PatientSearchViewSet, basename="patient-search")
 router.register("patient", PatientViewSet, basename="patient")
 patient_nested_router = NestedSimpleRouter(router, r"patient", lookup="patient")
 patient_nested_router.register(r"notes", PatientNotesViewSet, basename="patient-notes")
@@ -291,9 +274,6 @@ patient_nested_router.register(
 
 patient_nested_router.register(r"symptom", SymptomViewSet, basename="symptom")
 patient_nested_router.register(r"diagnosis", DiagnosisViewSet, basename="diagnosis")
-
-
-patient_nested_router.register(r"encounter", EncounterViewSet, basename="encounter")
 
 patient_nested_router.register(
     "observation", ObservationViewSet, basename="observation"
@@ -322,16 +302,32 @@ patient_nested_router.register(
     basename="medication-administration",
 )
 
-router.register(
-    "consultation", PatientConsultationViewSet, basename="patient-consultation"
-)
-consultation_nested_router = NestedSimpleRouter(
-    router, r"consultation", lookup="consultation"
+patient_nested_router.register(
+    r"thread",
+    NoteThreadViewSet,
+    basename="thread",
 )
 
-consultation_nested_router.register(
-    r"consents", PatientConsentViewSet, basename="consultation-consents"
+thread_nested_router = NestedSimpleRouter(
+    patient_nested_router, r"thread", lookup="thread"
 )
+
+thread_nested_router.register(
+    r"note",
+    NoteMessageViewSet,
+    basename="note",
+)
+
+# router.register(
+#     "consultation", PatientConsultationViewSet, basename="patient-consultation"
+# )
+# consultation_nested_router = NestedSimpleRouter(
+#     router, r"consultation", lookup="consultation"
+# )
+#
+# consultation_nested_router.register(
+#     r"consents", PatientConsentViewSet, basename="consultation-consents"
+# )
 
 # Public endpoints
 router.register("public/asset", AssetPublicViewSet, basename="public-asset")
@@ -347,8 +343,9 @@ urlpatterns = [
     path("", include(bed_nested_router.urls)),
     path("", include(assetbed_nested_router.urls)),
     path("", include(patient_nested_router.urls)),
+    path("", include(thread_nested_router.urls)),
     path("", include(patient_notes_nested_router.urls)),
-    path("", include(consultation_nested_router.urls)),
+    # path("", include(consultation_nested_router.urls)),
     path("", include(resource_nested_router.urls)),
     path("", include(shifting_nested_router.urls)),
     path("", include(organization_nested_router.urls)),

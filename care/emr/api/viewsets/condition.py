@@ -4,6 +4,7 @@ from rest_framework.exceptions import PermissionDenied
 
 from care.emr.api.viewsets.base import EMRModelViewSet, EMRQuestionnaireResponseMixin
 from care.emr.models.condition import Condition
+from care.emr.models.encounter import Encounter
 from care.emr.registries.system_questionnaire.system_questionnaire import (
     InternalQuestionnaireRegistry,
 )
@@ -13,7 +14,6 @@ from care.emr.resources.condition.spec import (
     ConditionSpecRead,
 )
 from care.emr.resources.questionnaire.spec import SubjectType
-from care.facility.models.patient_consultation import PatientConsultation
 
 
 class ConditionFilters(FilterSet):
@@ -43,7 +43,7 @@ class SymptomViewSet(EMRQuestionnaireResponseMixin, EMRModelViewSet):
         super().perform_create(instance)
 
     def authorize_create(self, instance: ConditionSpec):
-        encounter = PatientConsultation.objects.get(external_id=instance.encounter)
+        encounter = Encounter.objects.get(external_id=instance.encounter)
         if str(encounter.patient.external_id) != self.kwargs["patient_external_id"]:
             err = "Malformed request"
             raise PermissionDenied(err)
@@ -83,7 +83,7 @@ class DiagnosisViewSet(EMRQuestionnaireResponseMixin, EMRModelViewSet):
         super().perform_create(instance)
 
     def authorize_create(self, instance: ConditionSpec):
-        encounter = PatientConsultation.objects.get(external_id=instance.encounter)
+        encounter = Encounter.objects.get(external_id=instance.encounter)
         if str(encounter.patient.external_id) != self.kwargs["patient_external_id"]:
             err = "Malformed request"
             raise PermissionDenied(err)

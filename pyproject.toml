@@ -84,7 +84,8 @@ ignore = [
   "S106",
   "S105",
   "UP038",    # this results in slower code
-  "EM101" # Why not!
+  "EM101", # Why not!
+  "ERA001" # Lots of commented out code until the big merge!
 ]
 
 

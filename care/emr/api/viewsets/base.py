@@ -107,7 +107,7 @@ class EMRCreateMixin:
         self.authorize_create(instance)
         model_instance = instance.de_serialize()
         self.perform_create(model_instance)
-        return self.get_read_pydantic_model().serialize(model_instance).to_json()
+        return self.get_retrieve_pydantic_model().serialize(model_instance).to_json()
 
 
 class EMRListMixin:
@@ -171,7 +171,7 @@ class EMRUpdateMixin:
         self.authorize_update(serializer_obj, instance)
         model_instance = serializer_obj.de_serialize(obj=instance)
         self.perform_update(model_instance)
-        return self.get_read_pydantic_model().serialize(model_instance).to_json()
+        return self.get_retrieve_pydantic_model().serialize(model_instance).to_json()
 
 
 class EMRDeleteMixin:

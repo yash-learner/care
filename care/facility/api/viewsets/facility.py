@@ -1,10 +1,11 @@
 from django.conf import settings
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django_filters import rest_framework as filters
 from djqscsv import render_to_csv_response
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from dry_rest_permissions.generics import DRYPermissionFiltersBase, DRYPermissions
+from dry_rest_permissions.generics import DRYPermissions
 from rest_framework import filters as drf_filters
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action, parser_classes
@@ -12,6 +13,9 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from care.emr.models import Organization
+from care.emr.models.organziation import FacilityOrganizationUser, OrganizationUser
+from care.emr.resources.user.spec import UserSpec
 from care.facility.api.serializers.facility import (
     FacilityBasicInfoSerializer,
     FacilityImageUploadSerializer,
@@ -29,6 +33,14 @@ from care.utils.file_uploads.cover_image import delete_cover_image
 from care.utils.queryset.facility import get_facility_queryset
 
 
+class GeoOrganizationFilter(filters.UUIDFilter):
+    def filter(self, qs, value):
+        if value:
+            organization = Organization.objects.get(external_id=value, org_type="govt")
+            return qs.filter(geo_organization_cache__overlap=[organization.id])
+        return qs
+
+
 class FacilityFilter(filters.FilterSet):
     name = filters.CharFilter(field_name="name", lookup_expr="icontains")
     facility_type = filters.NumberFilter(field_name="facility_type")
@@ -44,24 +56,11 @@ class FacilityFilter(filters.FilterSet):
     state_name = filters.CharFilter(field_name="state__name", lookup_expr="icontains")
     kasp_empanelled = filters.BooleanFilter(field_name="kasp_empanelled")
     exclude_user = filters.CharFilter(method="filter_exclude_user")
+    geo_organization = GeoOrganizationFilter()
 
     def filter_exclude_user(self, queryset, name, value):
         if value:
             queryset = queryset.exclude(facilityuser__user__username=value)
-        return queryset
-
-
-class FacilityQSPermissions(DRYPermissionFiltersBase):
-    def filter_queryset(self, request, queryset, view):
-        if request.user.is_superuser:
-            pass
-        elif request.user.user_type >= User.TYPE_VALUE_MAP["StateLabAdmin"]:
-            queryset = queryset.filter(state=request.user.state)
-        elif request.user.user_type >= User.TYPE_VALUE_MAP["DistrictLabAdmin"]:
-            queryset = queryset.filter(district=request.user.district)
-        else:
-            queryset = queryset.filter(users__id__exact=request.user.id)
-
         return queryset
 
 
@@ -78,9 +77,7 @@ class FacilityViewSet(
     queryset = Facility.objects.all().select_related(
         "ward", "local_body", "district", "state"
     )
-    permission_classes = (IsAuthenticated, DRYPermissions)
     filter_backends = (
-        FacilityQSPermissions,
         filters.DjangoFilterBackend,
         drf_filters.SearchFilter,
     )
@@ -93,9 +90,25 @@ class FacilityViewSet(
     FACILITY_DOCTORS_CSV_KEY = "doctors"
     FACILITY_TRIAGE_CSV_KEY = "triage"
 
-    def initialize_request(self, request, *args, **kwargs):
-        self.action = self.action_map.get(request.method.lower())
-        return super().initialize_request(request, *args, **kwargs)
+    def get_queryset(self):
+        # TODO Add Permission checks
+        organization_ids = list(
+            OrganizationUser.objects.filter(user=self.request.user).values_list(
+                "organization_id", flat=True
+            )
+        )
+        return (
+            super()
+            .get_queryset()
+            .filter(
+                Q(
+                    id__in=FacilityOrganizationUser.objects.filter(
+                        user=self.request.user
+                    ).values_list("organization__facility_id")
+                )
+                | Q(geo_organization_cache__overlap=organization_ids)
+            )
+        )
 
     def get_serializer_class(self):
         if self.request.query_params.get("all") == "true":
@@ -158,6 +171,18 @@ class FacilityViewSet(
         facility.cover_image_url = None
         facility.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=["GET"])
+    def users(self, request, *args, **kwargs):
+        facility = self.get_object()
+        facility_orgs = FacilityOrganizationUser.objects.filter(
+            organization__facility=facility
+        )
+        users = User.objects.filter(id__in=facility_orgs.values("user_id"))
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(users, request)
+        data = [UserSpec.serialize(obj).to_json() for obj in page]
+        return paginator.get_paginated_response(data)
 
 
 @extend_schema_view(

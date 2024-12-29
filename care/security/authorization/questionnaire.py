@@ -37,7 +37,7 @@ class QuestionnaireAccess(AuthorizationHandler):
         if user.is_superuser:
             return qs
         roles = self.get_role_from_permissions(
-            [QuestionnairePermissions.can_write_questionnaire.name]
+            [QuestionnairePermissions.can_read_questionnaire.name]
         )
         organization_ids = list(
             OrganizationUser.objects.filter(user=user, role_id__in=roles).values_list(

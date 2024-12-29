@@ -47,10 +47,10 @@ class QuestionType(str, Enum):
     datetime = "dateTime"
     time = "time"
     choice = "choice"
-    # open_choice = "open_choice" # noqa ERA001
+    # open_choice = "open_choice"
     url = "url"
-    # attachment = "attachment" # noqa ERA001
-    # reference = "reference" # noqa ERA001
+    # attachment = "attachment"
+    # reference = "reference"
     quantity = "quantity"
     structured = "structured"
 

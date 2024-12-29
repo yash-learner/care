@@ -1,68 +1,118 @@
 import datetime
+import uuid
+from enum import Enum
 
-from pydantic import UUID4
+from django.utils import timezone
+from pydantic import UUID4, field_validator, model_validator
 
+from care.emr.models import Organization
+from care.emr.models.patient import Patient
 from care.emr.resources.base import EMRResource
 from care.emr.resources.organization.spec import OrganizationReadSpec
 from care.emr.resources.user.spec import UserSpec
-from care.facility.models import REVERSE_BLOOD_GROUP_CHOICES, PatientRegistration
-from care.users.models import REVERSE_GENDER_CHOICES
+
+
+class BloodGroupChoices(str, Enum):
+    A_negative = "A_negative"
+    A_positive = "A_positive"
+    B_negative = "B_negative"
+    B_positive = "B_positive"
+    AB_negative = "AB_negative"
+    AB_positive = "AB_positive"
+    O_negative = "O_negative"
+    O_positive = "O_positive"
+    unknown = "unknown"
+
+
+class GenderChoices(str, Enum):
+    male = "male"
+    female = "female"
+    non_binary = "non_binary"
+    transgender = "transgender"
 
 
 class PatientBaseSpec(EMRResource):
-    __model__ = PatientRegistration
-    __exclude__ = []
+    __model__ = Patient
+    __exclude__ = ["geo_organization"]
 
-    id: UUID4
-
-
-class PatientListSpec(PatientBaseSpec):
+    id: UUID4 | None = None
     name: str
-    gender: str
+    gender: GenderChoices
     phone_number: str
-    emergency_phone_number: str
+    emergency_phone_number: str | None = None
     address: str
     permanent_address: str
     pincode: int
     date_of_birth: datetime.date
-    year_of_birth: int
-    death_datetime: datetime.datetime
-    blood_group: str | None = None
+    age: int | None = None
+    death_datetime: datetime.datetime | None = None
+    blood_group: BloodGroupChoices | None = None
 
-    geo_organization: dict | None = None
 
+class PatientCreateSpec(PatientBaseSpec):
+    geo_organization: UUID4
+
+    @model_validator(mode="after")
+    def validate_age(self):
+        if not (self.age or self.date_of_birth):
+            raise ValueError("Either age or date of birth is required")
+        return self
+
+    @field_validator("geo_organization")
+    @classmethod
+    def validate_geo_organization(cls, geo_organization):
+        if not Organization.objects.filter(
+            org_type="govt", external_id=geo_organization
+        ).exists():
+            raise ValueError("Geo Organization does not exist")
+        return geo_organization
+
+    def perform_extra_deserialization(self, is_update, obj):
+        if not is_update:
+            obj.geo_organization = Organization.objects.get(
+                external_id=self.geo_organization
+            )
+            if self.age:
+                obj.year_of_birth = timezone.now().date().year - self.age
+            else:
+                obj.year_of_birth = self.date_of_birth.year
+
+
+class PatientListSpec(PatientBaseSpec):
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
-        mapping["gender"] = REVERSE_GENDER_CHOICES[obj.gender]
-        if obj.blood_group:
-            mapping["blood_group"] = REVERSE_BLOOD_GROUP_CHOICES[obj.blood_group]
-        if obj.geo_organization:
-            mapping["geo_organization"] = OrganizationReadSpec.serialize(
-                obj.geo_organization
-            ).to_json()
+
+
+class PatientPartialSpec(EMRResource):
+    __model__ = Patient
+
+    id: UUID4 | None = None
+    name: str
+    gender: GenderChoices
+    phone_number: str
+    partial_id: str
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        mapping["partial_id"] = str(obj.external_id)[:5]
+        mapping["id"] = str(uuid.uuid4())
 
 
 class PatientRetrieveSpec(PatientListSpec):
-    created_by: UserSpec | None = None
-    nationality: str
-    passport_no: str | None = None
-    updated_by: UserSpec | None = None
+    geo_organization: dict = {}
 
-    occupation: str | None = None
-    ration_card_category: str | None = None
-    socioeconomic_status: str | None = None
+    created_by: UserSpec | None = None
+    updated_by: UserSpec | None = None
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         super().perform_extra_serialization(mapping, obj)
-        if obj.occupation:
-            mapping["occupation"] = True
-        if obj.ration_card_category:
-            mapping["ration_card_category"] = True
-        if obj.socioeconomic_status:
-            mapping["socioeconomic_status"] = True
+        if obj.geo_organization:
+            mapping["geo_organization"] = OrganizationReadSpec.serialize(
+                obj.geo_organization
+            ).to_json()
         if obj.created_by:
             mapping["created_by"] = UserSpec.serialize(obj.created_by).to_json()
-        if obj.last_edited:
-            mapping["updated_by"] = UserSpec.serialize(obj.last_edited).to_json()
+        if obj.updated_by:
+            mapping["updated_by"] = UserSpec.serialize(obj.updated_by).to_json()
