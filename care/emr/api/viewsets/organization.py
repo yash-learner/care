@@ -184,14 +184,15 @@ class OrganizationUsersViewSet(EMRModelViewSet):
         if model_obj:
             return
         organization = self.get_organization_obj()
-        if (
-            OrganizationUser.objects.filter(
+        queryset = OrganizationUser.objects.filter(user__external_id=instance.user)
+        if organization.root_org is None:
+            queryset = queryset.filter(organization=organization)
+        else:
+            queryset = queryset.filter(
                 Q(organization=organization)
                 | Q(organization__root_org=organization.root_org)
             )
-            .filter(user__external_id=instance.user)
-            .exists()
-        ):
+        if queryset.exists():
             raise ValidationError("User association already exists")
 
     def authorize_update(self, request_obj, model_instance):

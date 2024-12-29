@@ -15,7 +15,6 @@ from care.emr.resources.patient.spec import (
     PatientPartialSpec,
     PatientRetrieveSpec,
 )
-from care.security.authorization import AuthorizationController
 
 
 class PatientFilters(FilterSet):
@@ -34,12 +33,11 @@ class PatientViewSet(EMRModelViewSet):
     # TODO : Retrieve will work if an active encounter exists on the patient
 
     def get_queryset(self):
-        qs = (
+        return (
             super()
             .get_queryset()
             .select_related("created_by", "updated_by", "geo_organization")
         )
-        return qs
         # return AuthorizationController.call(
         #     "get_filtered_patients", qs, self.request.user
         # )
