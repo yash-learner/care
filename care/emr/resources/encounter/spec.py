@@ -4,7 +4,7 @@ import datetime
 from django.utils import timezone
 from pydantic import UUID4, BaseModel, model_validator
 
-from care.emr.models import Encounter, TokenBooking
+from care.emr.models import Encounter, EncounterOrganization, TokenBooking
 from care.emr.models.patient import Patient
 from care.emr.resources.base import EMRResource
 from care.emr.resources.encounter.constants import (
@@ -16,6 +16,7 @@ from care.emr.resources.encounter.constants import (
     StatusChoices,
 )
 from care.emr.resources.facility.spec import FacilityBareMinimumSpec
+from care.emr.resources.facility_organization.spec import FacilityOrganizationReadSpec
 from care.emr.resources.patient.spec import PatientListSpec
 from care.emr.resources.scheduling.slot.spec import TokenBookingReadSpec
 from care.emr.resources.user.spec import UserSpec
@@ -108,6 +109,7 @@ class EncounterRetrieveSpec(EncounterListSpec):
     appointment: dict = {}
     created_by: dict = {}
     updated_by: dict = {}
+    organizations: list[dict] = []
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -116,6 +118,11 @@ class EncounterRetrieveSpec(EncounterListSpec):
             mapping["appointment"] = TokenBookingReadSpec.serialize(
                 obj.appointment
             ).to_json()
+        organizations = EncounterOrganization.objects.filter(encounter=obj)
+        mapping["organizations"] = [
+            FacilityOrganizationReadSpec.serialize(encounter_org.organization).to_json()
+            for encounter_org in organizations
+        ]
         if obj.created_by:
             mapping["created_by"] = UserSpec.serialize(obj.created_by)
         if obj.updated_by:
