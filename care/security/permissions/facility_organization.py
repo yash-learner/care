@@ -55,11 +55,11 @@ class FacilityOrganizationPermissions(enum.Enum):
         PermissionContext.FACILITY_ORGANIZATION,
         [
             FACILITY_ADMIN_ROLE,
+            ADMIN_ROLE,
             STAFF_ROLE,
             DOCTOR_ROLE,
-            NURSE_ROLE,
-            ADMIN_ROLE,
             GEO_ADMIN,
+            NURSE_ROLE,
         ],
     )
     can_manage_facility_organization_users = Permission(

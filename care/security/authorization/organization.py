@@ -55,6 +55,8 @@ class OrganizationAccess(AuthorizationHandler):
         """
         Check if the user has permission to create organizations under the given organization
         """
+        if user.is_superuser:
+            return True
         organization_parents = [*organization.parent_cache, organization.id]
 
         if not self.check_role_subset(user, organization_parents, requested_role):
