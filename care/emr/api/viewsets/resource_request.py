@@ -38,6 +38,7 @@ class ResourceRequestCommentViewSet(
     database_model = ResourceRequestComment
     pydantic_model = ResourceRequestCommentCreateSpec
     pydantic_read_model = ResourceRequestCommentListSpec
+    pydantic_retrieve_model = ResourceRequestRetrieveSpec
 
     def perform_create(self, instance):
         instance.request = ResourceRequest.objects.get(
