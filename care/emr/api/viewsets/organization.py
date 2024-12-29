@@ -67,6 +67,7 @@ class OrganizationViewSet(EMRModelViewSet):
             raise PermissionDenied(
                 "User does not have the required permissions to update organizations"
             )
+        # TODO delete should not be allowed if there are any children left
 
     def authorize_update(self, request_obj, model_instance):
         if self.request.user.is_superuser:
@@ -110,7 +111,6 @@ class OrganizationViewSet(EMRModelViewSet):
             raise PermissionDenied(
                 "User does not have the required permissions to create organizations"
             )
-        # TODO Deletes are not allowed if there are child organizations
         return True
 
     def get_queryset(self):

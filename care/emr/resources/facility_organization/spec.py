@@ -18,17 +18,21 @@ class FacilityOrganizationTypeChoices(str, Enum):
 class FacilityOrganizationBaseSpec(EMRResource):
     __model__ = FacilityOrganization
     __exclude__ = ["facility", "parent"]
-    id: str = None
+    id: UUID4 = None
     active: bool = True
-    org_type: FacilityOrganizationTypeChoices
     name: str
     description: str = ""
-    parent: UUID4 | None = None
     metadata: dict = {}
+
+
+class FacilityOrganizationUpdateSpec(FacilityOrganizationBaseSpec):
+    pass
 
 
 class FacilityOrganizationWriteSpec(FacilityOrganizationBaseSpec):
     facility: UUID4
+    org_type: FacilityOrganizationTypeChoices
+    parent: UUID4 | None = None
 
     # TODO Validations to confirm facility and org exists
 
@@ -74,6 +78,9 @@ class FacilityOrganizationWriteSpec(FacilityOrganizationBaseSpec):
 
 
 class FacilityOrganizationReadSpec(FacilityOrganizationBaseSpec):
+    org_type: FacilityOrganizationTypeChoices
+    parent: UUID4 | None = None
+
     created_by: UserSpec = dict
     updated_by: UserSpec = dict
     system_generated: bool
