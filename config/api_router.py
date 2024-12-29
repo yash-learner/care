@@ -40,37 +40,11 @@ from care.emr.api.viewsets.scheduling.availability_exceptions import (
 from care.emr.api.viewsets.scheduling.booking import TokenBookingViewSet
 from care.emr.api.viewsets.units import UnitsView
 from care.emr.api.viewsets.valueset import ValueSetViewSet
-from care.facility.api.viewsets.asset import (
-    AssetLocationViewSet,
-    AssetPublicQRViewSet,
-    AssetPublicViewSet,
-    AssetRetrieveConfigViewSet,
-    AssetServiceViewSet,
-    AssetTransactionViewSet,
-    AssetViewSet,
-    AvailabilityViewSet,
-)
-from care.facility.api.viewsets.bed import (
-    AssetBedViewSet,
-    BedViewSet,
-    ConsultationBedViewSet,
-    PatientAssetBedViewSet,
-)
-from care.facility.api.viewsets.camera_preset import (
-    AssetBedCameraPresetViewSet,
-    CameraPresetViewSet,
-)
 from care.facility.api.viewsets.facility import (
     AllFacilityViewSet,
-    FacilityHubsViewSet,
-    FacilitySpokesViewSet,
-)
-from care.facility.api.viewsets.legacy.inventory import (
-    FacilityInventoryItemViewSet,
 )
 from care.facility.api.viewsets.notification import NotificationViewSet
 from care.facility.api.viewsets.patient import (
-    FacilityDischargedPatientViewSet,
     PatientNotesEditViewSet,
     PatientNotesViewSet,
 )
@@ -158,31 +132,31 @@ facility_nested_router = NestedSimpleRouter(router, r"facility", lookup="facilit
 # facility_nested_router.register(
 #     r"get_users", FacilityUserViewSet, basename="facility-users"
 # )
-facility_nested_router.register(
-    r"asset_location", AssetLocationViewSet, basename="facility-location"
-)
+# facility_nested_router.register(
+#     r"asset_location", AssetLocationViewSet, basename="facility-location"
+# )
 
-facility_location_nested_router = NestedSimpleRouter(
-    facility_nested_router, r"asset_location", lookup="asset_location"
-)
-facility_location_nested_router.register(
-    r"availability", AvailabilityViewSet, basename="facility-location-availability"
-)
+# facility_location_nested_router = NestedSimpleRouter(
+#     facility_nested_router, r"asset_location", lookup="asset_location"
+# )
+# facility_location_nested_router.register(
+#     r"availability", AvailabilityViewSet, basename="facility-location-availability"
+# )
 
-facility_nested_router.register(
-    r"patient_asset_beds",
-    PatientAssetBedViewSet,
-    basename="facility-patient-asset-beds",
-)
-facility_nested_router.register(
-    r"discharged_patients",
-    FacilityDischargedPatientViewSet,
-    basename="facility-discharged-patients",
-)
-facility_nested_router.register(
-    r"spokes", FacilitySpokesViewSet, basename="facility-spokes"
-)
-facility_nested_router.register(r"hubs", FacilityHubsViewSet, basename="facility-hubs")
+# facility_nested_router.register(
+#     r"patient_asset_beds",
+#     PatientAssetBedViewSet,
+#     basename="facility-patient-asset-beds",
+# )
+# facility_nested_router.register(
+#     r"discharged_patients",
+#     FacilityDischargedPatientViewSet,
+#     basename="facility-discharged-patients",
+# )
+# facility_nested_router.register(
+#     r"spokes", FacilitySpokesViewSet, basename="facility-spokes"
+# )
+# facility_nested_router.register(r"hubs", FacilityHubsViewSet, basename="facility-hubs")
 
 facility_nested_router.register(
     r"organizations", FacilityOrganizationViewSet, basename="facility-organization"
@@ -306,15 +280,15 @@ thread_nested_router.register(
 # )
 
 # Public endpoints
-router.register("public/asset", AssetPublicViewSet, basename="public-asset")
-router.register("public/asset_qr", AssetPublicQRViewSet, basename="public-asset-qr")
+# router.register("public/asset", AssetPublicViewSet, basename="public-asset")
+# router.register("public/asset_qr", AssetPublicQRViewSet, basename="public-asset-qr")
 
 app_name = "api"
 urlpatterns = [
     path("", include(router.urls)),
     path("", include(user_nested_router.urls)),
     path("", include(facility_nested_router.urls)),
-    path("", include(facility_location_nested_router.urls)),
+    # path("", include(facility_location_nested_router.urls)),
     # path("", include(asset_nested_router.urls)),
     # path("", include(bed_nested_router.urls)),
     # path("", include(assetbed_nested_router.urls)),
