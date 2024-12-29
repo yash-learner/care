@@ -65,11 +65,8 @@ from care.facility.api.viewsets.facility import (
     FacilityHubsViewSet,
     FacilitySpokesViewSet,
 )
-from care.facility.api.viewsets.inventory import (
+from care.facility.api.viewsets.legacy.inventory import (
     FacilityInventoryItemViewSet,
-    FacilityInventoryLogViewSet,
-    FacilityInventoryMinQuantityViewSet,
-    FacilityInventorySummaryViewSet,
 )
 from care.facility.api.viewsets.notification import NotificationViewSet
 from care.facility.api.viewsets.patient import (
@@ -93,7 +90,6 @@ router = DefaultRouter() if settings.DEBUG else SimpleRouter()
 router.register("users", UserViewSet, basename="users")
 
 router.register("plug_config", PlugConfigViewset, basename="plug_configs")
-
 user_nested_router = NestedSimpleRouter(router, r"users", lookup="users")
 user_nested_router.register("skill", UserSkillViewSet, basename="users-skill")
 
@@ -141,7 +137,7 @@ organization_nested_router.register(
     "users", OrganizationUsersViewSet, basename="organization-users"
 )
 
-router.register("items", FacilityInventoryItemViewSet, basename="items")
+# router.register("items", FacilityInventoryItemViewSet, basename="items")
 
 # router.register("shift", ShiftingViewSet, basename="patient-shift")
 # shifting_nested_router = NestedSimpleRouter(router, r"shift", lookup="shift")
@@ -162,19 +158,6 @@ facility_nested_router = NestedSimpleRouter(router, r"facility", lookup="facilit
 # facility_nested_router.register(
 #     r"get_users", FacilityUserViewSet, basename="facility-users"
 # )
-facility_nested_router.register(
-    r"inventory", FacilityInventoryLogViewSet, basename="facility-inventory"
-)
-facility_nested_router.register(
-    r"inventorysummary",
-    FacilityInventorySummaryViewSet,
-    basename="facility-inventory-summary",
-)
-facility_nested_router.register(
-    r"min_quantity",
-    FacilityInventoryMinQuantityViewSet,
-    basename="facility-inventory-min-quantity",
-)
 facility_nested_router.register(
     r"asset_location", AssetLocationViewSet, basename="facility-location"
 )
@@ -227,33 +210,33 @@ facility_nested_router.register(
     basename="schedule-exceptions",
 )
 
-router.register("asset", AssetViewSet, basename="asset")
-asset_nested_router = NestedSimpleRouter(router, r"asset", lookup="asset")
-asset_nested_router.register(
-    r"camera_presets", CameraPresetViewSet, basename="asset-camera-presets"
-)
-asset_nested_router.register(
-    r"availability", AvailabilityViewSet, basename="asset-availability"
-)
-asset_nested_router.register(
-    r"service_records", AssetServiceViewSet, basename="asset-service-records"
-)
+# router.register("asset", AssetViewSet, basename="asset")
+# asset_nested_router = NestedSimpleRouter(router, r"asset", lookup="asset")
+# asset_nested_router.register(
+#     r"camera_presets", CameraPresetViewSet, basename="asset-camera-presets"
+# )
+# asset_nested_router.register(
+#     r"availability", AvailabilityViewSet, basename="asset-availability"
+# )
+# asset_nested_router.register(
+#     r"service_records", AssetServiceViewSet, basename="asset-service-records"
+# )
+#
+# router.register("asset_config", AssetRetrieveConfigViewSet, basename="asset-config")
+# router.register("asset_transaction", AssetTransactionViewSet)
 
-router.register("asset_config", AssetRetrieveConfigViewSet, basename="asset-config")
-router.register("asset_transaction", AssetTransactionViewSet)
-
-router.register("bed", BedViewSet, basename="bed")
-bed_nested_router = NestedSimpleRouter(router, r"bed", lookup="bed")
-bed_nested_router.register(
-    r"camera_presets", CameraPresetViewSet, basename="bed-camera-presets"
-)
-
-router.register("assetbed", AssetBedViewSet, basename="asset-bed")
-router.register("consultationbed", ConsultationBedViewSet, basename="consultation-bed")
-assetbed_nested_router = NestedSimpleRouter(router, r"assetbed", lookup="assetbed")
-assetbed_nested_router.register(
-    r"camera_presets", AssetBedCameraPresetViewSet, basename="assetbed-camera-presets"
-)
+# router.register("bed", BedViewSet, basename="bed")
+# bed_nested_router = NestedSimpleRouter(router, r"bed", lookup="bed")
+# bed_nested_router.register(
+#     r"camera_presets", CameraPresetViewSet, basename="bed-camera-presets"
+# )
+#
+# router.register("assetbed", AssetBedViewSet, basename="asset-bed")
+# router.register("consultationbed", ConsultationBedViewSet, basename="consultation-bed")
+# assetbed_nested_router = NestedSimpleRouter(router, r"assetbed", lookup="assetbed")
+# assetbed_nested_router.register(
+#     r"camera_presets", AssetBedCameraPresetViewSet, basename="assetbed-camera-presets"
+# )
 
 # router.register("patient/search", PatientSearchViewSet, basename="patient-search")
 router.register("patient", PatientViewSet, basename="patient")
