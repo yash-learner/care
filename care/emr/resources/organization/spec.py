@@ -5,6 +5,7 @@ from pydantic import UUID4, model_validator
 from care.emr.models.organziation import Organization
 from care.emr.resources.base import EMRResource
 from care.emr.resources.user.spec import UserSpec
+from care.security.authorization import AuthorizationController
 
 
 class OrganizationTypeChoices(str, Enum):
@@ -75,3 +76,13 @@ class OrganizationReadSpec(OrganizationBaseSpec):
             mapping["created_by"] = UserSpec.serialize(obj.created_by)
         if obj.updated_by:
             mapping["updated_by"] = UserSpec.serialize(obj.updated_by)
+
+
+class OrganizationRetrieveSpec(OrganizationReadSpec):
+    permissions: list[str] = []
+
+    @classmethod
+    def perform_extra_user_serialization(cls, mapping, obj, user):
+        mapping["permissions"] = AuthorizationController.call(
+            "get_permission_on_organization", obj, user
+        )

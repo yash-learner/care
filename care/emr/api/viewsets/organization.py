@@ -15,6 +15,7 @@ from care.emr.resources.organization.organization_user_spec import (
 )
 from care.emr.resources.organization.spec import (
     OrganizationReadSpec,
+    OrganizationRetrieveSpec,
     OrganizationTypeChoices,
     OrganizationUpdateSpec,
     OrganizationWriteSpec,
@@ -35,6 +36,7 @@ class OrganizationViewSet(EMRModelViewSet):
     pydantic_model = OrganizationWriteSpec
     pydantic_read_model = OrganizationReadSpec
     pydantic_update_model = OrganizationUpdateSpec
+    pydantic_retrieve_model = OrganizationRetrieveSpec
     filterset_class = OrganizationFilter
     filter_backends = [filters.DjangoFilterBackend]
     authentication_classes = [
@@ -43,15 +45,39 @@ class OrganizationViewSet(EMRModelViewSet):
     ]
 
     def permissions_controller(self, request):
-        if self.action in ["list", "retrieve"]:
+        if self.action in ["list"]:
             # All users including otp users can view the list of organizations
             return True
-        if getattr(request.user, "is_alternative_login", False):
-            # Deny all other permissions in OTP mode
-            return False
-        return request.user.is_authenticated
+        # Deny all other permissions in OTP mode
+        return not getattr(request.user, "is_alternative_login", False)
+
+    def authorize_delete(self, instance):
+        if self.request.user.is_superuser:
+            return
+
+        if instance.org_type in [
+            OrganizationTypeChoices.govt.value,
+            OrganizationTypeChoices.role.value,
+        ]:
+            raise PermissionDenied("Organization Type cannot be deleted")
+
+        if not AuthorizationController.call(
+            "can_manage_organization_obj", self.request.user, instance
+        ):
+            raise PermissionDenied(
+                "User does not have the required permissions to update organizations"
+            )
 
     def authorize_update(self, request_obj, model_instance):
+        if self.request.user.is_superuser:
+            return
+
+        if model_instance.org_type in [
+            OrganizationTypeChoices.govt.value,
+            OrganizationTypeChoices.role.value,
+        ]:
+            raise PermissionDenied("Organization Type cannot be updated")
+
         if not AuthorizationController.call(
             "can_manage_organization_obj", self.request.user, model_instance
         ):
@@ -92,11 +118,21 @@ class OrganizationViewSet(EMRModelViewSet):
             super().get_queryset().select_related("parent", "created_by", "updated_by")
         )
         if "parent" in self.request.GET and not self.request.GET.get("parent"):
+            # Filter for root organizations, For some reason its not working as intended in Django Filters
             queryset = queryset.filter(parent__isnull=True)
+        if getattr(self.request.user, "is_alternative_login", False):
+            # OTP Mode can only access organizations of the type govt and role
+            # OTP Users do not have any more permissions
+            return queryset.filter(
+                org_type__in=[
+                    OrganizationTypeChoices.govt.value,
+                ]
+            )
         if "permission" in self.request.GET and (
             not self.request.user.is_superuser
             or not getattr(self.request.user, "is_alternative_login", False)
         ):
+            # Filter by a permission, this is used to list organizations that the user has a permission over
             permission = get_object_or_404(
                 PermissionModel, slug=self.request.GET.get("permission")
             )
@@ -108,10 +144,17 @@ class OrganizationViewSet(EMRModelViewSet):
                     user=self.request.user, role_id__in=roles
                 ).values_list("organization_id", flat=True)
             )
-        return queryset
+
+        # Filter organizations based on the user's permissions
+        return AuthorizationController.call(
+            "get_accessible_organizations", queryset, self.request.user
+        )
 
     @action(detail=False, methods=["GET"])
     def mine(self, request, *args, **kwargs):
+        """
+        Get organizations that are directly attached to the given user
+        """
         orgusers = OrganizationUser.objects.filter(user=request.user).select_related(
             "organization"
         )
@@ -152,11 +195,32 @@ class OrganizationUsersViewSet(EMRModelViewSet):
             raise ValidationError("User association already exists")
 
     def authorize_update(self, request_obj, model_instance):
-        # TODO : This logic is flawed, the users current permissions needs to be checks to understand
-        #        if the user is capable of the edit, lower permission person should not move high permission user lower
-        self.authorize_create(request_obj)
+        organization = self.get_organization_obj()
+        requested_role = get_object_or_404(RoleModel, external_id=request_obj.role)
+        if not AuthorizationController.call(
+            "can_manage_organization_users_obj",
+            self.request.user,
+            organization,
+            model_instance.role,
+        ):
+            raise PermissionDenied("User does not have permission for this action")
+        if not AuthorizationController.call(
+            "can_manage_organization_users_obj",
+            self.request.user,
+            organization,
+            requested_role,
+        ):
+            raise PermissionDenied("User does not have permission for this action")
 
-    # TODO Deletes needs to be authorized, we cannot delete a user higher in prvilage than the user
+    def authorize_delete(self, instance):
+        organization = self.get_organization_obj()
+        if not AuthorizationController.call(
+            "can_manage_organization_users_obj",
+            self.request.user,
+            organization,
+            instance.role,
+        ):
+            raise PermissionDenied("User does not have permission for this action")
 
     def authorize_create(self, instance):
         """
@@ -167,31 +231,14 @@ class OrganizationUsersViewSet(EMRModelViewSet):
         if self.request.user.is_superuser:
             return
         organization = self.get_organization_obj()
-        organization_parents = [*organization.parent_cache, organization.id]
-        AuthorizationController.call(
-            "can_manage_organization_users_obj", self.request.user, organization
-        )
-        user_roles = RoleModel.objects.filter(
-            id__in=OrganizationUser.objects.filter(
-                organization_id__in=organization_parents, user=self.request.user
-            ).values("role_id")
-        )
-        merged_permissions = set()
-        for role in user_roles:
-            merged_permissions = merged_permissions.union(
-                set(role.get_permission_sk_for_role())
-            )
-        requested_role = RoleModel.objects.filter(external_id=instance.role).first()
-        if not requested_role:
-            raise Exception("Role does not exist")
-        requested_role = set(requested_role.get_permission_sk_for_role())
-        # Confirm if requested role's permission are the subset of the users roles
-        if not requested_role.issubset(merged_permissions):
-            raise PermissionDenied(
-                "User does not have the required permissions to assign the role"
-            )
-
-        ## Check for duplicates
+        requested_role = get_object_or_404(RoleModel, external_id=instance.role)
+        if not AuthorizationController.call(
+            "can_manage_organization_users_obj",
+            self.request.user,
+            organization,
+            requested_role,
+        ):
+            raise PermissionDenied("User does not have permission for this action")
 
     def get_queryset(self):
         """

@@ -35,11 +35,15 @@ class EMRResource(BaseModel):
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
 
+    @classmethod
+    def perform_extra_user_serialization(cls, mapping, obj, user):
+        pass
+
     def is_update(self):
         return getattr("_is_update", False)
 
     @classmethod
-    def serialize(cls, obj: __model__):
+    def serialize(cls, obj: __model__, user=None):
         """
         Creates a pydantic object from a database object
         """
@@ -52,6 +56,8 @@ class EMRResource(BaseModel):
             if field in cls.model_fields:
                 constructed[field] = obj.meta[field]
         cls.perform_extra_serialization(constructed, obj)
+        if user:
+            cls.perform_extra_user_serialization(constructed, obj, user=user)
         return cls.model_construct(**constructed)
 
     def perform_extra_deserialization(self, is_update, obj):

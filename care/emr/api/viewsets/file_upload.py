@@ -1,3 +1,4 @@
+from django.utils import timezone
 from pydantic import BaseModel
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
@@ -7,11 +8,11 @@ from care.emr.api.viewsets.base import EMRModelViewSet
 from care.emr.models import FileUpload
 from care.emr.resources.file_upload.spec import (
     FileUploadCreateSpec,
+    FileUploadListSpec,
     FileUploadRetrieveSpec,
-    FileUploadUpdateSpec, FileUploadListSpec,
+    FileUploadUpdateSpec,
 )
 
-from django.utils import timezone
 
 def file_authorizer(file_type, associating_id, permission):
     return
@@ -51,9 +52,8 @@ class FileUploadViewSet(EMRModelViewSet):
         file_authorizer(obj.file_type, obj.associating_id, "read")
         return super().get_queryset()
 
-
     @action(detail=True, methods=["POST"])
-    def mark_upload_completed(self, request,*args, **kwargs):
+    def mark_upload_completed(self, request, *args, **kwargs):
         obj = self.get_object()
         file_authorizer(obj.file_type, obj.associating_id, "write")
         obj.upload_completed = True
@@ -61,10 +61,10 @@ class FileUploadViewSet(EMRModelViewSet):
         return Response(FileUploadListSpec.serialize(obj).to_json())
 
     class ArchiveRequestSpec(BaseModel):
-        archive_reason : str
+        archive_reason: str
 
     @action(detail=True, methods=["POST"])
-    def archive(self, request,*args, **kwargs):
+    def archive(self, request, *args, **kwargs):
         obj = self.get_object()
         request_data = self.ArchiveRequestSpec(**request.data)
         file_authorizer(obj.file_type, obj.associating_id, "write")
@@ -72,5 +72,12 @@ class FileUploadViewSet(EMRModelViewSet):
         obj.archive_reason = request_data.archive_reason
         obj.archived_datetime = timezone.now()
         obj.archived_by = request.user
-        obj.save(update_fields=["is_archived" , "archive_reason" , "archived_datetime" , "archived_by"])
+        obj.save(
+            update_fields=[
+                "is_archived",
+                "archive_reason",
+                "archived_datetime",
+                "archived_by",
+            ]
+        )
         return Response(FileUploadListSpec.serialize(obj).to_json())

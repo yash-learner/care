@@ -62,7 +62,7 @@ class EMRQuestionnaireMixin:
 class EMRRetrieveMixin:
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        data = self.get_retrieve_pydantic_model().serialize(instance)
+        data = self.get_retrieve_pydantic_model().serialize(instance, request.user)
         return Response(data.to_json())
 
 
