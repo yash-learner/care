@@ -12,7 +12,7 @@ from care.emr.resources.resource_request.spec import (
     ResourceRequestCommentListSpec,
     ResourceRequestCreateSpec,
     ResourceRequestListSpec,
-    ResourceRequestRetrieveSpec,
+    ResourceRequestRetrieveSpec, ResourceRequestCommentRetrieveSpec,
 )
 
 
@@ -38,7 +38,7 @@ class ResourceRequestCommentViewSet(
     database_model = ResourceRequestComment
     pydantic_model = ResourceRequestCommentCreateSpec
     pydantic_read_model = ResourceRequestCommentListSpec
-    pydantic_retrieve_model = ResourceRequestRetrieveSpec
+    pydantic_retrieve_model = ResourceRequestCommentRetrieveSpec
 
     def perform_create(self, instance):
         instance.request = ResourceRequest.objects.get(
