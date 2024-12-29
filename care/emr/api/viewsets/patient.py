@@ -39,9 +39,10 @@ class PatientViewSet(EMRModelViewSet):
             .get_queryset()
             .select_related("created_by", "updated_by", "geo_organization")
         )
-        return AuthorizationController.call(
-            "get_filtered_patients", qs, self.request.user
-        )
+        return qs
+        # return AuthorizationController.call(
+        #     "get_filtered_patients", qs, self.request.user
+        # )
 
     class SearchRequestSpec(BaseModel):
         name: str = ""
