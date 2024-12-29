@@ -10,11 +10,9 @@ class MedicationAdministration(EMRBaseModel):
     status_reason = models.JSONField(null=True, blank=True)
     category = models.CharField(max_length=100, null=True, blank=True)
     medication = models.JSONField(default=dict)
-    patient = models.ForeignKey(
-        "facility.PatientRegistration", on_delete=models.CASCADE
-    )
+    patient = models.ForeignKey("emr.Patient", on_delete=models.CASCADE)
     encounter = models.ForeignKey(
-        "facility.PatientConsultation", on_delete=models.CASCADE, null=True, blank=True
+        "emr.Encounter", on_delete=models.CASCADE, null=True, blank=True
     )
     request = models.ForeignKey(
         "emr.MedicationRequest", on_delete=models.CASCADE, null=True, blank=True
