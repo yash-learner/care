@@ -137,3 +137,12 @@ class ResourceRequestCommentCreateSpec(ResourceRequestCommentBaseSpec):
 
 class ResourceRequestCommentListSpec(ResourceRequestCommentBaseSpec):
     pass
+
+class ResourceRequestCommentRetrieveSpec(ResourceRequestCommentListSpec):
+    created_by: dict | None = None
+    created_date: datetime.datetime
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        if obj.created_by:
+            mapping["created_by"] = UserSpec.serialize(obj.created_by)
