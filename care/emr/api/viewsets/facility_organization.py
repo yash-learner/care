@@ -112,6 +112,9 @@ class FacilityOrganizationViewSet(EMRModelViewSet):
             .filter(facility=facility)
             .select_related("facility", "parent", "created_by", "updated_by")
         )
+        if "parent" in self.request.GET and not self.request.GET.get("parent"):
+            # Filter for root organizations, For some reason its not working as intended in Django Filters
+            queryset = queryset.filter(parent__isnull=True)
         return AuthorizationController.call(
             "get_accessible_facility_organizations",
             queryset,
