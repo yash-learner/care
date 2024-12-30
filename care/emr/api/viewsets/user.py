@@ -1,5 +1,6 @@
 from django.db import transaction
 from django.utils.decorators import method_decorator
+from django_filters import rest_framework as filters
 from rest_framework.decorators import action, parser_classes
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.parsers import MultiPartParser
@@ -22,6 +23,16 @@ from care.users.models import User
 from care.utils.file_uploads.cover_image import delete_cover_image
 
 
+class UserFilter(filters.FilterSet):
+    name = filters.CharFilter(field_name="name", lookup_expr="icontains")
+    email = filters.CharFilter(field_name="email", lookup_expr="icontains")
+    phone_number = filters.CharFilter(
+        field_name="phone_number", lookup_expr="icontains"
+    )
+    username = filters.CharFilter(field_name="username", lookup_expr="icontains")
+    user_type = filters.CharFilter(field_name="username", lookup_expr="iexact")
+
+
 class UserViewSet(EMRModelViewSet):
     database_model = User
     pydantic_model = UserCreateSpec
@@ -29,6 +40,8 @@ class UserViewSet(EMRModelViewSet):
     pydantic_read_model = UserSpec
     pydantic_retrieve_model = UserRetrieveSpec
     lookup_field = "username"
+    filterset_class = UserFilter
+    filter_backends = [filters.DjangoFilterBackend]
 
     def perform_create(self, instance):
         with transaction.atomic():

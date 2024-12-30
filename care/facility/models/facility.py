@@ -356,6 +356,8 @@ class Facility(FacilityBaseModel, FacilityPermissionMixin):
                 system_generated=True,
                 facility=self,
             )
+            self.default_internal_organization = facility_organization
+            super().save(update_fields=["default_internal_organization"])
             FacilityOrganizationUser.objects.create(
                 organization=facility_organization,
                 user=self.created_by,

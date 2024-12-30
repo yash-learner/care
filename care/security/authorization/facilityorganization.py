@@ -36,11 +36,14 @@ class FacilityOrganizationAccess(AuthorizationHandler):
         """
         Check if the user has permission to create organizations under the given organization
         """
+        root_organization = FacilityOrganization.objects.get(
+            facility=organization.facility, org_type="root"
+        )
         if organization:
             return self.check_permission_in_facility_organization(
                 [FacilityOrganizationPermissions.can_create_facility_organization.name],
                 user,
-                [*organization.parent_cache, organization.id],
+                [*organization.parent_cache, organization.id, root_organization.id],
             )
         return self.check_permission_in_facility_organization(
             [FacilityOrganizationPermissions.can_create_facility_organization.name],
@@ -52,20 +55,26 @@ class FacilityOrganizationAccess(AuthorizationHandler):
         """
         Check if the user has permission to manage given organization.
         """
+        root_organization = FacilityOrganization.objects.get(
+            facility=organization.facility, org_type="root"
+        )
         return self.check_permission_in_facility_organization(
             [FacilityOrganizationPermissions.can_manage_facility_organization.name],
             user,
-            [*organization.parent_cache, organization.id],
+            [*organization.parent_cache, organization.id, root_organization.id],
         )
 
     def can_delete_facility_organization(self, user, organization):
         """
         Check if the user has permission to delete the given organization
         """
+        root_organization = FacilityOrganization.objects.get(
+            facility=organization.facility, org_type="root"
+        )
         return self.check_permission_in_facility_organization(
             [FacilityOrganizationPermissions.can_delete_facility_organization.name],
             user,
-            [*organization.parent_cache, organization.id],
+            [*organization.parent_cache, organization.id, root_organization.id],
         )
 
     def get_accessible_facility_organizations(self, qs, user, facility):
@@ -109,7 +118,14 @@ class FacilityOrganizationAccess(AuthorizationHandler):
         if user.is_superuser:
             return True
 
-        organization_parents = [*organization.parent_cache, organization.id]
+        root_organization = FacilityOrganization.objects.get(
+            facility=organization.facility, org_type="root"
+        )
+        organization_parents = [
+            *organization.parent_cache,
+            organization.id,
+            root_organization.id,
+        ]
 
         if not self.check_role_subset(user, organization_parents, requested_role):
             return False
