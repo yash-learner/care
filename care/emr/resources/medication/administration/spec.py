@@ -44,11 +44,9 @@ class MedicationAdministrationPerformerFunction(str, Enum):
 
 class MedicationAdministrationPerformer(BaseModel):
     actor: UUID4 = Field(
-        ...,
         description="Who or what performed the administration",
     )
     function: MedicationAdministrationPerformerFunction | None = Field(
-        ...,
         description="The function of the performer",
     )
 
@@ -97,7 +95,6 @@ class BaseMedicationAdministrationSpec(EMRResource):
     id: UUID4 = None
 
     status: MedicationAdministrationStatus = Field(
-        ...,
         description="Represents the current status of the medication administration",
     )
     status_reason: Coding | None = Field(
@@ -111,7 +108,6 @@ class BaseMedicationAdministrationSpec(EMRResource):
     )
 
     medication: Coding = Field(
-        ...,
         description="The medication that was taken",
         json_schema_extra={"slug": CARE_MEDICATION_VALUESET.slug},
     )
@@ -133,11 +129,9 @@ class BaseMedicationAdministrationSpec(EMRResource):
     )
 
     encounter: UUID4 = Field(
-        ...,
         description="The encounter where the administration was noted",
     )
     request: UUID4 = Field(
-        ...,
         description="The medication request under which the administration was made",
     )
 

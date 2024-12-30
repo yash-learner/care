@@ -1,5 +1,6 @@
-from datetime import UTC, datetime
 
+from django.db.models import Q
+from django.utils import timezone
 from django_filters import rest_framework as filters
 from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import action
@@ -24,15 +25,30 @@ from care.security.authorization import AuthorizationController
 
 class MedicationRequestFilter(filters.FilterSet):
     encounter = filters.UUIDFilter(field_name="encounter__external_id")
-    status = filters.MultipleChoiceFilter(
-        field_name="status", choices=MedicationRequestStatus.choices()
-    )
+    status = filters.CharFilter(method="filter_statuses")
     is_prn = filters.BooleanFilter(method="filter_as_needed_boolean")
 
     def filter_as_needed_boolean(self, queryset, name, value):
         return queryset.filter(
             dosage_instruction__contains=[{"as_needed_boolean": value}]
         )
+
+    def filter_statuses(self, queryset, name, value):
+        """
+        Handle multiple values for the same 'status' parameter in an OR-fashion
+        (case-insensitive).
+        """
+
+        # Get *all* values for 'status' as a list: ["active", "on_hold", ...]
+        values = self.request.GET.getlist("status")
+        if not values:
+            return queryset
+
+        query = Q()
+        for v in values:
+            query |= Q(status__iexact=v)
+
+        return queryset.filter(query)
 
 
 class MedicationRequestViewSet(
@@ -71,14 +87,12 @@ class MedicationRequestViewSet(
         request: MedicationRequest = self.get_object()
 
         request.status = MedicationRequestStatus.ended
-        request.status_changed = datetime.now(UTC)
+        request.status_changed = timezone.now()
         request.status_reason = data.status_reason
         request.save()
 
         return Response(
-            self.get_read_pydantic_model()
-            .serialize(request)
-            .model_dump(exclude=["meta"]),
+            self.get_read_pydantic_model().serialize(request).to_json(),
         )
 
 

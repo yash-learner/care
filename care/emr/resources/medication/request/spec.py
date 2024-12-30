@@ -33,10 +33,6 @@ class MedicationRequestStatus(str, Enum):
     draft = "draft"
     unknown = "unknown"
 
-    @classmethod
-    def choices(cls):
-        return [(status.value, status.value) for status in cls]
-
 
 class StatusReason(str, Enum):
     alt_choice = "altchoice"
@@ -224,4 +220,4 @@ class MedicationRequestReadSpec(BaseMedicationRequestSpec):
             mapping["updated_by"] = UserSpec.serialize(obj.updated_by)
 
 class MedicationRequestDiscontinueRequest(BaseModel):
-    status_reason: StatusReason = Field(..., description="Reason for discontinuation")
+    status_reason: StatusReason = Field(description="Reason for discontinuation")
