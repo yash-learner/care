@@ -26,12 +26,7 @@ from care.security.authorization import AuthorizationController
 class MedicationRequestFilter(filters.FilterSet):
     encounter = filters.UUIDFilter(field_name="encounter__external_id")
     status = filters.CharFilter(method="filter_statuses")
-    is_prn = filters.BooleanFilter(method="filter_as_needed_boolean")
-
-    def filter_as_needed_boolean(self, queryset, name, value):
-        return queryset.filter(
-            dosage_instruction__contains=[{"as_needed_boolean": value}]
-        )
+    is_prn = filters.BooleanFilter(field_name="as_needed_boolean")
 
     def filter_statuses(self, queryset, name, value):
         """
