@@ -6,6 +6,7 @@ from pydantic import UUID4, BaseModel, Field, field_validator
 from care.emr.fhir.schema.base import Coding, Quantity
 from care.emr.models.medication_administration import MedicationAdministration
 from care.emr.models.medication_request import MedicationRequest
+from care.emr.registries.care_valueset.care_valueset import validate_valueset
 from care.emr.resources.base import EMRResource
 from care.emr.resources.medication.valueset.administration_method import (
     CARE_ADMINISTRATION_METHOD_VALUESET,
@@ -44,7 +45,7 @@ class MedicationAdministrationPerformerFunction(str, Enum):
 
 class MedicationAdministrationPerformer(BaseModel):
     actor: UUID4 = Field(
-        description="Who or what performed the administration",
+        description="The user who performed the administration",
     )
     function: MedicationAdministrationPerformerFunction | None = Field(
         description="The function of the performer",
@@ -87,6 +88,33 @@ class Dosage(BaseModel):
         None,
         description="The speed of administration",
     )
+
+    @field_validator("site")
+    @classmethod
+    def validate_site(cls, code):
+        return validate_valueset(
+            "site",
+            cls.model_fields["site"].json_schema_extra["slug"],
+            code,
+        )
+
+    @field_validator("route")
+    @classmethod
+    def validate_route(cls, code):
+        return validate_valueset(
+            "route",
+            cls.model_fields["route"].json_schema_extra["slug"],
+            code,
+        )
+
+    @field_validator("method")
+    @classmethod
+    def validate_method(cls, code):
+        return validate_valueset(
+            "method",
+            cls.model_fields["method"].json_schema_extra["slug"],
+            code,
+        )
 
 
 class BaseMedicationAdministrationSpec(EMRResource):
@@ -166,6 +194,24 @@ class MedicationAdministrationSpec(BaseMedicationAdministrationSpec):
             err = "Medication Request not found"
             raise ValueError(err)
         return request
+
+    @field_validator("medication")
+    @classmethod
+    def validate_medication(cls, code):
+        return validate_valueset(
+            "medication",
+            cls.model_fields["medication"].json_schema_extra["slug"],
+            code,
+        )
+
+    @field_validator("status_reason")
+    @classmethod
+    def validate_status_reason(cls, code):
+        return validate_valueset(
+            "status_reason",
+            cls.model_fields["status_reason"].json_schema_extra["slug"],
+            code,
+        )
 
     def perform_extra_deserialization(self, is_update, obj):
         if not is_update:
