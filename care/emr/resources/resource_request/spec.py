@@ -147,4 +147,3 @@ class ResourceRequestCommentListSpec(ResourceRequestCommentBaseSpec):
 
 class ResourceRequestCommentRetrieveSpec(ResourceRequestCommentListSpec):
     pass
-

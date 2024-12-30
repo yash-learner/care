@@ -4,11 +4,14 @@ from rest_framework.decorators import action, parser_classes
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 
-from care.emr.api.viewsets.base import EMRModelViewSet
+from care.emr.api.viewsets.base import EMRModelReadOnlyViewSet, EMRModelViewSet
+from care.emr.models import SchedulableUserResource
 from care.emr.models.organziation import FacilityOrganizationUser, OrganizationUser
 from care.emr.resources.facility.spec import FacilityCreateSpec, FacilityReadSpec
+from care.emr.resources.user.spec import UserSpec
 from care.facility.api.serializers.facility import FacilityImageUploadSerializer
 from care.facility.models import Facility
+from care.users.models import User
 from care.utils.file_uploads.cover_image import delete_cover_image
 
 
@@ -53,3 +56,17 @@ class FacilityViewSet(EMRModelViewSet):
         facility.cover_image_url = None
         facility.save()
         return Response(status=204)
+
+
+class FacilityUsersViewSet(EMRModelReadOnlyViewSet):
+    database_model = User
+    pydantic_read_model = UserSpec
+    authentication_classes = []
+    permission_classes = []
+
+    def get_queryset(self):
+        return User.objects.filter(
+            id__in=SchedulableUserResource.objects.filter(
+                facility__external_id=self.kwargs["facility_external_id"]
+            ).values("resource_id")
+        )

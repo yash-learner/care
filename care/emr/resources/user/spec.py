@@ -7,6 +7,7 @@ from rest_framework.generics import get_object_or_404
 from care.emr.models import Organization
 from care.emr.resources.base import EMRResource
 from care.emr.resources.patient.spec import GenderChoices
+from care.security.roles.role import DOCTOR_ROLE, NURSE_ROLE, STAFF_ROLE, VOLUNTEER_ROLE
 from care.users.models import User
 
 
@@ -15,6 +16,13 @@ class UserTypeOptions(str, Enum):
     nurse = "nurse"
     staff = "staff"
     volunteer = "volunteer"
+
+
+class UserTypeRoleMapping(Enum):
+    doctor = DOCTOR_ROLE
+    nurse = NURSE_ROLE
+    staff = STAFF_ROLE
+    volunteer = VOLUNTEER_ROLE
 
 
 class UserBaseSpec(EMRResource):
@@ -33,11 +41,18 @@ class UserUpdateSpec(UserBaseSpec):
     gender: GenderChoices
 
 
-class UserCreateSpec(UserBaseSpec):
+class UserCreateSpec(UserUpdateSpec):
     geo_organization: UUID4
     password: str
     username: str
     email: str
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, username):
+        if User.objects.filter(username=username).exists():
+            raise ValueError("Username already exists")
+        return username
 
     @field_validator("password")
     @classmethod
@@ -60,6 +75,7 @@ class UserSpec(UserBaseSpec):
     profile_picture_url: str
     user_type: str
     gender: str
+    username: str
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj: User):
@@ -70,6 +86,7 @@ class UserSpec(UserBaseSpec):
 class UserRetrieveSpec(UserSpec):
     geo_organization: dict
     created_by: dict
+    email: str
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj: User):

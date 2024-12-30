@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.utils.decorators import method_decorator
 from rest_framework.decorators import action, parser_classes
 from rest_framework.exceptions import PermissionDenied
@@ -6,12 +7,16 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import EMRModelViewSet
+from care.emr.models import Organization
+from care.emr.models.organziation import OrganizationUser
 from care.emr.resources.user.spec import (
     UserCreateSpec,
     UserRetrieveSpec,
     UserSpec,
+    UserTypeRoleMapping,
     UserUpdateSpec,
 )
+from care.security.models import RoleModel
 from care.users.api.serializers.user import UserImageUploadSerializer, UserSerializer
 from care.users.models import User
 from care.utils.file_uploads.cover_image import delete_cover_image
@@ -23,6 +28,32 @@ class UserViewSet(EMRModelViewSet):
     pydantic_update_model = UserUpdateSpec
     pydantic_read_model = UserSpec
     pydantic_retrieve_model = UserRetrieveSpec
+    lookup_field = "username"
+
+    def perform_create(self, instance):
+        with transaction.atomic():
+            super().perform_create(instance)
+            # Get or create organization with the role
+            org_name = instance.user_type.capitalize()
+            org = Organization.objects.filter(
+                parent__isnull=True,
+                name=org_name,
+                org_type="role",
+                system_generated=True,
+            ).first()
+            if not org:
+                org = Organization.objects.create(
+                    name=org_name, org_type="role", system_generated=True
+                )
+            # Add User to organization with default role
+            OrganizationUser.objects.create(
+                organization=org,
+                user=instance,
+                role=RoleModel.objects.get(
+                    is_system=True,
+                    name=UserTypeRoleMapping[instance.user_type].value.name,
+                ),
+            )
 
     def authorize_update(self, request_obj, model_instance):
         if self.request.user.is_superuser:

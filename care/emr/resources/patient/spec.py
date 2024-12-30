@@ -41,14 +41,15 @@ class PatientBaseSpec(EMRResource):
     address: str
     permanent_address: str
     pincode: int
-    date_of_birth: datetime.date
-    age: int | None = None
     death_datetime: datetime.datetime | None = None
     blood_group: BloodGroupChoices | None = None
 
 
 class PatientCreateSpec(PatientBaseSpec):
     geo_organization: UUID4
+    date_of_birth: datetime.date | None = None
+
+    age: int | None = None
 
     @model_validator(mode="after")
     def validate_age(self):
@@ -77,6 +78,8 @@ class PatientCreateSpec(PatientBaseSpec):
 
 
 class PatientListSpec(PatientBaseSpec):
+    date_of_birth: datetime.date | None = None
+    age: int | None = None
     created_date: datetime.datetime
     modified_date: datetime.datetime
 

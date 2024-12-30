@@ -11,6 +11,10 @@ class Role:
     description: str
 
 
+VOLUNTEER_ROLE = Role(
+    name="Volunteer",
+    description="Volunteer at some facility",
+)
 DOCTOR_ROLE = Role(
     name="Doctor",
     description="Doctor at some facility",
