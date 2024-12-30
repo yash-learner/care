@@ -16,6 +16,9 @@ from care.emr.api.viewsets.facility_organization import (
     FacilityOrganizationViewSet,
 )
 from care.emr.api.viewsets.file_upload import FileUploadViewSet
+from care.emr.api.viewsets.medication_administration import (
+    MedicationAdministrationViewSet,
+)
 from care.emr.api.viewsets.medication_request import MedicationRequestViewSet
 from care.emr.api.viewsets.medication_statement import MedicationStatementViewSet
 from care.emr.api.viewsets.notes import NoteMessageViewSet, NoteThreadViewSet
@@ -41,9 +44,7 @@ from care.emr.api.viewsets.scheduling.booking import TokenBookingViewSet
 from care.emr.api.viewsets.units import UnitsView
 from care.emr.api.viewsets.user import UserViewSet
 from care.emr.api.viewsets.valueset import ValueSetViewSet
-from care.facility.api.viewsets.facility import (
-    AllFacilityViewSet,
-)
+from care.facility.api.viewsets.facility import AllFacilityViewSet
 from care.facility.api.viewsets.notification import NotificationViewSet
 from care.facility.api.viewsets.patient import (
     PatientNotesEditViewSet,
@@ -252,6 +253,11 @@ patient_nested_router.register(
     r"medication/statement",
     MedicationStatementViewSet,
     basename="medication-statement",
+)
+patient_nested_router.register(
+    r"medication/administration",
+    MedicationAdministrationViewSet,
+    basename="medication-administration",
 )
 
 patient_nested_router.register(

@@ -136,7 +136,7 @@ class DosageInstruction(BaseModel):
     method: Coding | None = Field(
         json_schema_extra={"slug": CARE_ADMINISTRATION_METHOD_VALUESET.slug}
     )
-    dose_and_rate: list[DoseAndRate] | None = None
+    dose_and_rate: DoseAndRate | None = None
     max_dose_per_period: DoseRange | None = None
 
 
@@ -181,7 +181,7 @@ class BaseMedicationRequestSpec(EMRResource):
         description="When request was initially authored",
     )
 
-    dosage_instruction: list[DosageInstruction] = Field(
+    dosage_instruction: DosageInstruction = Field(
         description="Dosage instructions for the medication",
     )
 
@@ -218,3 +218,6 @@ class MedicationRequestReadSpec(BaseMedicationRequestSpec):
             mapping["created_by"] = UserSpec.serialize(obj.created_by)
         if obj.updated_by:
             mapping["updated_by"] = UserSpec.serialize(obj.updated_by)
+
+class MedicationRequestDiscontinueRequest(BaseModel):
+    status_reason: StatusReason = Field(description="Reason for discontinuation")
