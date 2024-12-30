@@ -313,12 +313,14 @@ class UserSerializer(SignUpSerializer):
     def get_facilities(self, user):
         unique_ids = []
         data = []
-        for obj in FacilityOrganizationUser.objects.filter(
-                user=user
-            ).select_related("organization__facility"):
+        for obj in FacilityOrganizationUser.objects.filter(user=user).select_related(
+            "organization__facility"
+        ):
             if obj.organization.facility.id not in unique_ids:
                 unique_ids.append(obj.organization.facility.id)
-                data.append(FacilityBareMinimumSerializer(obj.organization.facility).data)
+                data.append(
+                    FacilityBareMinimumSerializer(obj.organization.facility).data
+                )
         return data
 
     def get_user_flags(self, user) -> tuple[str]:
