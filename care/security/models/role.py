@@ -99,3 +99,5 @@ def invalidate_role_permissions_cache(sender, instance, **kwargs):
     """
     cache_key = ROLE_PERMISSIONS_CACHE_KEY.format(instance.role_id)
     cache.delete(cache_key)
+    cache_key = ROLE_PERMISSION_SK_CACHE_KEY.format(instance.role_id)
+    cache.delete(cache_key)
