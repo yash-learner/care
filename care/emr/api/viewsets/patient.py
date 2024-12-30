@@ -44,6 +44,15 @@ class PatientViewSet(EMRModelViewSet):
             .get_queryset()
             .select_related("created_by", "updated_by", "geo_organization")
         )
+        if self.action != "list":
+            patient = get_object_or_404(
+                Patient, external_id=self.kwargs.get("external_id")
+            )
+            if AuthorizationController.call(
+                "can_view_clinical_data", self.request.user, patient
+            ):
+                return qs.filter(external_id=self.kwargs.get("external_id"))
+
         if self.request.GET.get("geo_organization"):
             geo_organization = get_object_or_404(
                 Organization,

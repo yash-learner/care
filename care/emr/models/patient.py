@@ -43,6 +43,7 @@ class Patient(EMRBaseModel):
         organization_parents = []
         if self.geo_organization:
             organization_parents.extend(self.geo_organization.parent_cache)
+            organization_parents.append(self.geo_organization.id)
         if self.id:
             for patient_organization in PatientOrganization.objects.filter(
                 patient_id=self.id
@@ -50,6 +51,8 @@ class Patient(EMRBaseModel):
                 organization_parents.extend(
                     patient_organization.organization.parent_cache
                 )
+                organization_parents.append(patient_organization.id)
+
         self.organization_cache = list(set(organization_parents))
 
     def rebuild_users_cache(self):
