@@ -44,25 +44,7 @@ class GeoOrganizationFilter(filters.UUIDFilter):
 class FacilityFilter(filters.FilterSet):
     name = filters.CharFilter(field_name="name", lookup_expr="icontains")
     facility_type = filters.NumberFilter(field_name="facility_type")
-    district = filters.NumberFilter(field_name="district__id")
-    district_name = filters.CharFilter(
-        field_name="district__name", lookup_expr="icontains"
-    )
-    local_body = filters.NumberFilter(field_name="local_body__id")
-    local_body_name = filters.CharFilter(
-        field_name="local_body__name", lookup_expr="icontains"
-    )
-    state = filters.NumberFilter(field_name="state__id")
-    state_name = filters.CharFilter(field_name="state__name", lookup_expr="icontains")
-    kasp_empanelled = filters.BooleanFilter(field_name="kasp_empanelled")
-    exclude_user = filters.CharFilter(method="filter_exclude_user")
     geo_organization = GeoOrganizationFilter()
-
-    def filter_exclude_user(self, queryset, name, value):
-        if value:
-            queryset = queryset.exclude(facilityuser__user__username=value)
-        return queryset
-
 
 class FacilityViewSet(
     mixins.CreateModelMixin,
@@ -181,18 +163,7 @@ class AllFacilityViewSet(
     filter_backends = (filters.DjangoFilterBackend, drf_filters.SearchFilter)
     filterset_class = FacilityFilter
     lookup_field = "external_id"
-    search_fields = ["name", "district__name", "state__name"]
-
-    def get_queryset(self):
-        qs = super().get_queryset()
-        if self.request.GET.get("geo_organization"):
-            geo_organization = get_object_or_404(
-                Organization,
-                external_id=self.request.GET["geo_organization"],
-                org_type="govt",
-            )
-            qs = qs.filter(geo_organization_cache__overlap=[geo_organization.id])
-        return qs
+    search_fields = ["name"]
 
 class FacilitySpokesViewSet(viewsets.ModelViewSet):
     queryset = FacilityHubSpoke.objects.all().select_related("spoke", "hub")
