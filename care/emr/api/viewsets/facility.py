@@ -58,7 +58,7 @@ class FacilityViewSet(EMRModelViewSet):
         return Response(status=204)
 
 
-class FacilityUsersViewSet(EMRModelReadOnlyViewSet):
+class FacilitySchedulableUsersViewSet(EMRModelReadOnlyViewSet):
     database_model = User
     pydantic_read_model = UserSpec
     authentication_classes = []
@@ -69,4 +69,16 @@ class FacilityUsersViewSet(EMRModelReadOnlyViewSet):
             id__in=SchedulableUserResource.objects.filter(
                 facility__external_id=self.kwargs["facility_external_id"]
             ).values("resource_id")
+        )
+
+
+class FacilityUsersViewSet(EMRModelReadOnlyViewSet):
+    database_model = User
+    pydantic_read_model = UserSpec
+
+    def get_queryset(self):
+        return User.objects.filter(
+            id__in=FacilityOrganizationUser.objects.filter(
+                organization__facility__external_id=self.kwargs["facility_external_id"]
+            ).values("user_id")
         )
