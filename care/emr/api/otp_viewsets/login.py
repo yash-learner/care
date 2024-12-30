@@ -8,6 +8,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import EMRBaseViewSet
+from care.facility.api.serializers.patient_otp import rand_pass
 from care.facility.models import PatientMobileOTP
 from care.utils.models.validators import mobile_validator
 from care.utils.sms.send_sms import send_sms
@@ -46,14 +47,14 @@ class OTPLoginView(EMRBaseViewSet):
         )
         if sent_otps.count() >= settings.OTP_MAX_REPEATS_WINDOW:
             raise ValidationError({"phone_number": "Max Retries has exceeded"})
-        random_otp = "45612"  # rand_pass(settings.OTP_LENGTH)
-        otp_obj = PatientMobileOTP(phone_number=data.phone_number, otp=random_otp)
+        random_otp = ""
         if settings.USE_SMS:
+            random_otp = rand_pass(settings.OTP_LENGTH)
             try:
                 send_sms(
-                    otp_obj.phone_number,
+                    data.phone_number,
                     (
-                        f"Open Healthcare Network Patient Management System Login, OTP is {otp_obj.otp} . "
+                        f"Open Healthcare Network Patient Management System Login, OTP is {random_otp} . "
                         "Please do not share this Confidential Login Token with anyone else"
                     ),
                 )
@@ -61,10 +62,10 @@ class OTPLoginView(EMRBaseViewSet):
                 import logging
 
                 logging.error(e)
-        elif settings.DEBUG:
-            import logging
+        else:
+            random_otp = "45612"
 
-            logging.info(f"{otp_obj.otp} {otp_obj.phone_number}")  # noqa G004
+        otp_obj = PatientMobileOTP(phone_number=data.phone_number, otp=random_otp)
         otp_obj.save()
         return Response({"otp": "generated"})
 
