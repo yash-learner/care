@@ -183,6 +183,16 @@ class AllFacilityViewSet(
     lookup_field = "external_id"
     search_fields = ["name", "district__name", "state__name"]
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if self.request.GET.get("geo_organization"):
+            geo_organization = get_object_or_404(
+                Organization,
+                external_id=self.request.GET["geo_organization"],
+                org_type="govt",
+            )
+            qs = qs.filter(geo_organization_cache__overlap=[geo_organization.id])
+        return qs
 
 class FacilitySpokesViewSet(viewsets.ModelViewSet):
     queryset = FacilityHubSpoke.objects.all().select_related("spoke", "hub")
