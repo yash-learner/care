@@ -83,6 +83,11 @@ class NoteMessageViewSet(
 
     # TODO Authorise Based on encounter and patient
 
+    def get_patient(self):
+        return get_object_or_404(
+            Patient, external_id=self.kwargs["patient_external_id"]
+        )
+
     def perform_create(self, instance):
         instance.thread = get_object_or_404(
             NoteThread, external_id=self.kwargs["thread_external_id"]
