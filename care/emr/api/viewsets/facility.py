@@ -49,7 +49,7 @@ class FacilityViewSet(EMRModelViewSet):
                 external_id=self.request.GET["geo_organization"],
                 org_type="govt",
             )
-            qs = qs.filter(geo_organization_cache__overlap=geo_organization.id)
+            qs = qs.filter(geo_organization_cache__overlap=[geo_organization.id])
         return qs.filter(
             Q(
                 id__in=FacilityOrganizationUser.objects.filter(

@@ -36,10 +36,11 @@ class FacilityOrganizationAccess(AuthorizationHandler):
         """
         Check if the user has permission to create organizations under the given organization
         """
-        root_organization = FacilityOrganization.objects.get(
-            facility=organization.facility, org_type="root"
-        )
+
         if organization:
+            root_organization = FacilityOrganization.objects.get(
+                facility=organization.facility, org_type="root"
+            )
             return self.check_permission_in_facility_organization(
                 [FacilityOrganizationPermissions.can_create_facility_organization.name],
                 user,
