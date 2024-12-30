@@ -28,6 +28,7 @@ class UserViewSet(EMRModelViewSet):
     pydantic_update_model = UserUpdateSpec
     pydantic_read_model = UserSpec
     pydantic_retrieve_model = UserRetrieveSpec
+    lookup_field = "username"
 
     def perform_create(self, instance):
         with transaction.atomic():
