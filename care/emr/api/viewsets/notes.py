@@ -83,7 +83,7 @@ class NoteMessageViewSet(
 
     # TODO Authorise Based on encounter and patient
 
-    def get_patient(self):
+    def get_patient_obj(self):
         return get_object_or_404(
             Patient, external_id=self.kwargs["patient_external_id"]
         )

@@ -616,7 +616,7 @@ FACILITY_S3_BUCKET_EXTERNAL_ENDPOINT = env(
         BUCKET_EXTERNAL_ENDPOINT if BUCKET_ENDPOINT else FACILITY_S3_BUCKET_ENDPOINT
     ),
 )
-
+FACILITY_CDN = env("FACILITY_CDN", default=None)
 # for setting the shifting mode
 PEACETIME_MODE = env.bool("PEACETIME_MODE", default=True)
 

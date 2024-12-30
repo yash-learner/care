@@ -308,6 +308,8 @@ class Facility(FacilityBaseModel, FacilityPermissionMixin):
 
     def read_cover_image_url(self):
         if self.cover_image_url:
+            if settings.FACILITY_CDN:
+                return f"{settings.FACILITY_CDN}/{self.cover_image_url}"
             return f"{settings.FACILITY_S3_BUCKET_EXTERNAL_ENDPOINT}/{settings.FACILITY_S3_BUCKET}/{self.cover_image_url}"
         return None
 
