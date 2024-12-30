@@ -10,7 +10,7 @@ from care.emr.api.viewsets.allergy_intolerance import AllergyIntoleranceViewSet
 from care.emr.api.viewsets.batch_request import BatchRequestView
 from care.emr.api.viewsets.condition import DiagnosisViewSet, SymptomViewSet
 from care.emr.api.viewsets.encounter import EncounterViewSet
-from care.emr.api.viewsets.facility import FacilityViewSet
+from care.emr.api.viewsets.facility import FacilityUsersViewSet, FacilityViewSet
 from care.emr.api.viewsets.facility_organization import (
     FacilityOrganizationUsersViewSet,
     FacilityOrganizationViewSet,
@@ -161,7 +161,9 @@ facility_nested_router = NestedSimpleRouter(router, r"facility", lookup="facilit
 facility_nested_router.register(
     r"organizations", FacilityOrganizationViewSet, basename="facility-organization"
 )
-
+facility_nested_router.register(
+    r"schedulable_users", FacilityUsersViewSet, basename="facility-schedulable-users"
+)
 facility_organization_nested_router = NestedSimpleRouter(
     facility_nested_router, r"organizations", lookup="facility_organizations"
 )
