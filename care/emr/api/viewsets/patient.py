@@ -9,7 +9,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import EMRModelViewSet
-from care.emr.models import PatientUser
+from care.emr.models import Organization, PatientUser
 from care.emr.models.patient import Patient
 from care.emr.resources.patient.spec import (
     PatientCreateSpec,
@@ -18,6 +18,7 @@ from care.emr.resources.patient.spec import (
     PatientRetrieveSpec,
 )
 from care.emr.resources.user.spec import UserSpec
+from care.security.authorization import AuthorizationController
 from care.security.models import RoleModel
 from care.users.models import User
 
@@ -38,14 +39,21 @@ class PatientViewSet(EMRModelViewSet):
     # TODO : Retrieve will work if an active encounter exists on the patient
 
     def get_queryset(self):
-        return (
+        qs = (
             super()
             .get_queryset()
             .select_related("created_by", "updated_by", "geo_organization")
         )
-        # return AuthorizationController.call(
-        #     "get_filtered_patients", qs, self.request.user
-        # )
+        if self.request.GET.get("geo_organization"):
+            geo_organization = get_object_or_404(
+                Organization,
+                external_id=self.request.GET["geo_organization"],
+                org_type="govt",
+            )
+            qs = qs.filter(organization_cache__overlap=geo_organization.id)
+        return AuthorizationController.call(
+            "get_filtered_patients", qs, self.request.user
+        )
 
     class SearchRequestSpec(BaseModel):
         name: str = ""

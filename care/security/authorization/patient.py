@@ -42,6 +42,15 @@ class PatientAccess(AuthorizationHandler):
             role__in=user_roles,
         ).exists()
 
+    def can_write_patient_obj(self, user, patient):
+        if user.is_superuser:
+            return True
+        user_roles = self.find_roles_on_patient(user, patient)
+        return RolePermission.objects.filter(
+            permission__slug__in=[PatientPermissions.can_write_patient.name],
+            role__in=user_roles,
+        ).exists()
+
     def can_view_clinical_data(self, user, patient):
         if user.is_superuser:
             return True

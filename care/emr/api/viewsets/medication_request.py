@@ -79,7 +79,7 @@ class MedicationRequestViewSet(
     def discontinue(self, request, *args, **kwargs):
         data = MedicationRequestDiscontinueRequest(**request.data)
         request: MedicationRequest = self.get_object()
-
+        self.authorize_update({}, request)
         request.status = MedicationRequestStatus.ended
         request.status_changed = timezone.now()
         request.status_reason = data.status_reason
