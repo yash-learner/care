@@ -50,10 +50,6 @@ from care.emr.api.viewsets.user import UserViewSet
 from care.emr.api.viewsets.valueset import ValueSetViewSet
 from care.facility.api.viewsets.facility import AllFacilityViewSet
 from care.facility.api.viewsets.notification import NotificationViewSet
-from care.facility.api.viewsets.patient import (
-    PatientNotesEditViewSet,
-    PatientNotesViewSet,
-)
 from care.users.api.viewsets.lsg import (
     DistrictViewSet,
     LocalBodyViewSet,
@@ -227,13 +223,13 @@ facility_nested_router.register(
 # router.register("patient/search", PatientSearchViewSet, basename="patient-search")
 router.register("patient", PatientViewSet, basename="patient")
 patient_nested_router = NestedSimpleRouter(router, r"patient", lookup="patient")
-patient_nested_router.register(r"notes", PatientNotesViewSet, basename="patient-notes")
-patient_notes_nested_router = NestedSimpleRouter(
-    patient_nested_router, r"notes", lookup="notes"
-)
-patient_notes_nested_router.register(
-    r"edits", PatientNotesEditViewSet, basename="patient-notes-edits"
-)
+# patient_nested_router.register(r"notes", PatientNotesViewSet, basename="patient-notes")
+# patient_notes_nested_router = NestedSimpleRouter(
+#     patient_nested_router, r"notes", lookup="notes"
+# )
+# patient_notes_nested_router.register(
+#     r"edits", PatientNotesEditViewSet, basename="patient-notes-edits"
+# )
 
 patient_nested_router.register(
     r"allergy_intolerance", AllergyIntoleranceViewSet, basename="allergy-intolerance"
@@ -311,7 +307,7 @@ urlpatterns = [
     # path("", include(assetbed_nested_router.urls)),
     path("", include(patient_nested_router.urls)),
     path("", include(thread_nested_router.urls)),
-    path("", include(patient_notes_nested_router.urls)),
+    # path("", include(patient_notes_nested_router.urls)),
     # path("", include(consultation_nested_router.urls)),
     path("", include(resource_nested_router.urls)),
     # path("", include(shifting_nested_router.urls)),
