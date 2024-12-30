@@ -364,6 +364,8 @@ class User(AbstractUser):
 
     def read_profile_picture_url(self):
         if self.profile_picture_url:
+            if settings.FACILITY_CDN:
+                return f"{settings.FACILITY_CDN}/{self.profile_picture_url}"
             return f"{settings.FACILITY_S3_BUCKET_EXTERNAL_ENDPOINT}/{settings.FACILITY_S3_BUCKET}/{self.profile_picture_url}"
         return None
 
