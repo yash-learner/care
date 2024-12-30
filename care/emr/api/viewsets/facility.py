@@ -1,11 +1,14 @@
 from django.db.models import Q
 from django.utils.decorators import method_decorator
+from django_filters import CharFilter, FilterSet
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action, parser_classes
+from rest_framework.generics import get_object_or_404
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import EMRModelReadOnlyViewSet, EMRModelViewSet
-from care.emr.models import SchedulableUserResource
+from care.emr.models import Organization, SchedulableUserResource
 from care.emr.models.organziation import FacilityOrganizationUser, OrganizationUser
 from care.emr.resources.facility.spec import (
     FacilityCreateSpec,
@@ -19,30 +22,41 @@ from care.users.models import User
 from care.utils.file_uploads.cover_image import delete_cover_image
 
 
+class FacilityFilters(FilterSet):
+    name = CharFilter(field_name="name", lookup_expr="icontains")
+    phone_number = CharFilter(field_name="phone_number", lookup_expr="iexact")
+
+
 class FacilityViewSet(EMRModelViewSet):
     database_model = Facility
     pydantic_model = FacilityCreateSpec
     pydantic_read_model = FacilityReadSpec
     pydantic_retrieve_model = FacilityRetrieveSpec
+    filterset_class = FacilityFilters
+    filter_backends = [DjangoFilterBackend]
 
     def get_queryset(self):
         # TODO Add Permission checks
+        qs = super().get_queryset()
         organization_ids = list(
             OrganizationUser.objects.filter(user=self.request.user).values_list(
                 "organization_id", flat=True
             )
         )
-        return (
-            super()
-            .get_queryset()
-            .filter(
-                Q(
-                    id__in=FacilityOrganizationUser.objects.filter(
-                        user=self.request.user
-                    ).values_list("organization__facility_id")
-                )
-                | Q(geo_organization_cache__overlap=organization_ids)
+        if self.request.GET.get("geo_organization"):
+            geo_organization = get_object_or_404(
+                Organization,
+                external_id=self.request.GET["geo_organization"],
+                org_type="govt",
             )
+            qs = qs.filter(geo_organization_cache__overlap=geo_organization.id)
+        return qs.filter(
+            Q(
+                id__in=FacilityOrganizationUser.objects.filter(
+                    user=self.request.user
+                ).values_list("organization__facility_id")
+            )
+            | Q(geo_organization_cache__overlap=organization_ids)
         )
 
     @method_decorator(parser_classes([MultiPartParser]))

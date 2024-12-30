@@ -43,11 +43,12 @@ class FacilityCreateSpec(FacilityBaseSpec):
 class FacilityReadSpec(FacilityBaseSpec):
     features: list[int]
     cover_image_url: str
+    read_cover_image_url: str
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
-
+        mapping["read_cover_image_url"] = obj.read_cover_image_url()
         if obj.created_by:
             mapping["created_by"] = UserSpec.serialize(obj.created_by)
 
