@@ -64,17 +64,17 @@ router = DefaultRouter() if settings.DEBUG else SimpleRouter()
 
 router.register("users", UserViewSet, basename="users")
 
-router.register("plug_config", PlugConfigViewset, basename="plug_configs")
+# router.register("plug_config", PlugConfigViewset, basename="plug_configs")
 user_nested_router = NestedSimpleRouter(router, r"users", lookup="users")
-user_nested_router.register("skill", UserSkillViewSet, basename="users-skill")
+# user_nested_router.register("skill", UserSkillViewSet, basename="users-skill")
 
-router.register("skill", SkillViewSet, basename="skill")
+# router.register("skill", SkillViewSet, basename="skill")
 
 # Local Body / LSG Viewsets
-router.register("state", StateViewSet, basename="state")
-router.register("district", DistrictViewSet, basename="district")
-router.register("local_body", LocalBodyViewSet, basename="local-body")
-router.register("ward", WardViewSet, basename="ward")
+# router.register("state", StateViewSet, basename="state")
+# router.register("district", DistrictViewSet, basename="district")
+# router.register("local_body", LocalBodyViewSet, basename="local-body")
+# router.register("ward", WardViewSet, basename="ward")
 
 router.register("files", FileUploadViewSet, basename="files")
 
@@ -84,7 +84,7 @@ router.register("otp/patient", PatientOTPView, basename="otp-patient")
 
 router.register("otp/slots", OTPSlotViewSet, basename="otp-slots")
 
-router.register("notification", NotificationViewSet, basename="notification")
+# router.register("notification", NotificationViewSet, basename="notification")
 
 router.register("batch_requests", BatchRequestView, basename="batch-requests")
 
