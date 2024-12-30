@@ -4,9 +4,10 @@ from care.security.permissions.constants import Permission, PermissionContext
 from care.security.roles.role import (
     ADMIN_ROLE,
     DOCTOR_ROLE,
+    FACILITY_ADMIN_ROLE,
     GEO_ADMIN,
     STAFF_ROLE,
-    VOLUNTEER_ROLE, FACILITY_ADMIN_ROLE,
+    VOLUNTEER_ROLE,
 )
 
 
@@ -21,7 +22,14 @@ class FacilityPermissions(enum.Enum):
         "Can Read on Facility",
         "Something Here",
         PermissionContext.FACILITY,
-        [FACILITY_ADMIN_ROLE,GEO_ADMIN, ADMIN_ROLE, STAFF_ROLE, DOCTOR_ROLE, VOLUNTEER_ROLE],
+        [
+            FACILITY_ADMIN_ROLE,
+            GEO_ADMIN,
+            ADMIN_ROLE,
+            STAFF_ROLE,
+            DOCTOR_ROLE,
+            VOLUNTEER_ROLE,
+        ],
     )
     can_update_facility = Permission(
         "Can Update on Facility",
