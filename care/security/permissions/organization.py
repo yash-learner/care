@@ -6,7 +6,7 @@ from care.security.roles.role import (
     DOCTOR_ROLE,
     GEO_ADMIN,
     NURSE_ROLE,
-    STAFF_ROLE,
+    STAFF_ROLE, VOLUNTEER_ROLE,
 )
 
 
@@ -15,7 +15,7 @@ class OrganizationPermissions(enum.Enum):
         "Can View Organizations",
         "",
         PermissionContext.ORGANIZATION,
-        [ADMIN_ROLE, STAFF_ROLE, DOCTOR_ROLE, GEO_ADMIN, NURSE_ROLE],
+        [ADMIN_ROLE, STAFF_ROLE, DOCTOR_ROLE, GEO_ADMIN, NURSE_ROLE,VOLUNTEER_ROLE],
     )
     can_create_organization = Permission(
         "Can Create Organizations",
@@ -45,5 +45,5 @@ class OrganizationPermissions(enum.Enum):
         "Can List Users in an Organizations",
         "",
         PermissionContext.ORGANIZATION,
-        [ADMIN_ROLE, STAFF_ROLE, DOCTOR_ROLE, GEO_ADMIN, NURSE_ROLE],
+        [ADMIN_ROLE, STAFF_ROLE, DOCTOR_ROLE, GEO_ADMIN, NURSE_ROLE,VOLUNTEER_ROLE],
     )

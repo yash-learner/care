@@ -7,7 +7,7 @@ from care.security.roles.role import (
     FACILITY_ADMIN_ROLE,
     GEO_ADMIN,
     NURSE_ROLE,
-    STAFF_ROLE,
+    STAFF_ROLE, VOLUNTEER_ROLE,
 )
 
 ALL_ROLES = [
@@ -17,6 +17,7 @@ ALL_ROLES = [
     GEO_ADMIN,
     STAFF_ROLE,
     FACILITY_ADMIN_ROLE,
+VOLUNTEER_ROLE
 ]
 
 CLINICAL_DATA_ACCESS_ROLES = [

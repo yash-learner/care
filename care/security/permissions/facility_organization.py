@@ -7,7 +7,7 @@ from care.security.roles.role import (
     FACILITY_ADMIN_ROLE,
     GEO_ADMIN,
     NURSE_ROLE,
-    STAFF_ROLE,
+    STAFF_ROLE, VOLUNTEER_ROLE,
 )
 
 
@@ -35,6 +35,7 @@ class FacilityOrganizationPermissions(enum.Enum):
             DOCTOR_ROLE,
             GEO_ADMIN,
             NURSE_ROLE,
+            VOLUNTEER_ROLE
         ],
     )
     can_delete_facility_organization = Permission(
