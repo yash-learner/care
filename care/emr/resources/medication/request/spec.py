@@ -125,7 +125,6 @@ class DosageInstruction(BaseModel):
     )
     patient_instruction: str | None = None
     timing: Timing | None = None
-    as_needed_boolean: bool | None = None
     as_needed_for: Coding | None = Field(
         json_schema_extra={"slug": CARE_AS_NEEDED_REASON_VALUESET.slug}
     )
@@ -181,6 +180,7 @@ class BaseMedicationRequestSpec(EMRResource):
         description="When request was initially authored",
     )
 
+    as_needed_boolean: bool | None = None
     dosage_instruction: list[DosageInstruction] = Field(
         description="Dosage instructions for the medication",
     )
