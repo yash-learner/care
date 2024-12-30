@@ -2,6 +2,7 @@ from pydantic import UUID4
 
 from care.emr.models import Organization
 from care.emr.resources.base import EMRResource
+from care.emr.resources.organization.spec import OrganizationReadSpec
 from care.emr.resources.user.spec import UserSpec
 from care.facility.models import (
     REVERSE_FACILITY_TYPES,
@@ -51,3 +52,15 @@ class FacilityReadSpec(FacilityBaseSpec):
             mapping["created_by"] = UserSpec.serialize(obj.created_by)
 
         mapping["facility_type"] = REVERSE_FACILITY_TYPES[obj.facility_type]
+
+
+class FacilityRetrieveSpec(FacilityReadSpec):
+    geo_organization: dict = {}
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        super().perform_extra_serialization(mapping, obj)
+        if obj.geo_organization:
+            mapping["geo_organization"] = OrganizationReadSpec.serialize(
+                obj.geo_organization
+            ).to_json()

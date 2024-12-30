@@ -7,7 +7,11 @@ from rest_framework.response import Response
 from care.emr.api.viewsets.base import EMRModelReadOnlyViewSet, EMRModelViewSet
 from care.emr.models import SchedulableUserResource
 from care.emr.models.organziation import FacilityOrganizationUser, OrganizationUser
-from care.emr.resources.facility.spec import FacilityCreateSpec, FacilityReadSpec
+from care.emr.resources.facility.spec import (
+    FacilityCreateSpec,
+    FacilityReadSpec,
+    FacilityRetrieveSpec,
+)
 from care.emr.resources.user.spec import UserSpec
 from care.facility.api.serializers.facility import FacilityImageUploadSerializer
 from care.facility.models import Facility
@@ -19,6 +23,7 @@ class FacilityViewSet(EMRModelViewSet):
     database_model = Facility
     pydantic_model = FacilityCreateSpec
     pydantic_read_model = FacilityReadSpec
+    pydantic_retrieve_model = FacilityRetrieveSpec
 
     def get_queryset(self):
         # TODO Add Permission checks
