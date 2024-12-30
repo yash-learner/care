@@ -7,7 +7,8 @@ from care.security.roles.role import (
     FACILITY_ADMIN_ROLE,
     GEO_ADMIN,
     NURSE_ROLE,
-    STAFF_ROLE, VOLUNTEER_ROLE,
+    STAFF_ROLE,
+    VOLUNTEER_ROLE,
 )
 
 
@@ -22,7 +23,7 @@ class PatientPermissions(enum.Enum):
             NURSE_ROLE,
             GEO_ADMIN,
             ADMIN_ROLE,
-            FACILITY_ADMIN_ROLE
+            FACILITY_ADMIN_ROLE,
         ],
     )
     can_write_patient = Permission(
@@ -49,7 +50,7 @@ class PatientPermissions(enum.Enum):
             GEO_ADMIN,
             ADMIN_ROLE,
             FACILITY_ADMIN_ROLE,
-            VOLUNTEER_ROLE
+            VOLUNTEER_ROLE,
         ],
     )
     can_view_clinical_data = Permission(

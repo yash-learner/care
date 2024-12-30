@@ -64,6 +64,16 @@ FEATURE_CHOICES = [
     (4, "Neonatal care"),
     (5, "Operation theater"),
     (6, "Blood Bank"),
+    (7, "Emergency Services"),
+    (8, "Inpatient Services"),
+    (9, "Outpatient Services"),
+    (10, "Intensive Care Units"),
+    (11, "Pharmacy"),
+    (12, "Rehabilitation Services"),
+    (13, "Home Care Services"),
+    (14, "Psychosocial Support"),
+    (15, "Respite Care"),
+    (16, "Daycare Programs"),
 ]
 
 

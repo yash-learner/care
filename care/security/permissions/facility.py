@@ -1,7 +1,13 @@
 import enum
 
 from care.security.permissions.constants import Permission, PermissionContext
-from care.security.roles.role import ADMIN_ROLE, DOCTOR_ROLE, GEO_ADMIN, STAFF_ROLE, VOLUNTEER_ROLE
+from care.security.roles.role import (
+    ADMIN_ROLE,
+    DOCTOR_ROLE,
+    GEO_ADMIN,
+    STAFF_ROLE,
+    VOLUNTEER_ROLE,
+)
 
 
 class FacilityPermissions(enum.Enum):
@@ -15,7 +21,7 @@ class FacilityPermissions(enum.Enum):
         "Can Read on Facility",
         "Something Here",
         PermissionContext.FACILITY,
-        [GEO_ADMIN, ADMIN_ROLE, STAFF_ROLE, DOCTOR_ROLE,VOLUNTEER_ROLE],
+        [GEO_ADMIN, ADMIN_ROLE, STAFF_ROLE, DOCTOR_ROLE, VOLUNTEER_ROLE],
     )
     can_update_facility = Permission(
         "Can Update on Facility",

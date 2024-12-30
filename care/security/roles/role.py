@@ -51,7 +51,7 @@ class RoleController:
         GEO_ADMIN,
         FACILITY_ADMIN_ROLE,
         ADMIN_ROLE,
-        VOLUNTEER_ROLE
+        VOLUNTEER_ROLE,
     ]
 
     @classmethod
