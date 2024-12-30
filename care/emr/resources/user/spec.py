@@ -93,7 +93,8 @@ class UserRetrieveSpec(UserSpec):
         from care.emr.resources.organization.spec import OrganizationReadSpec
 
         super().perform_extra_serialization(mapping, obj)
-        mapping["created_by"] = UserSpec.serialize(obj.created_by).to_json()
+        if obj.created_by:
+            mapping["created_by"] = UserSpec.serialize(obj.created_by).to_json()
         if obj.geo_organization:
             mapping["geo_organization"] = OrganizationReadSpec.serialize(
                 obj.geo_organization
