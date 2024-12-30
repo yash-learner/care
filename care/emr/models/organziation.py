@@ -27,6 +27,18 @@ class OrganizationCommonBase(EMRBaseModel):
     cache_expiry_days = 15
     # Storing parent data within the organization to save joins each time
 
+    def set_organization_cache(self):
+        if self.parent:
+            self.parent_cache = [*self.parent.parent_cache, self.parent.id]
+            self.level_cache = self.parent.level_cache + 1
+            if self.parent.root_org is None:
+                self.root_org = self.parent
+            else:
+                self.root_org = self.parent.root_org
+            self.parent.has_children = True
+            self.parent.save(update_fields=["has_children"])
+        super().save()
+
     def get_parent_json(self):
         if self.parent:
             if self.cached_parent_json and timezone.now() < datetime.fromisoformat(
@@ -53,6 +65,13 @@ class OrganizationCommonBase(EMRBaseModel):
 
     class Meta:
         abstract = True
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            super().save(*args, **kwargs)
+            self.set_organization_cache()
+        else:
+            super().save(*args, **kwargs)
 
 
 class FacilityOrganization(OrganizationCommonBase):

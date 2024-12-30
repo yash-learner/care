@@ -47,14 +47,6 @@ class OrganizationWriteSpec(OrganizationBaseSpec):
         if not is_update:
             if self.parent:
                 obj.parent = Organization.objects.get(external_id=self.parent)
-                obj.level_cache = obj.parent.level_cache + 1
-                obj.parent_cache = [*obj.parent.parent_cache, obj.parent.id]
-                if obj.parent.root_org is None:
-                    obj.root_org = obj.parent
-                else:
-                    obj.root_org = obj.parent.root_org
-                obj.parent.has_children = True
-                obj.parent.save(update_fields=["has_children"])
             else:
                 obj.parent = None
 
