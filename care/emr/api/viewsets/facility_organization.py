@@ -12,10 +12,12 @@ from care.emr.resources.facility_organization.facility_orgnization_user_spec imp
 )
 from care.emr.resources.facility_organization.spec import (
     FacilityOrganizationReadSpec,
+    FacilityOrganizationRetrieveSpec,
     FacilityOrganizationWriteSpec,
 )
 from care.facility.models import Facility
 from care.security.authorization import AuthorizationController
+from care.security.models import RoleModel
 
 
 class FacilityOrganizationFilter(filters.FilterSet):
@@ -28,19 +30,96 @@ class FacilityOrganizationViewSet(EMRModelViewSet):
     database_model = FacilityOrganization
     pydantic_model = FacilityOrganizationWriteSpec
     pydantic_read_model = FacilityOrganizationReadSpec
+    pydantic_retrieve_model = FacilityOrganizationRetrieveSpec
     filterset_class = FacilityOrganizationFilter
     filter_backends = [filters.DjangoFilterBackend]
+
+    def get_organization_obj(self):
+        return get_object_or_404(
+            FacilityOrganization, external_id=self.kwargs["external_id"]
+        )
+
+    def get_facility_obj(self):
+        return get_object_or_404(
+            Facility, external_id=self.kwargs["facility_external_id"]
+        )
+
+    def validate_data(self, instance, model_obj=None):
+        if instance.org_type == "root":
+            raise PermissionDenied("Cannot create root organization")
+        if instance.parent:
+            parent = get_object_or_404(
+                FacilityOrganization, external_id=instance.parent
+            )
+            if parent.org_type == "root":
+                raise PermissionDenied("Cannot create multiple root organizations")
+
+    def authorize_delete(self, instance):
+        if instance.type == "root":
+            raise PermissionDenied("Cannot delete root organization")
+
+        if self.request.user.is_superuser:
+            return
+
+        if not AuthorizationController.call(
+            "can_delete_facility_organization", self.request.user, instance
+        ):
+            raise PermissionDenied(
+                "User does not have the required permissions to update organization"
+            )
+        # TODO delete should not be allowed if there are any children left
+
+    def authorize_update(self, request_obj, model_instance):
+        if self.request.user.is_superuser:
+            return
+
+        if not AuthorizationController.call(
+            "can_manage_facility_organization_obj", self.request.user, model_instance
+        ):
+            raise PermissionDenied(
+                "User does not have the required permissions to update organization"
+            )
+
+    def authorize_create(self, instance):
+        if self.request.user.is_superuser:
+            return True
+        # Organization creates require the Organization Create Permission
+
+        if instance.parent:
+            parent = get_object_or_404(
+                FacilityOrganization, external_id=instance.parent
+            )
+        else:
+            parent = None
+        facility = self.get_facility_obj()
+        if not AuthorizationController.call(
+            "can_create_facility_organization_obj", self.request.user, parent, facility
+        ):
+            raise PermissionDenied(
+                "User does not have the required permissions to create organizations"
+            )
+        return True
 
     def clean_create_data(self, request_data):
         request_data["facility"] = self.kwargs["facility_external_id"]
         return request_data
 
     def get_queryset(self):
-        return (
+        facility = self.get_facility_obj()
+        queryset = (
             super()
             .get_queryset()
-            .filter(facility__external_id=self.kwargs["facility_external_id"])
+            .filter(facility=facility)
             .select_related("facility", "parent", "created_by", "updated_by")
+        )
+        if "parent" in self.request.GET and not self.request.GET.get("parent"):
+            # Filter for root organizations, For some reason its not working as intended in Django Filters
+            queryset = queryset.filter(parent__isnull=True)
+        return AuthorizationController.call(
+            "get_accessible_facility_organizations",
+            queryset,
+            self.request.user,
+            facility,
         )
 
 
@@ -51,9 +130,6 @@ class FacilityOrganizationUsersViewSet(EMRModelViewSet):
     pydantic_update_model = FacilityOrganizationUserUpdateSpec
 
     def get_organization_obj(self):
-        import logging
-
-        logging.info(self.kwargs)
         return get_object_or_404(
             FacilityOrganization,
             external_id=self.kwargs["facility_organizations_external_id"],
@@ -69,25 +145,68 @@ class FacilityOrganizationUsersViewSet(EMRModelViewSet):
         instance.facility = self.get_facility_obj()
         super().perform_create(instance)
 
-    def authorize_delete(self, instance):
-        if instance.org_type == "root":
-            raise PermissionDenied("Cannot delete root organization")
-
     def validate_data(self, instance, model_obj=None):
         if model_obj:
             return
         organization = self.get_organization_obj()
-        if (
-            FacilityOrganizationUser.objects.filter(
+        queryset = FacilityOrganizationUser.objects.filter(
+            user__external_id=instance.user
+        )
+        if organization.root_org is None:
+            queryset = queryset.filter(organization=organization)
+        else:
+            queryset = queryset.filter(
                 Q(organization=organization)
                 | Q(organization__root_org=organization.root_org)
             )
-            .filter(user__external_id=instance.user)
-            .exists()
-        ):
+        if queryset.exists():
             raise ValidationError("User association already exists")
 
-    # TODO Add AuthZ, abstract based on organization users, cleanup required.
+    def authorize_delete(self, instance):
+        organization = self.get_organization_obj()
+        if not AuthorizationController.call(
+            "can_manage_facility_organization_users_obj",
+            self.request.user,
+            organization,
+            instance.role,
+        ):
+            raise PermissionDenied("User does not have permission for this action")
+
+    def authorize_update(self, request_obj, model_instance):
+        organization = self.get_organization_obj()
+        requested_role = get_object_or_404(RoleModel, external_id=request_obj.role)
+        if not AuthorizationController.call(
+            "can_manage_facility_organization_users_obj",
+            self.request.user,
+            organization,
+            model_instance.role,
+        ):
+            raise PermissionDenied("User does not have permission for this action")
+        if not AuthorizationController.call(
+            "can_manage_facility_organization_users_obj",
+            self.request.user,
+            organization,
+            requested_role,
+        ):
+            raise PermissionDenied("User does not have permission for this action")
+
+    def authorize_create(self, instance):
+        """
+        - Creates are only allowed if the user is part of the organization
+        - The role applied to the new user must be equal or lower in privilege to the user created
+        - Maintain a permission to add users to an organization
+        """
+        if self.request.user.is_superuser:
+            return
+        organization = self.get_organization_obj()
+        requested_role = get_object_or_404(RoleModel, external_id=instance.role)
+        if not AuthorizationController.call(
+            "can_manage_facility_organization_users_obj",
+            self.request.user,
+            organization,
+            requested_role,
+        ):
+            raise PermissionDenied("User does not have permission for this action")
 
     def get_queryset(self):
         """
@@ -100,4 +219,6 @@ class FacilityOrganizationUsersViewSet(EMRModelViewSet):
             raise PermissionDenied(
                 "User does not have the required permissions to list users"
             )
-        return FacilityOrganizationUser.objects.filter(organization=organization)
+        return FacilityOrganizationUser.objects.filter(
+            organization=organization
+        ).select_related("organization", "user", "role")

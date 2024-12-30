@@ -1,6 +1,7 @@
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
 
+from care.emr.api.viewsets.authz_base import EncounterBasedAuthorizationBase
 from care.emr.api.viewsets.base import (
     EMRBaseViewSet,
     EMRCreateMixin,
@@ -20,9 +21,11 @@ from care.emr.resources.notes.thread_spec import (
     NoteThreadReadSpec,
     NoteThreadUpdateSpec,
 )
+from care.security.authorization import AuthorizationController
 
 
 class NoteThreadViewSet(
+    EncounterBasedAuthorizationBase,
     EMRCreateMixin,
     EMRRetrieveMixin,
     EMRUpdateMixin,
@@ -50,12 +53,15 @@ class NoteThreadViewSet(
         return super().get_object()
 
     def get_queryset(self):
+        if not AuthorizationController.call(
+            "can_view_clinical_data", self.request.user, self.get_patient_obj()
+        ):
+            raise PermissionDenied("Permission denied to user")
         queryset = (
             super()
             .get_queryset()
             .filter(patient__external_id=self.kwargs["patient_external_id"])
         )
-
         encounter = self.request.GET.get("encounter", None)
         if encounter and self.action == "list":
             # TODO Authorise Encounter
@@ -87,7 +93,33 @@ class NoteMessageViewSet(
         if self.request.user != model_instance.created_by:
             raise PermissionDenied("Cannot Update Message Created by Other User")
 
+        if not AuthorizationController.call(
+            "can_update_encounter_obj",
+            self.request.user,
+            model_instance.thread.encounter,
+        ):
+            raise PermissionDenied("You do not have permission to update encounter")
+
+    def authorize_create(self, instance):
+        thread = get_object_or_404(
+            NoteThread, external_id=self.kwargs["thread_external_id"]
+        )
+        if not AuthorizationController.call(
+            "can_update_encounter_obj", self.request.user, thread.encounter
+        ):
+            raise PermissionDenied("You do not have permission to update encounter")
+
+    def authorize_delete(self, instance):
+        if not AuthorizationController.call(
+            "can_update_encounter_obj", self.request.user, instance.encounter
+        ):
+            raise PermissionDenied("You do not have permission to update encounter")
+
     def get_queryset(self):
+        if not AuthorizationController.call(
+            "can_view_clinical_data", self.request.user, self.get_patient_obj()
+        ):
+            raise PermissionDenied("Permission denied to user")
         return (
             super()
             .get_queryset()

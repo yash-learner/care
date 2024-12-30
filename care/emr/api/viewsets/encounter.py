@@ -13,7 +13,12 @@ from care.emr.api.viewsets.base import (
     EMRRetrieveMixin,
     EMRUpdateMixin,
 )
-from care.emr.models import Encounter, EncounterOrganization, FacilityOrganization
+from care.emr.models import (
+    Encounter,
+    EncounterOrganization,
+    FacilityOrganization,
+    Patient,
+)
 from care.emr.resources.encounter.constants import COMPLETED_CHOICES
 from care.emr.resources.encounter.spec import (
     EncounterCreateSpec,
@@ -39,7 +44,6 @@ class LiveFilter(filters.CharFilter):
 
 
 class EncounterFilters(filters.FilterSet):
-    patient = filters.UUIDFilter(field_name="patient__external_id")
     facility = filters.UUIDFilter(field_name="facility__external_id")
     status = filters.CharFilter(field_name="status", lookup_expr="iexact")
     encounter_class = filters.CharFilter(
@@ -67,11 +71,6 @@ class EncounterViewSet(
     filterset_class = EncounterFilters
     filter_backends = [filters.DjangoFilterBackend]
 
-    def get_facility_obj(self):
-        return get_object_or_404(
-            Facility, external_id=self.kwargs["facility_external_id"]
-        )
-
     def perform_create(self, instance):
         with transaction.atomic():
             organizations = getattr(instance, "_organizations", [])
@@ -79,8 +78,10 @@ class EncounterViewSet(
             for organization in organizations:
                 EncounterOrganization.objects.create(
                     encounter=instance,
-                    organization=FacilityOrganization.objects.get(
-                        external_id=organization, facility=instance.facility
+                    organization=get_object_or_404(
+                        FacilityOrganization,
+                        external_id=organization,
+                        facility=instance.facility,
                     ),
                 )
             if not organizations:
@@ -88,9 +89,9 @@ class EncounterViewSet(
 
     def authorize_update(self, request_obj, model_instance):
         if not AuthorizationController.call(
-            "can_create_encounter_obj", self.request.user, model_instance.facility
+            "can_update_encounter_obj", self.request.user, model_instance
         ):
-            raise PermissionDenied("You do not have permission to create encounter")
+            raise PermissionDenied("You do not have permission to update encounter")
 
     def authorize_create(self, instance):
         # Check if encounter create permission exists on Facility Organization
@@ -101,16 +102,47 @@ class EncounterViewSet(
             raise PermissionDenied("You do not have permission to create encounter")
 
     def get_queryset(self):
-        return (
+        qs = (
             super()
             .get_queryset()
             .select_related("patient", "facility", "appointment")
             .order_by("-created_date")
         )
+        if (
+            self.action in ["list", "retrieve"]
+            and "patient" in self.request.GET
+            and self.request.GET["patient"]
+        ):
+            # If the user has view access to the patient, then encounter view is also granted for that patient
+            patient = get_object_or_404(
+                Patient, external_id=self.request.GET["patient"]
+            )
+            if AuthorizationController.call(
+                "can_view_patient_obj", self.request.user, patient
+            ):
+                return qs.filter(patient=patient)
+            raise PermissionDenied("User Cannot access patient")
+
+        if (
+            self.action in ["list", "retrieve"]
+            and "facility" in self.request.GET
+            and self.request.GET["facility"]
+        ):
+            # If the user has view access to the patient, then encounter view is also granted for that patient
+            facility = get_object_or_404(
+                Facility, external_id=self.request.GET["facility"]
+            )
+            return AuthorizationController.call(
+                "get_filtered_encounters", qs, self.request.user, facility
+            )
+        if self.action in ["list", "retrieve"]:
+            raise PermissionDenied("Cannot access encounters")
+        return qs  # Authz Exists separately for update and deletes
 
     @action(detail=True, methods=["GET"])
     def organizations(self, request, *args, **kwargs):
         instance = self.get_object()
+        self.authorize_update({}, instance)
         encounter_organizations = EncounterOrganization.objects.filter(
             encounter=instance
         ).select_related("organization")
@@ -128,6 +160,7 @@ class EncounterViewSet(
     @action(detail=True, methods=["POST"])
     def organizations_add(self, request, *args, **kwargs):
         instance = self.get_object()
+        self.authorize_update({}, instance)
         request_data = self.EncounterOrganizationManageSpec(**request.data)
         organization = get_object_or_404(
             FacilityOrganization, external_id=request_data.organization
@@ -147,6 +180,7 @@ class EncounterViewSet(
     @action(detail=True, methods=["DELETE"])
     def organizations_remove(self, request, *args, **kwargs):
         instance = self.get_object()
+        self.authorize_update({}, instance)
         request_data = self.EncounterOrganizationManageSpec(**request.data)
         organization = get_object_or_404(
             FacilityOrganization, external_id=request_data.organization

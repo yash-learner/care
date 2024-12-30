@@ -3,8 +3,10 @@ from datetime import UTC, datetime
 from django_filters import rest_framework as filters
 from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
+from care.emr.api.viewsets.authz_base import EncounterBasedAuthorizationBase
 from care.emr.api.viewsets.base import EMRModelViewSet, EMRQuestionnaireResponseMixin
 from care.emr.models.medication_request import MedicationRequest
 from care.emr.registries.system_questionnaire.system_questionnaire import (
@@ -17,6 +19,7 @@ from care.emr.resources.medication.request.spec import (
     MedicationRequestStatus,
 )
 from care.emr.resources.questionnaire.spec import SubjectType
+from care.security.authorization import AuthorizationController
 
 
 class MedicationRequestFilter(filters.FilterSet):
@@ -32,7 +35,9 @@ class MedicationRequestFilter(filters.FilterSet):
         )
 
 
-class MedicationRequestViewSet(EMRQuestionnaireResponseMixin, EMRModelViewSet):
+class MedicationRequestViewSet(
+    EncounterBasedAuthorizationBase, EMRQuestionnaireResponseMixin, EMRModelViewSet
+):
     database_model = MedicationRequest
     pydantic_model = MedicationRequestSpec
     pydantic_read_model = MedicationRequestReadSpec
@@ -44,6 +49,10 @@ class MedicationRequestViewSet(EMRQuestionnaireResponseMixin, EMRModelViewSet):
     filter_backends = [filters.DjangoFilterBackend]
 
     def get_queryset(self):
+        if not AuthorizationController.call(
+            "can_view_clinical_data", self.request.user, self.get_patient_obj()
+        ):
+            raise PermissionDenied("Permission denied to user")
         return (
             super()
             .get_queryset()

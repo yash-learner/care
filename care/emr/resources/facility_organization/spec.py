@@ -6,6 +6,7 @@ from care.emr.models.organziation import FacilityOrganization
 from care.emr.resources.base import EMRResource
 from care.emr.resources.user.spec import UserSpec
 from care.facility.models import Facility
+from care.security.authorization import AuthorizationController
 
 
 class FacilityOrganizationTypeChoices(str, Enum):
@@ -18,17 +19,21 @@ class FacilityOrganizationTypeChoices(str, Enum):
 class FacilityOrganizationBaseSpec(EMRResource):
     __model__ = FacilityOrganization
     __exclude__ = ["facility", "parent"]
-    id: str = None
+    id: UUID4 = None
     active: bool = True
-    org_type: FacilityOrganizationTypeChoices
     name: str
     description: str = ""
-    parent: UUID4 | None = None
     metadata: dict = {}
+
+
+class FacilityOrganizationUpdateSpec(FacilityOrganizationBaseSpec):
+    pass
 
 
 class FacilityOrganizationWriteSpec(FacilityOrganizationBaseSpec):
     facility: UUID4
+    org_type: FacilityOrganizationTypeChoices
+    parent: UUID4 | None = None
 
     # TODO Validations to confirm facility and org exists
 
@@ -74,6 +79,9 @@ class FacilityOrganizationWriteSpec(FacilityOrganizationBaseSpec):
 
 
 class FacilityOrganizationReadSpec(FacilityOrganizationBaseSpec):
+    org_type: FacilityOrganizationTypeChoices
+    parent: UUID4 | None = None
+
     created_by: UserSpec = dict
     updated_by: UserSpec = dict
     system_generated: bool
@@ -89,3 +97,13 @@ class FacilityOrganizationReadSpec(FacilityOrganizationBaseSpec):
             mapping["created_by"] = UserSpec.serialize(obj.created_by)
         if obj.updated_by:
             mapping["updated_by"] = UserSpec.serialize(obj.updated_by)
+
+
+class FacilityOrganizationRetrieveSpec(FacilityOrganizationReadSpec):
+    permissions: list[str] = []
+
+    @classmethod
+    def perform_extra_user_serialization(cls, mapping, obj, user):
+        mapping["permissions"] = AuthorizationController.call(
+            "get_permission_on_facility_organization", obj, user
+        )

@@ -77,7 +77,7 @@ class OTPLoginView(EMRBaseViewSet):
         if not otp_object:
             raise ValidationError({"otp": "Invalid OTP"})
 
-        # otp_object.is_used = True # TODO UNCOMMENT THIS !!
+        otp_object.is_used = True
         otp_object.save()
 
         token = PatientToken()

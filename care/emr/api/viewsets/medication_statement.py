@@ -1,5 +1,7 @@
 from django_filters import rest_framework as filters
+from rest_framework.exceptions import PermissionDenied
 
+from care.emr.api.viewsets.authz_base import EncounterBasedAuthorizationBase
 from care.emr.api.viewsets.base import EMRModelViewSet, EMRQuestionnaireResponseMixin
 from care.emr.models.medication_statement import MedicationStatement
 from care.emr.registries.system_questionnaire.system_questionnaire import (
@@ -10,13 +12,16 @@ from care.emr.resources.medication.statement.spec import (
     MedicationStatementSpec,
 )
 from care.emr.resources.questionnaire.spec import SubjectType
+from care.security.authorization import AuthorizationController
 
 
 class MedicationStatementFilter(filters.FilterSet):
     encounter = filters.UUIDFilter(field_name="encounter__external_id")
 
 
-class MedicationStatementViewSet(EMRQuestionnaireResponseMixin, EMRModelViewSet):
+class MedicationStatementViewSet(
+    EncounterBasedAuthorizationBase, EMRQuestionnaireResponseMixin, EMRModelViewSet
+):
     database_model = MedicationStatement
     pydantic_model = MedicationStatementSpec
     pydantic_read_model = MedicationStatementReadSpec
@@ -28,6 +33,10 @@ class MedicationStatementViewSet(EMRQuestionnaireResponseMixin, EMRModelViewSet)
     filter_backends = [filters.DjangoFilterBackend]
 
     def get_queryset(self):
+        if not AuthorizationController.call(
+            "can_view_clinical_data", self.request.user, self.get_patient_obj()
+        ):
+            raise PermissionDenied("Permission denied to user")
         return (
             super()
             .get_queryset()

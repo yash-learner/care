@@ -30,6 +30,7 @@ class FileUploadBaseSpec(EMRResource):
 class FileUploadUpdateSpec(FileUploadBaseSpec):
     pass
 
+
 class FileUploadCreateSpec(FileUploadBaseSpec):
     original_name: str
     file_type: FileTypeChoices

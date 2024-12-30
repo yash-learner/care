@@ -123,6 +123,7 @@ if SENTRY_DSN := env("SENTRY_DSN", default=""):
 SNS_ACCESS_KEY = env("SNS_ACCESS_KEY", default="")
 SNS_SECRET_KEY = env("SNS_SECRET_KEY", default="")
 SNS_REGION = env("SNS_REGION", default="ap-south-1")
+SNS_ROLE_BASED_MODE = env.bool("SNS_ROLE_BASED_MODE", default=False)
 
 # open id connect
 JWKS = JsonWebKey.import_key_set(

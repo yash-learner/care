@@ -644,3 +644,7 @@ PLAUSIBLE_AUTH_TOKEN = env("PLAUSIBLE_AUTH_TOKEN", default="")
 
 # Timeout for middleware request (in seconds)
 MIDDLEWARE_REQUEST_TIMEOUT = env.int("MIDDLEWARE_REQUEST_TIMEOUT", 20)
+
+SNOWSTORM_DEPLOYMENT_URL = env(
+    "SNOWSTORM_DEPLOYMENT_URL", default="http://165.22.211.144/fhir"
+)
