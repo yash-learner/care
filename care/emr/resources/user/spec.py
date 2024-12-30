@@ -75,6 +75,7 @@ class UserSpec(UserBaseSpec):
     profile_picture_url: str
     user_type: str
     gender: str
+    username: str
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj: User):
@@ -85,6 +86,7 @@ class UserSpec(UserBaseSpec):
 class UserRetrieveSpec(UserSpec):
     geo_organization: dict
     created_by: dict
+    email: str
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj: User):

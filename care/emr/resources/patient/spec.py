@@ -57,12 +57,6 @@ class PatientCreateSpec(PatientBaseSpec):
             raise ValueError("Either age or date of birth is required")
         return self
 
-    @model_validator(mode="after")
-    def validate_age(self):
-        if not (self.age or self.date_of_birth):
-            raise ValueError("Either age or date of birth is required")
-        return self
-
     @field_validator("geo_organization")
     @classmethod
     def validate_geo_organization(cls, geo_organization):
