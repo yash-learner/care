@@ -22,6 +22,7 @@ from care.emr.resources.organization.spec import (
 )
 from care.security.authorization import AuthorizationController
 from care.security.models import PermissionModel, RoleModel, RolePermission
+from care.utils.pagination.care_pagination import CareLimitOffsetPagination
 from config.patient_otp_authentication import JWTTokenPatientAuthentication
 
 
@@ -55,6 +56,7 @@ class OrganizationViewSet(EMRModelViewSet):
         JWTTokenPatientAuthentication,
         *api_settings.DEFAULT_AUTHENTICATION_CLASSES,
     ]
+    pagination_class = CareLimitOffsetPagination
 
     def permissions_controller(self, request):
         if self.action in ["list"]:
