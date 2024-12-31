@@ -63,6 +63,7 @@ class Patient(EMRBaseModel):
 
     def save(self, *args, **kwargs) -> None:
         self.rebuild_organization_cache()
+        self.rebuild_users_cache()
         if self.date_of_birth and not self.year_of_birth:
             self.year_of_birth = self.date_of_birth.year
         super().save(*args, **kwargs)

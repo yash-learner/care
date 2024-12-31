@@ -38,15 +38,12 @@ class PatientViewSet(EMRModelViewSet):
 
     def authorize_update(self, request_obj, model_instance):
         if not AuthorizationController.call(
-            "can_write_patient_obj", self.request.user , model_instance
+            "can_write_patient_obj", self.request.user, model_instance
         ):
             raise PermissionDenied("Cannot Create Patient")
 
-
     def authorize_create(self, request_obj):
-        if not AuthorizationController.call(
-            "can_create_patient", self.request.user
-        ):
+        if not AuthorizationController.call("can_create_patient", self.request.user):
             raise PermissionDenied("Cannot Create Patient")
 
     def authorize_delete(self, instance):
@@ -154,4 +151,4 @@ class PatientViewSet(EMRModelViewSet):
         if not PatientUser.objects.filter(user=user, patient=patient).exists():
             raise ValidationError("User does not exist")
         PatientUser.objects.filter(user=user, patient=patient).delete()
-        return Response({}, status=204)
+        return Response({})
