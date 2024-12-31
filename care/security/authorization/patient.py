@@ -1,3 +1,5 @@
+from django.db.models import Q
+
 from care.emr.models import Encounter, PatientUser
 from care.emr.models.organziation import FacilityOrganizationUser, OrganizationUser
 from care.security.authorization.base import (
@@ -71,7 +73,10 @@ class PatientAccess(AuthorizationHandler):
                 "organization_id", flat=True
             )
         )
-        return qs.filter(organization_cache__overlap=organization_ids)
+        return qs.filter(
+            Q(organization_cache__overlap=organization_ids)
+            | Q(users_cache__overlap=[user.id])
+        )
 
 
 AuthorizationController.register_internal_controller(PatientAccess)
