@@ -30,7 +30,6 @@ from care.facility.models.icd11_diagnosis import (
     ACTIVE_CONDITION_VERIFICATION_STATUSES,
     ConditionVerificationStatus,
 )
-from care.facility.static_data.icd11 import get_icd11_diagnosis_object_by_id
 
 logger = logging.getLogger(__name__)
 
@@ -68,8 +67,8 @@ def get_diagnoses_data(consultation: PatientConsultation):
 
     # retrieve diagnosis objects
     diagnoses = []
-    for entry in entries:
-        diagnose = get_icd11_diagnosis_object_by_id(entry[0])
+    for _ in entries:
+        diagnose = []
         if diagnose:
             diagnoses.append(diagnose)
     principal, unconfirmed, provisional, differential, confirmed = [], [], [], [], []

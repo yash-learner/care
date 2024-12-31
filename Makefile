@@ -25,6 +25,9 @@ pull:
 up:
 	docker compose -f docker-compose.yaml -f $(docker_config_file) up -d --wait
 
+build-up-live:
+	docker compose -f docker-compose.yaml -f $(docker_config_file) up --build
+
 down:
 	docker compose -f docker-compose.yaml -f $(docker_config_file) down
 

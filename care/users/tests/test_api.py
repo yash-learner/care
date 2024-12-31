@@ -55,6 +55,8 @@ class TestSuperUser(TestUtils, APITestCase):
             "video_connect_link": obj.video_connect_link,
             "read_profile_picture_url": obj.profile_picture_url,
             "user_flags": [],
+            "organizations": [],
+            "permissions": [],
             "last_login": obj.last_login,
             **self.get_local_body_district_state_representation(obj),
         }
@@ -69,6 +71,7 @@ class TestSuperUser(TestUtils, APITestCase):
         response = self.client.get(f"/api/v1/users/{self.user.username}/")
         res_data_json = response.json()
         res_data_json.pop("id")
+        res_data_json.pop("external_id")
         data = self.user_data.copy()
         data["date_of_birth"] = str(data["date_of_birth"])
         data.pop("password")
