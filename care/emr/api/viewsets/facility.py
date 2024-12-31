@@ -3,6 +3,7 @@ from django.utils.decorators import method_decorator
 from django_filters import CharFilter, FilterSet
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action, parser_classes
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
@@ -18,6 +19,7 @@ from care.emr.resources.facility.spec import (
 from care.emr.resources.user.spec import UserSpec
 from care.facility.api.serializers.facility import FacilityImageUploadSerializer
 from care.facility.models import Facility
+from care.security.authorization import AuthorizationController
 from care.users.models import User
 from care.utils.file_uploads.cover_image import delete_cover_image
 
@@ -36,7 +38,6 @@ class FacilityViewSet(EMRModelViewSet):
     filter_backends = [DjangoFilterBackend]
 
     def get_queryset(self):
-        # TODO Add Permission checks
         qs = super().get_queryset()
         organization_ids = list(
             OrganizationUser.objects.filter(user=self.request.user).values_list(
@@ -59,10 +60,25 @@ class FacilityViewSet(EMRModelViewSet):
             | Q(geo_organization_cache__overlap=organization_ids)
         )
 
+    def authorize_create(self, instance):
+        if not AuthorizationController.call("can_create_facility", self.request.user):
+            raise PermissionDenied("You do not have permission to create Facilities")
+
+    def authorize_update(self, request_obj, model_instance):
+        if not AuthorizationController.call(
+            "can_update_facility_obj", self.request.user, model_instance
+        ):
+            raise PermissionDenied("You do not have permission to create Facilities")
+
+    def authorize_delete(self, instance):
+        if not self.request.user.is_superuser:
+            raise PermissionDenied("Only Super Admins can delete Facilities")
+
     @method_decorator(parser_classes([MultiPartParser]))
     @action(methods=["POST"], detail=True)
     def cover_image(self, request, external_id):
         facility = self.get_object()
+        self.authorize_update({}, facility)
         serializer = FacilityImageUploadSerializer(facility, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -71,6 +87,7 @@ class FacilityViewSet(EMRModelViewSet):
     @cover_image.mapping.delete
     def cover_image_delete(self, *args, **kwargs):
         facility = self.get_object()
+        self.authorize_update({}, facility)
         delete_cover_image(facility.cover_image_url, "cover_images")
         facility.cover_image_url = None
         facility.save()

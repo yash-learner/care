@@ -49,16 +49,6 @@ from care.emr.api.viewsets.units import UnitsView
 from care.emr.api.viewsets.user import UserViewSet
 from care.emr.api.viewsets.valueset import ValueSetViewSet
 from care.facility.api.viewsets.facility import AllFacilityViewSet
-from care.facility.api.viewsets.notification import NotificationViewSet
-from care.users.api.viewsets.lsg import (
-    DistrictViewSet,
-    LocalBodyViewSet,
-    StateViewSet,
-    WardViewSet,
-)
-from care.users.api.viewsets.plug_config import PlugConfigViewset
-from care.users.api.viewsets.skill import SkillViewSet
-from care.users.api.viewsets.userskill import UserSkillViewSet
 
 router = DefaultRouter() if settings.DEBUG else SimpleRouter()
 

@@ -46,6 +46,7 @@ class FacilityFilter(filters.FilterSet):
     facility_type = filters.NumberFilter(field_name="facility_type")
     geo_organization = GeoOrganizationFilter()
 
+
 class FacilityViewSet(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
@@ -164,6 +165,7 @@ class AllFacilityViewSet(
     filterset_class = FacilityFilter
     lookup_field = "external_id"
     search_fields = ["name"]
+
 
 class FacilitySpokesViewSet(viewsets.ModelViewSet):
     queryset = FacilityHubSpoke.objects.all().select_related("spoke", "hub")
