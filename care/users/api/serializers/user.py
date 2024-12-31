@@ -279,7 +279,6 @@ class UserCreateSerializer(SignUpSerializer):
 
 
 class UserSerializer(SignUpSerializer):
-    user_type = ChoiceField(choices=User.TYPE_CHOICES, read_only=True)
     created_by = serializers.CharField(source="created_by_user", read_only=True)
     is_superuser = serializers.BooleanField(read_only=True)
 
