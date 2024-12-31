@@ -16,7 +16,6 @@ from care.emr.resources.medication.valueset.body_site import CARE_BODY_SITE_VALU
 from care.emr.resources.medication.valueset.medication import CARE_MEDICATION_VALUESET
 from care.emr.resources.medication.valueset.route import CARE_ROUTE_VALUESET
 from care.emr.resources.user.spec import UserSpec
-from care.facility.models.patient_consultation import PatientConsultation
 from care.users.models import User
 
 
@@ -216,7 +215,7 @@ class MedicationAdministrationSpec(BaseMedicationAdministrationSpec):
 
     def perform_extra_deserialization(self, is_update, obj):
         if not is_update:
-            obj.encounter = PatientConsultation.objects.get(
+            obj.encounter = Encounter.objects.get(
                 external_id=self.encounter
             )  # Needs more validation
             obj.patient = obj.encounter.patient
