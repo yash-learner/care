@@ -42,6 +42,15 @@ class NoteThreadViewSet(
             Patient, external_id=self.kwargs["patient_external_id"]
         )
 
+    def authorize_create(self, instance):
+        pass
+
+    def authorize_update(self, request_obj, model_instance):
+        pass
+
+    def authorize_delete(self, instance):
+        pass
+
     def perform_create(self, instance):
         instance.patient = self.get_patient()
         if instance.encounter and instance.encounter.patient != instance.patient:

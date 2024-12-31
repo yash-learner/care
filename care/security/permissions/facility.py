@@ -13,7 +13,7 @@ from care.security.roles.role import (
 
 class FacilityPermissions(enum.Enum):
     can_create_facility = Permission(
-        "Can Read on Facility",
+        "Can Create on Facility",
         "Something Here",
         PermissionContext.FACILITY,
         [GEO_ADMIN, ADMIN_ROLE],

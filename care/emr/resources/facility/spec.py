@@ -20,8 +20,8 @@ class FacilityBareMinimumSpec(EMRResource):
 
 class FacilityBaseSpec(FacilityBareMinimumSpec):
     description: str
-    longitude: float
-    latitude: float
+    longitude: float | None = None
+    latitude: float | None = None
     pincode: int
     address: str
     phone_number: str

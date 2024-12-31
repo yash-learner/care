@@ -36,7 +36,22 @@ class PatientViewSet(EMRModelViewSet):
     filterset_class = PatientFilters
     filter_backends = [DjangoFilterBackend]
 
-    # TODO : Retrieve will work if an active encounter exists on the patient
+    def authorize_update(self, request_obj, model_instance):
+        if not AuthorizationController.call(
+            "can_write_patient_obj", self.request.user , model_instance
+        ):
+            raise PermissionDenied("Cannot Create Patient")
+
+
+    def authorize_create(self, request_obj):
+        if not AuthorizationController.call(
+            "can_create_patient", self.request.user
+        ):
+            raise PermissionDenied("Cannot Create Patient")
+
+    def authorize_delete(self, instance):
+        if not self.request.user.is_superuser:
+            raise PermissionDenied("Cannot delete patient")
 
     def get_queryset(self):
         qs = (
@@ -121,6 +136,7 @@ class PatientViewSet(EMRModelViewSet):
         user = get_object_or_404(User, external_id=request_data.user)
         role = get_object_or_404(RoleModel, external_id=request_data.role)
         patient = self.get_object()
+        self.authorize_update({}, patient)
         if PatientUser.objects.filter(user=user, patient=patient).exists():
             raise ValidationError("User already exists")
         PatientUser.objects.create(user=user, patient=patient, role=role)
@@ -134,6 +150,7 @@ class PatientViewSet(EMRModelViewSet):
         request_data = self.PatientUserDeleteSpec(**self.request.data)
         user = get_object_or_404(User, external_id=request_data.user)
         patient = self.get_object()
+        self.authorize_update({}, patient)
         if not PatientUser.objects.filter(user=user, patient=patient).exists():
             raise ValidationError("User does not exist")
         PatientUser.objects.filter(user=user, patient=patient).delete()
