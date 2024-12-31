@@ -1,4 +1,5 @@
 from care.emr.models.organziation import FacilityOrganizationUser
+from care.emr.resources.encounter.constants import COMPLETED_CHOICES
 from care.security.authorization.base import (
     AuthorizationController,
     AuthorizationHandler,
@@ -29,7 +30,9 @@ class EncounterAccess(AuthorizationHandler):
         """
         Check if the user has permission to create encounter under this facility
         """
-        # TODO check if encounter has been closed
+        if encounter.status in COMPLETED_CHOICES:
+            # Cannot write to a closed encounter
+            return False
         return self.check_permission_in_facility_organization(
             [EncounterPermissions.can_write_encounter.name],
             user,

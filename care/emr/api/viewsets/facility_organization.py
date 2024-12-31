@@ -58,6 +58,9 @@ class FacilityOrganizationViewSet(EMRModelViewSet):
         if instance.type == "root":
             raise PermissionDenied("Cannot delete root organization")
 
+        if FacilityOrganization.objects.filter(parent=instance).exists():
+            raise PermissionDenied("Cannot delete organization with children")
+
         if self.request.user.is_superuser:
             return
 
@@ -67,7 +70,6 @@ class FacilityOrganizationViewSet(EMRModelViewSet):
             raise PermissionDenied(
                 "User does not have the required permissions to update organization"
             )
-        # TODO delete should not be allowed if there are any children left
 
     def authorize_update(self, request_obj, model_instance):
         if self.request.user.is_superuser:

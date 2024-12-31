@@ -66,6 +66,9 @@ class OrganizationViewSet(EMRModelViewSet):
         return not getattr(request.user, "is_alternative_login", False)
 
     def authorize_delete(self, instance):
+        if Organization.objects.filter(parent=instance).exists():
+            raise PermissionDenied("Cannot delete organization with children")
+
         if self.request.user.is_superuser:
             return
 
