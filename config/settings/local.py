@@ -19,8 +19,9 @@ INSTALLED_APPS = ["whitenoise.runserver_nostatic", *INSTALLED_APPS]
 # django-silk
 # ------------------------------------------------------------------------------
 # https://github.com/jazzband/django-silk#requirements
-INSTALLED_APPS += ["silk"]
-MIDDLEWARE += ["silk.middleware.SilkyMiddleware"]
+if env("ENABLE_SILK", default=False):
+    INSTALLED_APPS += ["silk"]
+    MIDDLEWARE += ["silk.middleware.SilkyMiddleware"]
 # https://github.com/jazzband/django-silk#profiling
 SILKY_PYTHON_PROFILER = True
 
@@ -39,7 +40,10 @@ CELERY_TASK_EAGER_PROPAGATES = True
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-RUNSERVER_PLUS_PRINT_SQL_TRUNCATE = 100000
+RUNSERVER_PLUS_PRINT_SQL_TRUNCATE = None
+
+RUNSERVERPLUS_POLLER_RELOADER_TYPE = "watchdog"
+
 
 DISABLE_RATELIMIT = True
 

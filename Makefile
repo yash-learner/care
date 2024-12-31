@@ -1,4 +1,4 @@
-.PHONY: build, re-build, up, down, list, logs, test, makemigrations, reset_db
+.PHONY: logs
 
 
 DOCKER_VERSION := $(shell docker --version 2>/dev/null)
@@ -19,11 +19,20 @@ re-build:
 build:
 	docker compose -f docker-compose.yaml -f $(docker_config_file) build
 
+pull:
+	docker compose -f docker-compose.yaml -f $(docker_config_file) pull
+
 up:
 	docker compose -f docker-compose.yaml -f $(docker_config_file) up -d --wait
 
+build-up-live:
+	docker compose -f docker-compose.yaml -f $(docker_config_file) up --build
+
 down:
 	docker compose -f docker-compose.yaml -f $(docker_config_file) down
+
+teardown:
+	docker compose -f docker-compose.yaml -f $(docker_config_file) down -v
 
 load-dummy-data:
 	docker compose exec backend bash -c "python manage.py load_dummy_data"
@@ -40,6 +49,9 @@ checkmigration:
 makemigrations:
 	docker compose exec backend bash -c "python manage.py makemigrations"
 
+migrate:
+	docker compose exec backend bash -c "python manage.py migrate"
+
 test:
 	docker compose exec backend bash -c "python manage.py test --keepdb --parallel --shuffle"
 
@@ -48,9 +60,16 @@ test-coverage:
 	docker compose exec backend bash -c "coverage combine || true; coverage xml"
 	docker compose cp backend:/app/coverage.xml coverage.xml
 
-reset_db:
+dump-db:
+	docker compose exec db sh -c "pg_dump -U postgres -Fc care > /tmp/care_db.dump"
+	docker compose cp db:/tmp/care_db.dump care_db.dump
+
+load-db:
+	docker compose cp care_db.dump db:/tmp/care_db.dump
+	docker compose exec db sh -c "pg_restore -U postgres --clean --if-exists -d care /tmp/care_db.dump"
+
+reset-db:
 	docker compose exec backend bash -c "python manage.py reset_db --noinput"
-	docker compose exec backend bash -c "python manage.py migrate"
 
 ruff-all:
 	ruff check .

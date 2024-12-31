@@ -16,7 +16,7 @@ def rand_pass(size):
         return "45612"
 
     return "".join(
-        secrets.choice(string.ascii_uppercase + string.digits) for _ in range(size)
+        secrets.choice(string.digits) for _ in range(size)
     )
 
 

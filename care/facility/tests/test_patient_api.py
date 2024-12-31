@@ -6,10 +6,6 @@ from rest_framework.test import APITestCase
 
 from care.facility.models import PatientNoteThreadChoices, ShiftingRequest
 from care.facility.models.file_upload import FileUpload
-from care.facility.models.icd11_diagnosis import (
-    ConditionVerificationStatus,
-    ICD11Diagnosis,
-)
 from care.facility.models.patient_base import NewDischargeReasonEnum
 from care.facility.models.patient_consultation import ConsentType, PatientCodeStatusType
 from care.utils.tests.test_utils import TestUtils
@@ -45,6 +41,7 @@ class ExpectedFacilityKeys(Enum):
     FEATURES = "features"
     PATIENT_COUNT = "patient_count"
     BED_COUNT = "bed_count"
+    DESCRIPTION = "description"
 
 
 class ExpectedWardObjectKeys(Enum):
@@ -80,6 +77,7 @@ class ExpectedFacilityTypeKeys(Enum):
 
 class ExpectedCreatedByObjectKeys(Enum):
     ID = "id"
+    EXTERNAL_ID = "external_id"
     FIRST_NAME = "first_name"
     USERNAME = "username"
     EMAIL = "email"
@@ -522,27 +520,6 @@ class PatientFilterTestCase(TestUtils, APITestCase):
         cls.consultation.save()
         cls.patient.last_consultation = cls.consultation
         cls.patient.save()
-        cls.diagnoses = ICD11Diagnosis.objects.filter(is_leaf=True)[10:15]
-        cls.create_consultation_diagnosis(
-            cls.consultation,
-            cls.diagnoses[0],
-            verification_status=ConditionVerificationStatus.CONFIRMED,
-        )
-        cls.create_consultation_diagnosis(
-            cls.consultation,
-            cls.diagnoses[1],
-            verification_status=ConditionVerificationStatus.DIFFERENTIAL,
-        )
-        cls.create_consultation_diagnosis(
-            cls.consultation,
-            cls.diagnoses[2],
-            verification_status=ConditionVerificationStatus.PROVISIONAL,
-        )
-        cls.create_consultation_diagnosis(
-            cls.consultation,
-            cls.diagnoses[3],
-            verification_status=ConditionVerificationStatus.UNCONFIRMED,
-        )
 
         cls.consent = cls.create_patient_consent(
             cls.consultation,
@@ -618,64 +595,6 @@ class PatientFilterTestCase(TestUtils, APITestCase):
         self.assertEqual(response.data["count"], 3)
         self.assertContains(response, str(self.patient.external_id))
 
-    def test_filter_by_diagnoses(self):
-        self.client.force_authenticate(user=self.user)
-        res = self.client.get(
-            self.get_base_url(),
-            {"diagnoses": ",".join([str(x.id) for x in self.diagnoses])},
-        )
-        self.assertContains(res, self.patient.external_id)
-        res = self.client.get(self.get_base_url(), {"diagnoses": self.diagnoses[4].id})
-        self.assertNotContains(res, self.patient.external_id)
-
-    def test_filter_by_diagnoses_unconfirmed(self):
-        self.client.force_authenticate(user=self.user)
-        res = self.client.get(
-            self.get_base_url(),
-            {"diagnoses_unconfirmed": self.diagnoses[3].id},
-        )
-        self.assertContains(res, self.patient.external_id)
-        res = self.client.get(
-            self.get_base_url(), {"diagnoses_unconfirmed": self.diagnoses[2].id}
-        )
-        self.assertNotContains(res, self.patient.external_id)
-
-    def test_filter_by_diagnoses_provisional(self):
-        self.client.force_authenticate(user=self.user)
-        res = self.client.get(
-            self.get_base_url(),
-            {"diagnoses_provisional": self.diagnoses[2].id},
-        )
-        self.assertContains(res, self.patient.external_id)
-        res = self.client.get(
-            self.get_base_url(), {"diagnoses_provisional": self.diagnoses[3].id}
-        )
-        self.assertNotContains(res, self.patient.external_id)
-
-    def test_filter_by_diagnoses_differential(self):
-        self.client.force_authenticate(user=self.user)
-        res = self.client.get(
-            self.get_base_url(),
-            {"diagnoses_differential": self.diagnoses[1].id},
-        )
-        self.assertContains(res, self.patient.external_id)
-        res = self.client.get(
-            self.get_base_url(), {"diagnoses_differential": self.diagnoses[0].id}
-        )
-        self.assertNotContains(res, self.patient.external_id)
-
-    def test_filter_by_diagnoses_confirmed(self):
-        self.client.force_authenticate(user=self.user)
-        res = self.client.get(
-            self.get_base_url(),
-            {"diagnoses_confirmed": self.diagnoses[0].id},
-        )
-        self.assertContains(res, self.patient.external_id)
-        res = self.client.get(
-            self.get_base_url(), {"diagnoses_confirmed": self.diagnoses[2].id}
-        )
-        self.assertNotContains(res, self.patient.external_id)
-
     def test_filter_by_review_missed(self):
         self.client.force_authenticate(user=self.user)
         res = self.client.get(self.get_base_url() + "?review_missed=true")
@@ -727,6 +646,135 @@ class PatientFilterTestCase(TestUtils, APITestCase):
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.json()["count"], 3)
+
+    def test_filter_by_invalid_params(self):
+        self.client.force_authenticate(user=self.user)
+
+        # name length > 200 words
+        invalid_name_param = "a" * 201
+        res = self.client.get(self.get_base_url() + f"?name={invalid_name_param}")
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            "Ensure this value has at most 200 characters (it has 201).",
+            res.json()["name"],
+        )
+
+        # invalid gender choice
+        invalid_gender = 4
+        res = self.client.get(self.get_base_url() + f"?gender={invalid_gender}")
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            "Select a valid choice. 4 is not one of the available choices.",
+            res.json()["gender"],
+        )
+
+        # invalid value for age, age max , age min filter (i.e <0)
+        invalid_age = -2
+        res = self.client.get(self.get_base_url() + f"?age={invalid_age}")
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            "Ensure this value is greater than or equal to 0.", res.json()["age"]
+        )
+
+        invalid_min_age = -2
+        res = self.client.get(self.get_base_url() + f"?age_min={invalid_min_age}")
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            "Ensure this value is greater than or equal to 0.", res.json()["age_min"]
+        )
+
+        invalid_max_age = -2
+        res = self.client.get(self.get_base_url() + f"?age_max={invalid_max_age}")
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            "Ensure this value is greater than or equal to 0.", res.json()["age_max"]
+        )
+
+        # invalid number_of_doses param >3 or <0
+        invalid_number_of_doses = -2
+        res = self.client.get(
+            self.get_base_url() + f"?number_of_doses={invalid_number_of_doses}"
+        )
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            "Ensure this value is greater than or equal to 0.",
+            res.json()["number_of_doses"],
+        )
+
+        invalid_number_of_doses = 4
+        res = self.client.get(
+            self.get_base_url() + f"?number_of_doses={invalid_number_of_doses}"
+        )
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            "Ensure this value is less than or equal to 3.",
+            res.json()["number_of_doses"],
+        )
+
+        # invalid srf id length > 200 words
+        invalid_srf_param = "a" * 201
+        res = self.client.get(self.get_base_url() + f"?srf_id={invalid_srf_param}")
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            "Ensure this value has at most 200 characters (it has 201).",
+            res.json()["srf_id"],
+        )
+
+        # invalid district_name length > 255 words
+        invalid_district_name_param = "a" * 256
+        res = self.client.get(
+            self.get_base_url() + f"?district_name={invalid_district_name_param}"
+        )
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            "Ensure this value has at most 255 characters (it has 256).",
+            res.json()["district_name"],
+        )
+
+        # invalid local_body_name length > 255 words
+        invalid_local_body_name_param = "a" * 256
+        res = self.client.get(
+            self.get_base_url() + f"?local_body_name={invalid_local_body_name_param}"
+        )
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            "Ensure this value has at most 255 characters (it has 256).",
+            res.json()["local_body_name"],
+        )
+
+        # invalid state_name length > 255 words
+        invalid_state_name_param = "a" * 256
+        res = self.client.get(
+            self.get_base_url() + f"?state_name={invalid_state_name_param}"
+        )
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            "Ensure this value has at most 255 characters (it has 256).",
+            res.json()["state_name"],
+        )
+
+        # invalid patient no value > 100
+        invalid_patient_no_param = "A" * 101
+        res = self.client.get(
+            self.get_base_url() + f"?patient_no={invalid_patient_no_param}"
+        )
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            "Ensure this value has at most 100 characters (it has 101).",
+            res.json()["patient_no"],
+        )
+
+    def test_invalid_covin_id_param(self):
+        self.client.force_authenticate(user=self.user)
+
+        # Test invalid covin_id length > 15 characters
+        invalid_covin_id = "A" * 16
+        res = self.client.get(self.get_base_url() + f"?covin_id={invalid_covin_id}")
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            "Ensure this value has at most 15 characters (it has 16).",
+            res.json()["covin_id"],
+        )
 
 
 class DischargePatientFilterTestCase(TestUtils, APITestCase):
