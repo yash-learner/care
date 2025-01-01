@@ -72,3 +72,16 @@ class PatientPermissions(enum.Enum):
             FACILITY_ADMIN_ROLE,
         ],
     )
+    can_submit_patient_questionnaire = Permission(
+        "Can submit questionnaire about patients",
+        "",
+        PermissionContext.PATIENT,
+        [
+            VOLUNTEER_ROLE,
+            STAFF_ROLE,
+            DOCTOR_ROLE,
+            NURSE_ROLE,
+            ADMIN_ROLE,
+            FACILITY_ADMIN_ROLE,
+        ],
+    )

@@ -7,7 +7,13 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import EMRModelViewSet
-from care.emr.models import Organization, Questionnaire, QuestionnaireOrganization
+from care.emr.models import (
+    Encounter,
+    Organization,
+    Patient,
+    Questionnaire,
+    QuestionnaireOrganization,
+)
 from care.emr.resources.organization.spec import OrganizationReadSpec
 from care.emr.resources.questionnaire.spec import (
     QuestionnaireReadSpec,
@@ -67,31 +73,40 @@ class QuestionnaireViewSet(EMRModelViewSet):
         queryset = AuthorizationController.call(
             "get_filtered_questionnaires", queryset, self.request.user
         )
-        if "search" in self.request.GET:
-            queryset = queryset.filter(title__icontains=self.request.GET.get("search"))
         return queryset.select_related("created_by", "updated_by")
 
     @action(detail=True, methods=["POST"])
     def submit(self, request, *args, **kwargs):
         request_params = QuestionnaireSubmitRequest(**request.data)
         questionnaire = self.get_object()
-        if not AuthorizationController.call(
-            "can_submit_questionnaire_obj", request.user, questionnaire
-        ):
-            raise PermissionDenied("Permission Denied for Questionnaire")
-
+        patient = get_object_or_404(Patient, external_id=request_params.patient)
+        if questionnaire.encounter:
+            encounter = get_object_or_404(
+                Encounter, external_id=request_params.encounter, patient=patient
+            )
+            if not AuthorizationController.call(
+                "can_submit_encounter_questionnaire_obj", request.user, encounter
+            ):
+                raise PermissionDenied(
+                    "Permission Denied to submit patient questionnaire"
+                )
+        else:
+            patient = get_object_or_404(Patient, external_id=request_params.patient)
+            if not AuthorizationController.call(
+                "can_submit_questionnaire_patient_obj", request.user, patient
+            ):
+                raise PermissionDenied(
+                    "Permission Denied to submit patient questionnaire"
+                )
         with transaction.atomic():
             response = handle_response(questionnaire, request_params, request.user)
-        return Response(
-            QuestionnaireResponseReadSpec.serialize(response).model_dump(mode="json")
-        )
+        return Response(QuestionnaireResponseReadSpec.serialize(response).to_json())
 
     @action(detail=True, methods=["GET"])
     def get_organizations(self, request, *args, **kwargs):
         """
         Get all External Organizations connected to this Questionnaire
         """
-        # TODO : Switch to retrieve API of questionnaire
         questionnaire = self.get_object()
         questionnaire_organizations = QuestionnaireOrganization.objects.filter(
             questionnaire=questionnaire

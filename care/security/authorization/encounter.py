@@ -26,6 +26,16 @@ class EncounterAccess(AuthorizationHandler):
             orgs=encounter.facility_organization_cache,
         )
 
+    def can_submit_encounter_questionnaire_obj(self, user, encounter):
+        """
+        Check if the user has permission to read encounter under this facility
+        """
+        return self.check_permission_in_facility_organization(
+            [EncounterPermissions.can_submit_encounter_questionnaire.name],
+            user,
+            orgs=encounter.facility_organization_cache,
+        )
+
     def can_update_encounter_obj(self, user, encounter):
         """
         Check if the user has permission to create encounter under this facility
