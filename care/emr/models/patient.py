@@ -56,17 +56,21 @@ class Patient(EMRBaseModel):
         self.organization_cache = list(set(organization_parents))
 
     def rebuild_users_cache(self):
-        users = list(
-            PatientUser.objects.filter(patient=self).values_list("user_id", flat=True)
-        )
-        self.users_cache = users
+        if self.id:
+            users = list(
+                PatientUser.objects.filter(patient=self).values_list(
+                    "user_id", flat=True
+                )
+            )
+            self.users_cache = users
 
     def save(self, *args, **kwargs) -> None:
-        self.rebuild_organization_cache()
-        self.rebuild_users_cache()
         if self.date_of_birth and not self.year_of_birth:
             self.year_of_birth = self.date_of_birth.year
         super().save(*args, **kwargs)
+        self.rebuild_organization_cache()
+        self.rebuild_users_cache()
+        super().save(update_fields=["organization_cache", "users_cache"])
 
 
 class PatientOrganization(EMRBaseModel):
@@ -76,8 +80,7 @@ class PatientOrganization(EMRBaseModel):
 
     def save(self, *args, **kwargs) -> None:
         super().save(*args, **kwargs)
-        self.patient.rebuild_organization_cache()
-        self.patient.save(update_fields=["organization_cache"])
+        self.patient.save()
 
 
 class PatientUser(EMRBaseModel):
