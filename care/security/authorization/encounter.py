@@ -1,4 +1,4 @@
-from care.emr.models.organziation import FacilityOrganizationUser
+from care.emr.models.organization import FacilityOrganizationUser
 from care.emr.resources.encounter.constants import COMPLETED_CHOICES
 from care.security.authorization.base import (
     AuthorizationController,

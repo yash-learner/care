@@ -1,6 +1,6 @@
 import inspect
 
-from care.emr.models.organziation import FacilityOrganizationUser, OrganizationUser
+from care.emr.models.organization import FacilityOrganizationUser, OrganizationUser
 from care.security.models import RolePermission
 
 

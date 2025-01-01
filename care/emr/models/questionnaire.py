@@ -4,7 +4,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 from care.emr.models import EMRBaseModel
-from care.emr.models.organziation import FacilityOrganization, Organization
+from care.emr.models.organization import FacilityOrganization, Organization
 
 
 class Questionnaire(EMRBaseModel):

@@ -1,5 +1,5 @@
 from care.emr.models import FacilityOrganization
-from care.emr.models.organziation import FacilityOrganizationUser
+from care.emr.models.organization import FacilityOrganizationUser
 from care.security.authorization.base import (
     AuthorizationController,
     AuthorizationHandler,

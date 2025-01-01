@@ -3,7 +3,7 @@ from django.db import transaction
 from django.utils.timezone import now
 from rest_framework import serializers
 
-from care.emr.models.organziation import Organization
+from care.emr.models.organization import Organization
 from care.facility.api.serializers import TIMESTAMP_FIELDS
 from care.facility.api.serializers.facility import (
     FacilityBasicInfoSerializer,

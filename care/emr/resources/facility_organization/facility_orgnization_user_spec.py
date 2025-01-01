@@ -1,6 +1,6 @@
 from pydantic import UUID4, field_validator
 
-from care.emr.models.organziation import FacilityOrganizationUser
+from care.emr.models.organization import FacilityOrganizationUser
 from care.emr.resources.base import EMRResource
 from care.emr.resources.role.spec import RoleSpec
 from care.emr.resources.user.spec import UserSpec

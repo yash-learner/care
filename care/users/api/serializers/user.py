@@ -4,7 +4,7 @@ from django.utils.timezone import now
 from rest_framework import exceptions, serializers
 
 from care.emr.models import Organization
-from care.emr.models.organziation import FacilityOrganizationUser, OrganizationUser
+from care.emr.models.organization import FacilityOrganizationUser, OrganizationUser
 from care.emr.resources.organization.spec import OrganizationReadSpec
 from care.emr.resources.role.spec import PermissionSpec
 from care.facility.api.serializers.facility import FacilityBareMinimumSerializer

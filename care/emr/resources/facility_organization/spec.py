@@ -2,7 +2,7 @@ from enum import Enum
 
 from pydantic import UUID4, field_validator, model_validator
 
-from care.emr.models.organziation import FacilityOrganization
+from care.emr.models.organization import FacilityOrganization
 from care.emr.resources.base import EMRResource
 from care.emr.resources.user.spec import UserSpec
 from care.facility.models import Facility

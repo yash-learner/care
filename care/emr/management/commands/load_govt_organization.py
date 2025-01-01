@@ -8,7 +8,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from care.emr.models.organziation import Organization
+from care.emr.models.organization import Organization
 
 logger = logging.getLogger(__name__)
 

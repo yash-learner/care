@@ -2,7 +2,7 @@ from enum import Enum
 
 from pydantic import UUID4, model_validator
 
-from care.emr.models.organziation import Organization
+from care.emr.models.organization import Organization
 from care.emr.resources.base import EMRResource
 from care.emr.resources.user.spec import UserSpec
 from care.security.authorization import AuthorizationController

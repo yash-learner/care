@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.settings import api_settings
 
 from care.emr.api.viewsets.base import EMRModelReadOnlyViewSet, EMRModelViewSet
-from care.emr.models.organziation import Organization, OrganizationUser
+from care.emr.models.organization import Organization, OrganizationUser
 from care.emr.resources.organization.organization_user_spec import (
     OrganizationUserReadSpec,
     OrganizationUserUpdateSpec,

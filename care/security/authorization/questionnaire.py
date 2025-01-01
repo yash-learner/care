@@ -1,4 +1,4 @@
-from care.emr.models.organziation import OrganizationUser
+from care.emr.models.organization import OrganizationUser
 from care.security.authorization.base import (
     AuthorizationController,
     AuthorizationHandler,

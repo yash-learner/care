@@ -10,7 +10,7 @@ from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import EMRModelViewSet
 from care.emr.models import Organization
-from care.emr.models.organziation import OrganizationUser
+from care.emr.models.organization import OrganizationUser
 from care.emr.resources.user.spec import (
     UserCreateSpec,
     UserRetrieveSpec,

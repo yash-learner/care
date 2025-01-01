@@ -14,7 +14,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from care.emr.models import Organization
-from care.emr.models.organziation import FacilityOrganizationUser, OrganizationUser
+from care.emr.models.organization import FacilityOrganizationUser, OrganizationUser
 from care.emr.resources.user.spec import UserSpec
 from care.facility.api.serializers.facility import (
     FacilityBasicInfoSerializer,
