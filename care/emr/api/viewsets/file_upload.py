@@ -39,7 +39,7 @@ def file_authorizer(user, file_type, associating_id, permission):
         encounter_obj = get_object_or_404(Encounter, external_id=associating_id)
         if permission == "read":
             allowed = AuthorizationController.call(
-                "can_view_clinical_data", user, encounter_obj.patient_obj
+                "can_view_clinical_data", user, encounter_obj.patient
             )
         elif permission == "write":
             allowed = AuthorizationController.call(
