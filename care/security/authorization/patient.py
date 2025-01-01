@@ -67,6 +67,17 @@ class PatientAccess(AuthorizationHandler):
             role__in=user_roles,
         ).exists()
 
+    def can_view_patient_questionnaire_responses(self, user, patient):
+        if user.is_superuser:
+            return True
+        user_roles = self.find_roles_on_patient(user, patient)
+        return RolePermission.objects.filter(
+            permission__slug__in=[
+                PatientPermissions.can_view_questionnaire_responses.name
+            ],
+            role__in=user_roles,
+        ).exists()
+
     def get_filtered_patients(self, qs, user):
         if user.is_superuser:
             return qs

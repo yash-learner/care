@@ -59,3 +59,16 @@ class PatientPermissions(enum.Enum):
         PermissionContext.PATIENT,
         [STAFF_ROLE, DOCTOR_ROLE, NURSE_ROLE, ADMIN_ROLE, FACILITY_ADMIN_ROLE],
     )  # To be split into finer grain permissions
+    can_view_questionnaire_responses = Permission(
+        "Can view clinical data about patients",
+        "",
+        PermissionContext.PATIENT,
+        [
+            VOLUNTEER_ROLE,
+            STAFF_ROLE,
+            DOCTOR_ROLE,
+            NURSE_ROLE,
+            ADMIN_ROLE,
+            FACILITY_ADMIN_ROLE,
+        ],
+    )

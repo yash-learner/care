@@ -71,7 +71,7 @@ class PatientViewSet(EMRModelViewSet):
                 external_id=self.request.GET["geo_organization"],
                 org_type="govt",
             )
-            qs = qs.filter(organization_cache__overlap=geo_organization.id)
+            qs = qs.filter(organization_cache__overlap=[geo_organization.id])
         return AuthorizationController.call(
             "get_filtered_patients", qs, self.request.user
         )
