@@ -4,6 +4,7 @@ from enum import Enum
 from pydantic import UUID4, BaseModel, Field, field_validator
 
 from care.emr.fhir.schema.base import Coding, Quantity
+from care.emr.models.encounter import Encounter
 from care.emr.models.medication_administration import MedicationAdministration
 from care.emr.models.medication_request import MedicationRequest
 from care.emr.registries.care_valueset.care_valueset import validate_valueset
@@ -15,7 +16,6 @@ from care.emr.resources.medication.valueset.body_site import CARE_BODY_SITE_VALU
 from care.emr.resources.medication.valueset.medication import CARE_MEDICATION_VALUESET
 from care.emr.resources.medication.valueset.route import CARE_ROUTE_VALUESET
 from care.emr.resources.user.spec import UserSpec
-from care.facility.models.patient_consultation import PatientConsultation
 from care.users.models import User
 
 
@@ -182,7 +182,7 @@ class MedicationAdministrationSpec(BaseMedicationAdministrationSpec):
     @field_validator("encounter")
     @classmethod
     def validate_encounter_exists(cls, encounter):
-        if not PatientConsultation.objects.filter(external_id=encounter).exists():
+        if not Encounter.objects.filter(external_id=encounter).exists():
             err = "Encounter not found"
             raise ValueError(err)
         return encounter
@@ -215,7 +215,7 @@ class MedicationAdministrationSpec(BaseMedicationAdministrationSpec):
 
     def perform_extra_deserialization(self, is_update, obj):
         if not is_update:
-            obj.encounter = PatientConsultation.objects.get(
+            obj.encounter = Encounter.objects.get(
                 external_id=self.encounter
             )  # Needs more validation
             obj.patient = obj.encounter.patient
