@@ -80,7 +80,7 @@ class QuestionnaireViewSet(EMRModelViewSet):
         request_params = QuestionnaireSubmitRequest(**request.data)
         questionnaire = self.get_object()
         patient = get_object_or_404(Patient, external_id=request_params.patient)
-        if questionnaire.encounter:
+        if request_params.encounter:
             encounter = get_object_or_404(
                 Encounter, external_id=request_params.encounter, patient=patient
             )
