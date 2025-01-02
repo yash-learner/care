@@ -7,6 +7,8 @@ from care.security.permissions.facility_organization import (
 from care.security.permissions.organization import OrganizationPermissions
 from care.security.permissions.patient import PatientPermissions
 from care.security.permissions.questionnaire import QuestionnairePermissions
+from care.security.permissions.user import UserPermissions
+from care.security.permissions.user_schedule import UserSchedulePermissions
 
 
 class PermissionHandler:
@@ -29,6 +31,8 @@ class PermissionController:
         FacilityOrganizationPermissions,
         EncounterPermissions,
         PatientPermissions,
+        UserPermissions,
+        UserSchedulePermissions,
     ]
 
     cache = {}
