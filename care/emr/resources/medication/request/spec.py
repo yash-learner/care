@@ -154,19 +154,6 @@ class DosageInstruction(BaseModel):
             for code in codes
         ]
 
-    @field_validator("as_needed_for")
-    @classmethod
-    def validate_as_needed_for(cls, code, values):
-        if values.data.get("as_needed_boolean", False) and not code:
-            err = "as_needed_for is required when as_needed_boolean is True"
-            raise ValueError(err)
-
-        return validate_valueset(
-            "as_needed_for",
-            cls.model_fields["as_needed_for"].json_schema_extra["slug"],
-            code,
-        )
-
     @field_validator("site")
     @classmethod
     def validate_site(cls, code):
@@ -236,7 +223,7 @@ class BaseMedicationRequestSpec(EMRResource):
         description="When request was initially authored",
     )
 
-    dosage_instruction: DosageInstruction = Field(
+    dosage_instruction: list[DosageInstruction] = Field(
         description="Dosage instructions for the medication",
     )
 
