@@ -94,9 +94,6 @@ class EMRCreateMixin:
     def authorize_create(self, instance):
         pass
 
-    def validate_data(self, instance, model_obj=None):
-        pass
-
     def create(self, request, *args, **kwargs):
         return Response(self.handle_create(request.data))
 
@@ -252,6 +249,9 @@ class EMRBaseViewSet(GenericViewSet):
         return get_object_or_404(
             queryset, **{self.lookup_field: self.kwargs[self.lookup_field]}
         )
+
+    def validate_data(self, instance, model_obj=None):
+        pass
 
     def fetch_encounter_from_instance(self, instance):
         return instance.encounter
