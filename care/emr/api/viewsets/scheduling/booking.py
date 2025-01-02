@@ -16,15 +16,23 @@ from care.emr.resources.scheduling.slot.spec import (
     TokenBookingUpdateSpec,
 )
 from care.emr.resources.user.spec import UserSpec
-from care.facility.models import Facility, FacilityUser
+from care.facility.models import Facility, FacilityOrganizationUser
 
 
 class TokenBookingFilters(FilterSet):
     status = CharFilter(field_name="status")
     date = DateFilter(field_name="token_slot__start_datetime__date")
     slot = UUIDFilter(field_name="token_slot__external_id")
-    resource = UUIDFilter(field_name="token_slot__resource__resource__external_id")
+    resource = UUIDFilter(method="filter_by_resource")
     patient = UUIDFilter(field_name="patient__external_id")
+
+    def filter_by_resource(self, queryset, name, value):
+        resource = SchedulableUserResource.objects.filter(
+            resource__external_id=value
+        ).first()
+        if not resource:
+            return queryset.none()
+        return queryset.filter(token_slot__resource=resource)
 
 
 class TokenBookingViewSet(
@@ -60,11 +68,11 @@ class TokenBookingViewSet(
     @action(detail=False, methods=["GET"])
     def available_doctors(self, request, *args, **kwargs):
         facility = Facility.objects.get(external_id=self.kwargs["facility_external_id"])
-        facility_users = FacilityUser.objects.filter(
+        facility_users = FacilityOrganizationUser.objects.filter(
+            organization__facility=facility,
             user_id__in=SchedulableUserResource.objects.filter(
                 facility=facility
             ).values("resource_id"),
-            facility=facility,
         )
 
         return Response(
