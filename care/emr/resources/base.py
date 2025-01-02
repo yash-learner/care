@@ -12,7 +12,6 @@ from care.emr.fhir.schema.base import Coding
 class EMRResource(BaseModel):
     __model__ = None
     __exclude__ = []
-
     meta: dict = {}
     __questionnaire_cache__ = {}
 
@@ -36,11 +35,15 @@ class EMRResource(BaseModel):
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
 
+    @classmethod
+    def perform_extra_user_serialization(cls, mapping, obj, user):
+        pass
+
     def is_update(self):
         return getattr("_is_update", False)
 
     @classmethod
-    def serialize(cls, obj: __model__):
+    def serialize(cls, obj: __model__, user=None):
         """
         Creates a pydantic object from a database object
         """
@@ -53,6 +56,8 @@ class EMRResource(BaseModel):
             if field in cls.model_fields:
                 constructed[field] = obj.meta[field]
         cls.perform_extra_serialization(constructed, obj)
+        if user:
+            cls.perform_extra_user_serialization(constructed, obj, user=user)
         return cls.model_construct(**constructed)
 
     def perform_extra_deserialization(self, is_update, obj):
@@ -70,7 +75,11 @@ class EMRResource(BaseModel):
         meta = {}
         dump = self.model_dump(mode="json", exclude_defaults=True)
         for field in dump:
-            if field in database_fields and field not in self.__exclude__:
+            if (
+                field in database_fields
+                and field not in self.__exclude__
+                and field not in ["id", "external_id"]
+            ):
                 obj.__setattr__(field, dump[field])
             elif field not in self.__exclude__:
                 meta[field] = dump[field]

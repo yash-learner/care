@@ -1,19 +1,69 @@
 import enum
 
-from care.security.permissions.base import Permission, PermissionContext
-from care.security.roles.role import DOCTOR_ROLE, STAFF_ROLE
+from care.security.permissions.constants import Permission, PermissionContext
+from care.security.roles.role import (
+    ADMIN_ROLE,
+    DOCTOR_ROLE,
+    FACILITY_ADMIN_ROLE,
+    GEO_ADMIN,
+    NURSE_ROLE,
+    STAFF_ROLE,
+    VOLUNTEER_ROLE,
+)
+
+ALL_ROLES = [
+    ADMIN_ROLE,
+    DOCTOR_ROLE,
+    NURSE_ROLE,
+    GEO_ADMIN,
+    STAFF_ROLE,
+    FACILITY_ADMIN_ROLE,
+    VOLUNTEER_ROLE,
+]
+
+CLINICAL_DATA_ACCESS_ROLES = [
+    ADMIN_ROLE,
+    DOCTOR_ROLE,
+    NURSE_ROLE,
+    STAFF_ROLE,
+    FACILITY_ADMIN_ROLE,
+]
 
 
-class FacilityPermissions(enum.Enum):
-    can_read_facility = Permission(
-        "Can Read on Facility",
-        "Something Here",
-        PermissionContext.FACILITY,
-        [STAFF_ROLE, DOCTOR_ROLE],
+class EncounterPermissions(enum.Enum):
+    can_create_encounter = Permission(
+        "Can write encounter",
+        "",
+        PermissionContext.ENCOUNTER,
+        ALL_ROLES,
     )
-    can_update_facility = Permission(
-        "Can Update on Facility",
-        "Something Here",
-        PermissionContext.FACILITY,
-        [STAFF_ROLE],
+    can_list_encounter = Permission(
+        "Can list encounters",
+        "Clinical data is not associated with this permission",
+        PermissionContext.ENCOUNTER,
+        ALL_ROLES,
+    )
+    can_write_encounter = Permission(
+        "Update Encounter and Create all associated datapoints",
+        "",
+        PermissionContext.ENCOUNTER,
+        CLINICAL_DATA_ACCESS_ROLES,
+    )
+    can_read_encounter = Permission(
+        "Can Read encounter and related data",
+        "",
+        PermissionContext.ENCOUNTER,
+        CLINICAL_DATA_ACCESS_ROLES,
+    )
+    can_submit_encounter_questionnaire = Permission(
+        "Can submit questionnaire about patient encounters",
+        "",
+        PermissionContext.PATIENT,
+        [
+            STAFF_ROLE,
+            DOCTOR_ROLE,
+            NURSE_ROLE,
+            ADMIN_ROLE,
+            FACILITY_ADMIN_ROLE,
+        ],
     )

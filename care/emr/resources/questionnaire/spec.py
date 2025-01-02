@@ -47,10 +47,10 @@ class QuestionType(str, Enum):
     datetime = "dateTime"
     time = "time"
     choice = "choice"
-    # open_choice = "open_choice" # noqa ERA001
+    # open_choice = "open_choice"
     url = "url"
-    # attachment = "attachment" # noqa ERA001
-    # reference = "reference" # noqa ERA001
+    # attachment = "attachment"
+    # reference = "reference"
     quantity = "quantity"
     structured = "structured"
 
@@ -192,6 +192,7 @@ class QuestionnaireSpec(QuestionnaireBaseSpec):
         {}, description="Styling requirements without validation"
     )
     questions: list[Question]
+    organizations: list[UUID4] = Field(min_length=1)
 
     @field_validator("slug")
     @classmethod
@@ -233,6 +234,9 @@ class QuestionnaireSpec(QuestionnaireBaseSpec):
             err = "Question IDs must be unique"
             raise ValueError(err)
         return self
+
+    def perform_extra_deserialization(self, is_update, obj):
+        obj._organizations = self.organizations  # noqa SLF001
 
 
 class QuestionnaireReadSpec(QuestionnaireBaseSpec):

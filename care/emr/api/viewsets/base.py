@@ -62,7 +62,7 @@ class EMRQuestionnaireMixin:
 class EMRRetrieveMixin:
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        data = self.get_retrieve_pydantic_model().serialize(instance)
+        data = self.get_retrieve_pydantic_model().serialize(instance, request.user)
         return Response(data.to_json())
 
 
@@ -107,7 +107,7 @@ class EMRCreateMixin:
         self.authorize_create(instance)
         model_instance = instance.de_serialize()
         self.perform_create(model_instance)
-        return self.get_read_pydantic_model().serialize(model_instance).to_json()
+        return self.get_retrieve_pydantic_model().serialize(model_instance).to_json()
 
 
 class EMRListMixin:
@@ -168,19 +168,24 @@ class EMRUpdateMixin:
         serializer_obj = pydantic_model.model_validate(
             clean_data, context={"is_update": True, "object": instance}
         )
+        self.validate_data(serializer_obj, instance)
         self.authorize_update(serializer_obj, instance)
         model_instance = serializer_obj.de_serialize(obj=instance)
         self.perform_update(model_instance)
-        return self.get_read_pydantic_model().serialize(model_instance).to_json()
+        return self.get_retrieve_pydantic_model().serialize(model_instance).to_json()
 
 
 class EMRDeleteMixin:
+    def authorize_delete(self, instance):
+        pass
+
     def perform_delete(self, instance):
         instance.deleted = True
         instance.save(update_fields=["deleted"])
 
     def delete(self, request, *args, **kwargs):
         instance = self.get_object()
+        self.authorize_delete(instance)
         self.perform_delete(instance)
         return Response(status=204)
 
@@ -265,7 +270,6 @@ class EMRModelViewSet(
     EMRUpdateMixin,
     EMRListMixin,
     EMRDeleteMixin,
-    EMRQuestionnaireMixin,
     EMRBaseViewSet,
     EMRUpsertMixin,
 ):
@@ -275,7 +279,6 @@ class EMRModelViewSet(
 class EMRModelReadOnlyViewSet(
     EMRRetrieveMixin,
     EMRListMixin,
-    EMRQuestionnaireMixin,
     EMRBaseViewSet,
 ):
     pass

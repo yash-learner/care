@@ -9,10 +9,10 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
-from care.facility.api.viewsets.open_id import PublicJWKsView
-from care.facility.api.viewsets.patient_consultation import (
+from care.facility.api.viewsets.legacy.patient_consultation import (
     dev_preview_discharge_summary,
 )
+from care.facility.api.viewsets.open_id import PublicJWKsView
 from care.users.api.viewsets.change_password import ChangePasswordView
 from care.users.reset_password_views import (
     ResetPasswordCheck,

@@ -2,8 +2,10 @@ from django_filters import CharFilter, FilterSet, UUIDFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.exceptions import PermissionDenied
 
+from care.emr.api.viewsets.authz_base import EncounterBasedAuthorizationBase
 from care.emr.api.viewsets.base import EMRModelViewSet, EMRQuestionnaireResponseMixin
 from care.emr.models.condition import Condition
+from care.emr.models.encounter import Encounter
 from care.emr.registries.system_questionnaire.system_questionnaire import (
     InternalQuestionnaireRegistry,
 )
@@ -13,7 +15,7 @@ from care.emr.resources.condition.spec import (
     ConditionSpecRead,
 )
 from care.emr.resources.questionnaire.spec import SubjectType
-from care.facility.models.patient_consultation import PatientConsultation
+from care.security.authorization import AuthorizationController
 
 
 class ConditionFilters(FilterSet):
@@ -25,7 +27,9 @@ class ConditionFilters(FilterSet):
     severity = CharFilter(field_name="severity", lookup_expr="iexact")
 
 
-class SymptomViewSet(EMRQuestionnaireResponseMixin, EMRModelViewSet):
+class SymptomViewSet(
+    EncounterBasedAuthorizationBase, EMRQuestionnaireResponseMixin, EMRModelViewSet
+):
     database_model = Condition
     pydantic_model = ConditionSpec
     pydantic_read_model = ConditionSpecRead
@@ -43,7 +47,7 @@ class SymptomViewSet(EMRQuestionnaireResponseMixin, EMRModelViewSet):
         super().perform_create(instance)
 
     def authorize_create(self, instance: ConditionSpec):
-        encounter = PatientConsultation.objects.get(external_id=instance.encounter)
+        encounter = Encounter.objects.get(external_id=instance.encounter)
         if str(encounter.patient.external_id) != self.kwargs["patient_external_id"]:
             err = "Malformed request"
             raise PermissionDenied(err)
@@ -51,6 +55,10 @@ class SymptomViewSet(EMRQuestionnaireResponseMixin, EMRModelViewSet):
 
     def get_queryset(self):
         # Check if the user has read access to the patient and their EMR Data
+        if not AuthorizationController.call(
+            "can_view_clinical_data", self.request.user, self.get_patient_obj()
+        ):
+            raise PermissionDenied("Permission denied to user")
         return (
             super()
             .get_queryset()
@@ -65,7 +73,9 @@ class SymptomViewSet(EMRQuestionnaireResponseMixin, EMRModelViewSet):
 InternalQuestionnaireRegistry.register(SymptomViewSet)
 
 
-class DiagnosisViewSet(EMRQuestionnaireResponseMixin, EMRModelViewSet):
+class DiagnosisViewSet(
+    EncounterBasedAuthorizationBase, EMRQuestionnaireResponseMixin, EMRModelViewSet
+):
     database_model = Condition
     pydantic_model = ConditionSpec
     pydantic_read_model = ConditionSpecRead
@@ -83,7 +93,7 @@ class DiagnosisViewSet(EMRQuestionnaireResponseMixin, EMRModelViewSet):
         super().perform_create(instance)
 
     def authorize_create(self, instance: ConditionSpec):
-        encounter = PatientConsultation.objects.get(external_id=instance.encounter)
+        encounter = Encounter.objects.get(external_id=instance.encounter)
         if str(encounter.patient.external_id) != self.kwargs["patient_external_id"]:
             err = "Malformed request"
             raise PermissionDenied(err)
@@ -91,6 +101,10 @@ class DiagnosisViewSet(EMRQuestionnaireResponseMixin, EMRModelViewSet):
 
     def get_queryset(self):
         # Check if the user has read access to the patient and their EMR Data
+        if not AuthorizationController.call(
+            "can_view_clinical_data", self.request.user, self.get_patient_obj()
+        ):
+            raise PermissionDenied("Permission denied to user")
         return (
             super()
             .get_queryset()

@@ -2,32 +2,38 @@ from enum import Enum
 
 from pydantic import UUID4, field_validator, model_validator
 
-from care.emr.models.organziation import FacilityOrganization
+from care.emr.models.organization import FacilityOrganization
 from care.emr.resources.base import EMRResource
 from care.emr.resources.user.spec import UserSpec
 from care.facility.models import Facility
+from care.security.authorization import AuthorizationController
 
 
 class FacilityOrganizationTypeChoices(str, Enum):
     dept = "dept"
     team = "team"
+    root = "root"
     other = "other"
 
 
 class FacilityOrganizationBaseSpec(EMRResource):
     __model__ = FacilityOrganization
     __exclude__ = ["facility", "parent"]
-    id: str = None
+    id: UUID4 = None
     active: bool = True
-    org_type: FacilityOrganizationTypeChoices
     name: str
     description: str = ""
-    parent: UUID4 | None = None
     metadata: dict = {}
+
+
+class FacilityOrganizationUpdateSpec(FacilityOrganizationBaseSpec):
+    pass
 
 
 class FacilityOrganizationWriteSpec(FacilityOrganizationBaseSpec):
     facility: UUID4
+    org_type: FacilityOrganizationTypeChoices
+    parent: UUID4 | None = None
 
     # TODO Validations to confirm facility and org exists
 
@@ -60,19 +66,14 @@ class FacilityOrganizationWriteSpec(FacilityOrganizationBaseSpec):
                 obj.parent = FacilityOrganization.objects.get(
                     facility=obj.facility, external_id=self.parent
                 )
-                obj.level_cache = obj.parent.level_cache + 1
-                obj.parent_cache = [*obj.parent.parent_cache, obj.parent.id]
-                if obj.parent.root_org is None:
-                    obj.root_org = obj.parent
-                else:
-                    obj.root_org = obj.parent.root_org
-                obj.parent.has_children = True
-                obj.parent.save(update_fields=["has_children"])
             else:
                 obj.parent = None
 
 
 class FacilityOrganizationReadSpec(FacilityOrganizationBaseSpec):
+    org_type: FacilityOrganizationTypeChoices
+    parent: UUID4 | None = None
+
     created_by: UserSpec = dict
     updated_by: UserSpec = dict
     system_generated: bool
@@ -82,9 +83,19 @@ class FacilityOrganizationReadSpec(FacilityOrganizationBaseSpec):
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
-        mapping["parent"] = obj.parent.external_id if obj.parent else None
+        mapping["parent"] = obj.get_parent_json()
 
         if obj.created_by:
             mapping["created_by"] = UserSpec.serialize(obj.created_by)
         if obj.updated_by:
             mapping["updated_by"] = UserSpec.serialize(obj.updated_by)
+
+
+class FacilityOrganizationRetrieveSpec(FacilityOrganizationReadSpec):
+    permissions: list[str] = []
+
+    @classmethod
+    def perform_extra_user_serialization(cls, mapping, obj, user):
+        mapping["permissions"] = AuthorizationController.call(
+            "get_permission_on_facility_organization", obj, user
+        )

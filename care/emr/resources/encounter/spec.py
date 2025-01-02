@@ -1,61 +1,129 @@
 # Not Being used
 import datetime
-from enum import Enum
 
-from pydantic import UUID4, BaseModel
+from django.utils import timezone
+from pydantic import UUID4, BaseModel, model_validator
 
+from care.emr.models import Encounter, EncounterOrganization, TokenBooking
+from care.emr.models.patient import Patient
 from care.emr.resources.base import EMRResource
-
-
-class EncounterSpecBase(EMRResource):
-    __model__ = None
-    id: UUID4 = None
-
-
-class StatusChoices(str, Enum):
-    planned = "planned"
-    in_progress = "in_progress"
-    on_hold = "on_hold"
-    discharged = "discharged"
-    completed = "completed"
-    cancelled = "cancelled"
-    discontinued = "discontinued"
-    entered_in_error = "entered_in_error"
-    unknown = "unknown"
-
-
-class ClassChoices(str, Enum):
-    imp = "imp"
-    amb = "amb"
-    obsenc = "obsenc"
-    emer = "emer"
-    vr = "vr"
-    hh = "hh"
+from care.emr.resources.encounter.constants import (
+    AdmitSourcesChoices,
+    ClassChoices,
+    DietPreferenceChoices,
+    DischargeDispositionChoices,
+    EncounterPriorityChoices,
+    StatusChoices,
+)
+from care.emr.resources.facility.spec import FacilityBareMinimumSpec
+from care.emr.resources.facility_organization.spec import FacilityOrganizationReadSpec
+from care.emr.resources.patient.spec import PatientListSpec
+from care.emr.resources.scheduling.slot.spec import TokenBookingReadSpec
+from care.emr.resources.user.spec import UserSpec
+from care.facility.models import Facility
 
 
 class PeriodSpec(BaseModel):
-    start: datetime.datetime
-    end: datetime.datetime
+    start: datetime.datetime | None = None
+    end: datetime.datetime | None = None
 
-    # TODO Add validation
+    @model_validator(mode="after")
+    def validate_period(self):
+        if (self.start and self.end) and (self.start > self.end):
+            raise ValueError("Start Date cannot be greater than End Date")
+        return self
 
 
 class HospitalizationSpec(BaseModel):
-    pass
+    re_admission: bool | None = None
+    admit_source: AdmitSourcesChoices | None = None
+    discharge_disposition: DischargeDispositionChoices | None = None
+    diet_preference: DietPreferenceChoices | None = None
 
 
-class EncounterSpec(EncounterSpecBase):
+class EncounterSpecBase(EMRResource):
+    __model__ = Encounter
+    __exclude__ = ["patient", "organizations", "facility", "appointment"]
+
+    id: UUID4 = None
     status: StatusChoices
     encounter_class: ClassChoices
+    period: PeriodSpec = {}
+    hospitalization: HospitalizationSpec | None = {}
+    priority: EncounterPriorityChoices
+    external_identifier: str | None = None
+
+
+class EncounterCreateSpec(EncounterSpecBase):
     patient: UUID4
-    period: PeriodSpec
-    organization: UUID4 | None = None
+    facility: UUID4
+    organizations: list[UUID4] = []
     appointment: UUID4 | None = None
-    hospitalization: HospitalizationSpec | None = None
+
+    def perform_extra_deserialization(self, is_update, obj):
+        if not is_update:
+            obj.patient = Patient.objects.get(external_id=self.patient)
+            obj.facility = Facility.objects.get(external_id=self.facility)
+            if self.appointment:
+                obj.appointment = TokenBooking.objects.get(external_id=self.appointment)
+            obj._organizations = list(set(self.organizations))  # noqa SLF001
+            obj.status_history = {
+                "history": [{"status": obj.status, "moved_at": str(timezone.now())}]
+            }
+            obj.encounter_class_history = {
+                "history": [
+                    {"status": obj.encounter_class, "moved_at": str(timezone.now())}
+                ]
+            }
 
 
-class EncounterReadSpec(EncounterSpecBase):
-    status_history: list = list
-    class_history: list = list
-    is_closed: bool = False
-    length: int = 0
+class EncounterUpdateSpec(EncounterSpecBase):
+    def perform_extra_deserialization(self, is_update, obj):
+        old_instance = Encounter.objects.get(id=obj.id)
+        if old_instance.status != self.status:
+            obj.status_history["history"].append(
+                {"status": self.status, "moved_at": str(timezone.now())}
+            )
+        if old_instance.encounter_class != self.encounter_class:
+            obj.encounter_class_history["history"].append(
+                {"status": self.status, "moved_at": str(timezone.now())}
+            )
+
+
+class EncounterListSpec(EncounterSpecBase):
+    patient: dict
+    facility: dict
+    status_history: dict
+    encounter_class_history: dict
+    created_at: datetime.datetime
+    modified_date: datetime.datetime
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        mapping["id"] = obj.external_id
+        mapping["patient"] = PatientListSpec.serialize(obj.patient).to_json()
+        mapping["facility"] = FacilityBareMinimumSpec.serialize(obj.facility).to_json()
+
+
+class EncounterRetrieveSpec(EncounterListSpec):
+    appointment: dict = {}
+    created_by: dict = {}
+    updated_by: dict = {}
+    organizations: list[dict] = []
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        super().perform_extra_serialization(mapping, obj)
+        if obj.appointment:
+            mapping["appointment"] = TokenBookingReadSpec.serialize(
+                obj.appointment
+            ).to_json()
+        organizations = EncounterOrganization.objects.filter(encounter=obj)
+        mapping["organizations"] = [
+            FacilityOrganizationReadSpec.serialize(encounter_org.organization).to_json()
+            for encounter_org in organizations
+        ]
+        if obj.created_by:
+            mapping["created_by"] = UserSpec.serialize(obj.created_by)
+        if obj.updated_by:
+            mapping["updated_by"] = UserSpec.serialize(obj.updated_by)

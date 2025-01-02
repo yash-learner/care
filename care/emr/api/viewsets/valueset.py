@@ -21,6 +21,18 @@ class ValueSetViewSet(EMRModelViewSet):
     pydantic_read_model = ValueSetReadSpec
     lookup_field = "slug"
 
+    def permissions_controller(self, request):
+        if self.action in [
+            "list",
+            "retrieve",
+            "lookup_code",
+            "expand",
+            "validate_code",
+        ]:
+            return True
+        # Only superusers have write permission over valuesets
+        return request.user.is_superuser
+
     def get_queryset(self):
         return ValueSet.objects.all().select_related("created_by", "updated_by")
 
