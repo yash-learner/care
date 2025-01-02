@@ -270,7 +270,6 @@ class EMRModelViewSet(
     EMRUpdateMixin,
     EMRListMixin,
     EMRDeleteMixin,
-    EMRQuestionnaireMixin,
     EMRBaseViewSet,
     EMRUpsertMixin,
 ):
@@ -280,7 +279,6 @@ class EMRModelViewSet(
 class EMRModelReadOnlyViewSet(
     EMRRetrieveMixin,
     EMRListMixin,
-    EMRQuestionnaireMixin,
     EMRBaseViewSet,
 ):
     pass
