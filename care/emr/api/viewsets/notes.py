@@ -44,7 +44,7 @@ class NoteThreadViewSet(
     def authorize_create(self, instance):
         patient = self.get_patient()
         if instance.encounter:
-            encounter = get_object_or_404(Encounter, instance.encounter)
+            encounter = get_object_or_404(Encounter, external_id=instance.encounter)
             allowed = AuthorizationController.call(
                 "can_update_encounter_obj", self.request.user, encounter
             )

@@ -45,7 +45,6 @@ from care.emr.api.viewsets.scheduling.availability_exceptions import (
     AvailabilityExceptionsViewSet,
 )
 from care.emr.api.viewsets.scheduling.booking import TokenBookingViewSet
-from care.emr.api.viewsets.units import UnitsView
 from care.emr.api.viewsets.user import UserViewSet
 from care.emr.api.viewsets.valueset import ValueSetViewSet
 from care.facility.api.viewsets.facility import AllFacilityViewSet
@@ -78,7 +77,7 @@ router.register("otp/slots", OTPSlotViewSet, basename="otp-slots")
 
 router.register("batch_requests", BatchRequestView, basename="batch-requests")
 
-router.register("units", UnitsView, basename="units")
+# router.register("units", UnitsView, basename="units")
 
 router.register("valueset", ValueSetViewSet, basename="value-set")
 
