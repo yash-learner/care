@@ -52,7 +52,9 @@ class FacilityOrganizationViewSet(EMRModelViewSet):
                 FacilityOrganization, external_id=instance.parent
             )
             if parent.org_type == "root":
-                raise PermissionDenied("Cannot create multiple root organizations")
+                raise PermissionDenied(
+                    "Cannot create organizations under root organization"
+                )
 
     def authorize_delete(self, instance):
         if instance.type == "root":
