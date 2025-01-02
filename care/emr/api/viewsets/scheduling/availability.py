@@ -223,7 +223,8 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
         availabilities = {}
         for schedule in schedules:
             availabilities[schedule["id"]] = Availability.objects.filter(
-                schedule_id=schedule["id"]
+                schedule_id=schedule["id"],
+                slot_type=SlotTypeOptions.appointment.value,
             ).values()
 
         availability_exceptions = AvailabilityException.objects.filter(
