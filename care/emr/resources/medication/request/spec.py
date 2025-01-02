@@ -122,7 +122,7 @@ class DosageInstruction(BaseModel):
     sequence: int | None = None
     text: str | None = None
     additional_instruction: list[Coding] | None = Field(
-        json_schema_extra={"slug": CARE_ADDITIONAL_INSTRUCTION_VALUESET.slug}
+        None, json_schema_extra={"slug": CARE_ADDITIONAL_INSTRUCTION_VALUESET.slug}
     )
     patient_instruction: str | None = None
     timing: Timing | None = None
