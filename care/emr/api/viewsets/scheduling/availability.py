@@ -39,7 +39,7 @@ class AppointmentBookingSpec(BaseModel):
 class AvailabilityStatsRequestSpec(BaseModel):
     from_date: datetime.date
     to_date: datetime.date
-    resource: UUID4
+    user: UUID4
 
     @model_validator(mode="after")
     def validate_period(self):
