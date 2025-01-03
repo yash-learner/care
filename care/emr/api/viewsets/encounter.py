@@ -218,9 +218,14 @@ class EncounterViewSet(
         ).delete()
         return Response({}, status=204)
 
+    def _check_discharge_summary_access(self, encounter):
+        if not AuthorizationController.call(
+            "can_view_clinical_data", self.request.user, encounter.patient
+        ):
+            raise PermissionDenied("Permission denied to user")
+
     def _generate_discharge_summary(self, encounter_ext_id: str):
-        current_progress = discharge_summary.get_progress(encounter_ext_id)
-        if current_progress is not None:
+        if current_progress := discharge_summary.get_progress(encounter_ext_id):
             return Response(
                 {
                     "detail": (
@@ -247,6 +252,7 @@ class EncounterViewSet(
     @action(detail=True, methods=["POST"])
     def generate_discharge_summary(self, request, *args, **kwargs):
         encounter = self.get_object()
+        self._check_discharge_summary_access(encounter)
         return self._generate_discharge_summary(encounter.external_id)
 
     @extend_schema(
@@ -257,6 +263,7 @@ class EncounterViewSet(
     @action(detail=True, methods=["GET"])
     def preview_discharge_summary(self, request, *args, **kwargs):
         encounter = self.get_object()
+        self._check_discharge_summary_access(encounter)
         summary_file = (
             FileUpload.objects.filter(
                 file_type=FileTypeChoices.encounter.value,
@@ -288,9 +295,10 @@ class EncounterViewSet(
     )
     @action(detail=True, methods=["POST"])
     def email_discharge_summary(self, request, *args, **kwargs):
-        encounter_ext_id = kwargs["external_id"]
-        existing_progress = discharge_summary.get_progress(encounter_ext_id)
-        if existing_progress:
+        encounter = self.get_object()
+        self._check_discharge_summary_access(encounter)
+        encounter_ext_id = encounter.external_id
+        if existing_progress := discharge_summary.get_progress(encounter_ext_id):
             return Response(
                 {
                     "detail": (
