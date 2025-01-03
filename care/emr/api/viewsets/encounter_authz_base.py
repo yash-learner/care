@@ -29,3 +29,16 @@ class EncounterBasedAuthorizationBase:
             "can_update_encounter_obj", self.request.user, instance.encounter
         ):
             raise PermissionDenied("You do not have permission to update encounter")
+
+    def authorize_read_encounter(self):
+        if not AuthorizationController.call(
+            "can_view_clinical_data", self.request.user, self.get_patient_obj()
+        ):
+            if encounter := self.request.GET.get("encounter"):
+                encounter_obj = get_object_or_404(Encounter, external_id=encounter)
+                if not AuthorizationController.call(
+                    "can_view_encounter_obj", self.request.user, encounter_obj
+                ):
+                    raise PermissionDenied("Permission denied to user")
+            else:
+                raise PermissionDenied("Permission denied to user")

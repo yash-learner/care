@@ -2,8 +2,8 @@ from django_filters import CharFilter, FilterSet, UUIDFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.exceptions import PermissionDenied
 
-from care.emr.api.viewsets.authz_base import EncounterBasedAuthorizationBase
 from care.emr.api.viewsets.base import EMRModelViewSet, EMRQuestionnaireResponseMixin
+from care.emr.api.viewsets.encounter_authz_base import EncounterBasedAuthorizationBase
 from care.emr.models.condition import Condition
 from care.emr.models.encounter import Encounter
 from care.emr.registries.system_questionnaire.system_questionnaire import (
@@ -15,7 +15,6 @@ from care.emr.resources.condition.spec import (
     ConditionSpecRead,
 )
 from care.emr.resources.questionnaire.spec import SubjectType
-from care.security.authorization import AuthorizationController
 
 
 class ConditionFilters(FilterSet):
@@ -55,10 +54,7 @@ class SymptomViewSet(
 
     def get_queryset(self):
         # Check if the user has read access to the patient and their EMR Data
-        if not AuthorizationController.call(
-            "can_view_clinical_data", self.request.user, self.get_patient_obj()
-        ):
-            raise PermissionDenied("Permission denied to user")
+        self.authorize_read_encounter()
         return (
             super()
             .get_queryset()
@@ -101,10 +97,7 @@ class DiagnosisViewSet(
 
     def get_queryset(self):
         # Check if the user has read access to the patient and their EMR Data
-        if not AuthorizationController.call(
-            "can_view_clinical_data", self.request.user, self.get_patient_obj()
-        ):
-            raise PermissionDenied("Permission denied to user")
+        self.authorize_read_encounter()
         return (
             super()
             .get_queryset()

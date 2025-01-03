@@ -18,7 +18,6 @@ COMPLETED_CHOICES = [
     StatusChoices.cancelled.value,
     StatusChoices.entered_in_error.value,
     StatusChoices.discontinued.value,
-    StatusChoices.discharged.value,
 ]
 
 

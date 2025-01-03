@@ -49,6 +49,8 @@ class QuestionnaireResponseViewSet(EMRModelReadOnlyViewSet):
         if encounter:
             allowed = AuthorizationController.call(
                 "can_view_clinical_data", self.request.user, patient
+            ) or AuthorizationController.call(
+                "can_view_encounter_obj", self.request.user, encounter
             )
         else:
             allowed = AuthorizationController.call(

@@ -2,6 +2,7 @@ from django.db.models import Q
 
 from care.emr.models import Encounter, PatientUser
 from care.emr.models.organization import FacilityOrganizationUser, OrganizationUser
+from care.emr.resources.encounter.constants import COMPLETED_CHOICES
 from care.security.authorization.base import (
     AuthorizationController,
     AuthorizationHandler,
@@ -14,8 +15,10 @@ class PatientAccess(AuthorizationHandler):
     def find_roles_on_patient(self, user, patient):
         role_ids = set()
         # Through Encounter
-        encounters = Encounter.objects.filter(patient=patient).values_list(
-            "facility_organization_cache", flat=True
+        encounters = (
+            Encounter.objects.filter(patient=patient)
+            .exclude(status__in=COMPLETED_CHOICES)
+            .values_list("facility_organization_cache", flat=True)
         )
         encounter_set = set()
         for encounter in encounters:

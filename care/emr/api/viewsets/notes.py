@@ -83,7 +83,15 @@ class NoteThreadViewSet(
         if not AuthorizationController.call(
             "can_view_clinical_data", self.request.user, patient
         ):
-            raise PermissionDenied("Permission denied to user")
+            if encounter := self.request.GET.get("encounter"):
+                encounter_obj = get_object_or_404(Encounter, external_id=encounter)
+                if not AuthorizationController.call(
+                    "can_view_encounter_obj", self.request.user, encounter_obj
+                ):
+                    raise PermissionDenied("Permission denied to user")
+            else:
+                raise PermissionDenied("Permission denied to user")
+
         queryset = super().get_queryset().filter(patient=patient)
         return queryset.order_by("-created_date")
 
@@ -131,7 +139,15 @@ class NoteMessageViewSet(
         if not AuthorizationController.call(
             "can_view_clinical_data", self.request.user, self.get_patient_obj()
         ):
-            raise PermissionDenied("Permission denied to user")
+            if encounter := self.request.GET.get("encounter"):
+                encounter_obj = get_object_or_404(Encounter, external_id=encounter)
+                if not AuthorizationController.call(
+                    "can_view_encounter_obj", self.request.user, encounter_obj
+                ):
+                    raise PermissionDenied("Permission denied to user")
+            else:
+                raise PermissionDenied("Permission denied to user")
+
         return (
             super()
             .get_queryset()
