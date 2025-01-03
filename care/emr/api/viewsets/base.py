@@ -146,6 +146,8 @@ class EMRUpdateMixin:
                 )
 
     def clean_update_data(self, request_data):
+        if type(request_data) is list:
+            return request_data
         request_data.pop("id", None)
         request_data.pop("external_id", None)
         request_data.pop("patient", None)

@@ -18,7 +18,19 @@ class UserSchedulePermissions(enum.Enum):
         [ADMIN_ROLE, STAFF_ROLE, FACILITY_ADMIN_ROLE, DOCTOR_ROLE, NURSE_ROLE],
     )
     can_list_user_schedule = Permission(
-        "Can Read on Facility",
+        "Can list user schedule on Facility",
+        "",
+        PermissionContext.FACILITY,
+        [ADMIN_ROLE, STAFF_ROLE, FACILITY_ADMIN_ROLE, DOCTOR_ROLE, NURSE_ROLE],
+    )
+    can_list_user_booking = Permission(
+        "Can list bookings on Facility",
+        "",
+        PermissionContext.FACILITY,
+        [ADMIN_ROLE, STAFF_ROLE, FACILITY_ADMIN_ROLE, DOCTOR_ROLE, NURSE_ROLE],
+    )
+    can_write_user_booking = Permission(
+        "Can update bookings on user",
         "",
         PermissionContext.FACILITY,
         [ADMIN_ROLE, STAFF_ROLE, FACILITY_ADMIN_ROLE, DOCTOR_ROLE, NURSE_ROLE],

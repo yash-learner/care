@@ -145,6 +145,8 @@ class DosageInstruction(BaseModel):
     @field_validator("additional_instruction")
     @classmethod
     def validate_additional_instruction(cls, codes):
+        if not codes:
+            return codes
         return [
             validate_valueset(
                 "additional_instruction",
@@ -157,6 +159,8 @@ class DosageInstruction(BaseModel):
     @field_validator("site")
     @classmethod
     def validate_site(cls, code):
+        if not code:
+            return code
         return validate_valueset(
             "site",
             cls.model_fields["site"].json_schema_extra["slug"],
@@ -166,6 +170,8 @@ class DosageInstruction(BaseModel):
     @field_validator("route")
     @classmethod
     def validate_route(cls, code):
+        if not code:
+            return code
         return validate_valueset(
             "route",
             cls.model_fields["route"].json_schema_extra["slug"],
@@ -175,6 +181,8 @@ class DosageInstruction(BaseModel):
     @field_validator("method")
     @classmethod
     def validate_method(cls, code):
+        if not code:
+            return code
         return validate_valueset(
             "method",
             cls.model_fields["method"].json_schema_extra["slug"],

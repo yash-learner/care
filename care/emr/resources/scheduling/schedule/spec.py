@@ -2,6 +2,7 @@ import datetime
 from enum import Enum
 
 from pydantic import UUID4, Field
+from rest_framework.generics import get_object_or_404
 
 from care.emr.models.scheduling.schedule import (
     Availability,
@@ -53,7 +54,7 @@ class ScheduleBaseSpec(EMRResource):
 
 
 class ScheduleWriteSpec(ScheduleBaseSpec):
-    resource: UUID4
+    user: UUID4
     facility: UUID4
     name: str
     valid_from: datetime.datetime
@@ -62,7 +63,7 @@ class ScheduleWriteSpec(ScheduleBaseSpec):
 
     def perform_extra_deserialization(self, is_update, obj):
         if not is_update:
-            user = User.objects.filter(external_id=self.resource).first()
+            user = get_object_or_404(User, external_id=self.user)
             # TODO Validation that user is in given facility
             if not user:
                 raise ValueError("User not found")
@@ -74,6 +75,12 @@ class ScheduleWriteSpec(ScheduleBaseSpec):
             )
             obj.resource = resource
             obj.availabilities = self.availabilities
+
+
+class ScheduleUpdateSpec(ScheduleBaseSpec):
+    name: str
+    valid_from: datetime.datetime
+    valid_to: datetime.datetime
 
 
 class ScheduleReadSpec(ScheduleBaseSpec):

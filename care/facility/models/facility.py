@@ -354,7 +354,7 @@ class Facility(FacilityBaseModel, FacilityPermissionMixin):
         if is_create:
             facility_organization = FacilityOrganization.objects.create(
                 org_type="root",
-                name="Root Organization",
+                name="Administration",
                 system_generated=True,
                 facility=self,
             )
