@@ -12,7 +12,6 @@ from drf_spectacular.views import (
 from care.facility.api.viewsets.legacy.patient_consultation import (
     dev_preview_discharge_summary,
 )
-from care.facility.api.viewsets.open_id import PublicJWKsView
 from care.users.api.viewsets.change_password import ChangePasswordView
 from care.users.reset_password_views import (
     ResetPasswordCheck,
@@ -20,10 +19,6 @@ from care.users.reset_password_views import (
     ResetPasswordRequestToken,
 )
 from config import api_router
-from config.health_views import (
-    MiddlewareAssetAuthenticationVerifyView,
-    MiddlewareAuthenticationVerifyView,
-)
 
 from .auth_views import AnnotatedTokenVerifyView, TokenObtainPairView, TokenRefreshView
 from .views import app_version, home_view, ping
