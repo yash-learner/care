@@ -27,7 +27,7 @@ from care.utils.lock import Lock
 
 
 class SlotsForDayRequestSpec(BaseModel):
-    resource: UUID4
+    user: UUID4
     day: datetime.date
 
 

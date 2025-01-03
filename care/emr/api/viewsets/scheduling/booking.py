@@ -90,7 +90,7 @@ class TokenBookingViewSet(
         )
 
     @action(detail=False, methods=["GET"])
-    def available_doctors(self, request, *args, **kwargs):
+    def available_users(self, request, *args, **kwargs):
         facility = Facility.objects.get(external_id=self.kwargs["facility_external_id"])
         facility_users = FacilityOrganizationUser.objects.filter(
             organization__facility=facility,

@@ -51,7 +51,7 @@ class ScheduleViewSet(EMRModelViewSet):
         facility = self.get_facility_obj()
         schedule_user = get_object_or_404(User, external_id=instance.user)
         if not FacilityOrganizationUser.objects.filter(
-            user=schedule_user, facility=facility
+            user=schedule_user, organization__facility=facility
         ).exists():
             raise ValidationError("Schedule User is not part of the facility")
 

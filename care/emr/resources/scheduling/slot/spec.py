@@ -89,5 +89,5 @@ class TokenBookingReadSpec(TokenBookingBaseSpec):
             exclude=["meta"]
         )
         mapping["resource"] = UserSpec.serialize(
-            User.objects.get(id=obj.token_slot.resource.resource_id)
+            User.objects.get(id=obj.token_slot.resource.user_id)
         ).model_dump(exclude=["meta"])
