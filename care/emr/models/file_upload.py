@@ -32,6 +32,7 @@ class FileUpload(EMRBaseModel):
     files_manager = S3FilesManager(BucketType.PATIENT)
 
     def get_extension(self):
+        # TODO: improve this logic to handle files with multiple extensions
         parts = self.internal_name.split(".")
         return f".{parts[-1]}" if len(parts) > 1 else ""
 
@@ -40,11 +41,10 @@ class FileUpload(EMRBaseModel):
         Create a random internal name to internally manage the file
         This is used as an intermediate step to avoid leakage of PII in-case of data leak
         """
-        if "force_insert" in kwargs or (not self.internal_name) or not self.id:
+        skip_internal_name = kwargs.pop("skip_internal_name", False)
+        if (not self.internal_name or not self.id) and not skip_internal_name:
             internal_name = str(uuid4()) + str(int(time.time()))
-            if self.internal_name:
-                parts = self.internal_name.split(".")
-                if len(parts) > 1:
-                    internal_name = f"{internal_name}.{parts[-1]}"
+            if self.internal_name and (extension := self.get_extension()):
+                internal_name = f"{internal_name}{extension}"
             self.internal_name = internal_name
         return super().save(*args, **kwargs)

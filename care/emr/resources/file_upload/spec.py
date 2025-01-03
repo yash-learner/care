@@ -18,6 +18,7 @@ class FileCategoryChoices(str, Enum):
     xray = "xray"
     identity_proof = "identity_proof"
     unspecified = "unspecified"
+    discharge_summary = "discharge_summary"
 
 
 class FileUploadBaseSpec(EMRResource):

@@ -1,6 +1,9 @@
+from dateutil.relativedelta import relativedelta
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.template.defaultfilters import pluralize
+from django.utils import timezone
 
 from care.emr.models import EMRBaseModel
 from care.users.models import User
@@ -38,6 +41,28 @@ class Patient(EMRBaseModel):
     organization_cache = ArrayField(models.IntegerField(), default=list)
 
     users_cache = ArrayField(models.IntegerField(), default=list)
+
+    def get_age(self) -> str:
+        start = self.date_of_birth or timezone.date(self.year_of_birth, 1, 1)
+        end = (self.deceased_datetime or timezone.now()).date()
+
+        delta = relativedelta(end, start)
+
+        if delta.years > 0:
+            year_str = f"{delta.years} year{pluralize(delta.years)}"
+            return f"{year_str}"
+
+        if delta.months > 0:
+            month_str = f"{delta.months} month{pluralize(delta.months)}"
+            day_str = (
+                f" {delta.days} day{pluralize(delta.days)}" if delta.days > 0 else ""
+            )
+            return f"{month_str}{day_str}"
+
+        if delta.days > 0:
+            return f"{delta.days} day{pluralize(delta.days)}"
+
+        return "0 days"
 
     def rebuild_organization_cache(self):
         organization_parents = []

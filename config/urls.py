@@ -9,9 +9,7 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
-from care.facility.api.viewsets.legacy.patient_consultation import (
-    dev_preview_discharge_summary,
-)
+from care.emr.api.viewsets.encounter import dev_preview_discharge_summary
 from care.users.api.viewsets.change_password import ChangePasswordView
 from care.users.reset_password_views import (
     ResetPasswordCheck,
@@ -90,7 +88,7 @@ if settings.DEBUG:
         ),
         path("500/", default_views.server_error),
         path(
-            "preview_discharge_summary/<str:consultation_id>/",
+            "preview_discharge_summary/<str:encounter_id>/",
             dev_preview_discharge_summary,
         ),
     ]

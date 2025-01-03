@@ -6,9 +6,9 @@ from botocore.exceptions import ClientError
 from celery import shared_task
 from celery.utils.log import get_task_logger
 
-from care.facility.models import PatientConsultation
-from care.facility.models.file_upload import FileUpload
-from care.facility.utils.reports.discharge_summary import (
+from care.emr.models.encounter import Encounter
+from care.emr.models.file_upload import FileUpload
+from care.emr.reports.discharge_summary import (
     email_discharge_summary,
     generate_and_upload_discharge_summary,
 )
@@ -20,18 +20,18 @@ logger: Logger = get_task_logger(__name__)
 @shared_task(
     autoretry_for=(ClientError,), retry_kwargs={"max_retries": 3}, expires=10 * 60
 )
-def generate_discharge_summary_task(consultation_ext_id: str):
+def generate_discharge_summary_task(encounter_ext_id: str):
     """
     Generate and Upload the Discharge Summary
     """
-    logger.info("Generating Discharge Summary for %s", consultation_ext_id)
+    logger.info("Generating Discharge Summary for %s", encounter_ext_id)
     try:
-        consultation = PatientConsultation.objects.get(external_id=consultation_ext_id)
-    except PatientConsultation.DoesNotExist as e:
-        msg = f"Consultation {consultation_ext_id} does not exist"
+        encounter = Encounter.objects.get(external_id=encounter_ext_id)
+    except Encounter.DoesNotExist as e:
+        msg = f"Encounter {encounter_ext_id} does not exist"
         raise CeleryTaskError(msg) from e
 
-    summary_file = generate_and_upload_discharge_summary(consultation)
+    summary_file = generate_and_upload_discharge_summary(encounter)
     if not summary_file:
         msg = "Unable to generate discharge summary"
         raise CeleryTaskError(msg)

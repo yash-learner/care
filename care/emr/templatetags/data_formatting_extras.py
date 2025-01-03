@@ -1,23 +1,17 @@
 from datetime import datetime
 
 from django.template import Library
+from django.utils import timezone
 
 register = Library()
 
 
-@register.filter(name="suggestion_string")
-def suggestion_string(suggestion_code: str):
-    if suggestion_code == "A":
-        return "Admission"
-    if suggestion_code == "HI":
-        return "Home Isolation"
-    if suggestion_code == "R":
-        return "Referral"
-    if suggestion_code == "OP":
-        return "OP Consultation"
-    if suggestion_code == "DC":
-        return "Domiciliary Care"
-    return "Other"
+@register.filter()
+def format_empty_data(data):
+    if data in (None, "", 0.0, []):
+        return "N/A"
+
+    return data
 
 
 @register.filter()
@@ -31,5 +25,13 @@ def field_name_to_label(value):
 def parse_datetime(value):
     try:
         return datetime.strptime(value, "%Y-%m-%dT%H:%M")  # noqa: DTZ007
+    except ValueError:
+        return None
+
+
+@register.filter(expects_localtime=True)
+def parse_iso_datetime(value):
+    try:
+        return timezone.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
     except ValueError:
         return None
