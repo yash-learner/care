@@ -7,7 +7,7 @@ class SchedulableUserResource(EMRBaseModel):
     """A resource that can be scheduled for appointments."""
 
     facility = models.ForeignKey("facility.Facility", on_delete=models.CASCADE)
-    resource = models.ForeignKey("users.User", on_delete=models.CASCADE)
+    user = models.ForeignKey("users.User", on_delete=models.CASCADE)
 
     # TODO : Index with resource and facility
 

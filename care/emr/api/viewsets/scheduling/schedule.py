@@ -18,7 +18,7 @@ from care.users.models import User
 
 
 class ScheduleFilters(FilterSet):
-    resource = UUIDFilter(field_name="resource__resource__external_id")
+    user = UUIDFilter(field_name="resource__user__external_id")
 
 
 class ScheduleViewSet(EMRModelViewSet):
@@ -51,7 +51,7 @@ class ScheduleViewSet(EMRModelViewSet):
         facility = self.get_facility_obj()
         schedule_user = get_object_or_404(User, external_id=instance.user)
         if not FacilityOrganizationUser.objects.filter(
-            user=schedule_user, facility=facility
+            user=schedule_user, organization__facility=facility
         ).exists():
             raise ValidationError("Schedule User is not part of the facility")
 

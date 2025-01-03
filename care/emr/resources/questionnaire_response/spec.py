@@ -43,6 +43,8 @@ class QuestionnaireResponseReadSpec(EMRResource):
     structured_response_type: str
     created_by: UserSpec = dict
     updated_by: UserSpec = dict
+    created_date: datetime | None = None
+    modified_date: datetime | None = None
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):

@@ -6,3 +6,4 @@ from .encounter import *  # noqa
 from .patient import *  # noqa
 from .facility import *  # noqa
 from .user import *  # noqa
+from .user_schedule import *  # noqa
