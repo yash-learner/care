@@ -66,11 +66,11 @@ urlpatterns = [
     ),
     path("api/v1/", include(api_router.urlpatterns)),
     # Health check urls
-    path("middleware/verify", MiddlewareAuthenticationVerifyView.as_view()),
-    path("middleware/verify-asset", MiddlewareAssetAuthenticationVerifyView.as_view()),
+    # path("middleware/verify", MiddlewareAuthenticationVerifyView.as_view()),
+    # path("middleware/verify-asset", MiddlewareAssetAuthenticationVerifyView.as_view()),
     path("health/", include("healthy_django.urls", namespace="healthy_django")),
     # OpenID Connect
-    path(".well-known/jwks.json", PublicJWKsView.as_view(), name="jwks-json"),
+    # path(".well-known/jwks.json", PublicJWKsView.as_view(), name="jwks-json"),
     *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
 ]
 
