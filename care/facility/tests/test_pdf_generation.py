@@ -10,12 +10,12 @@ from django.test import TestCase
 from PIL import Image
 from rest_framework.test import APIClient
 
+from care.emr.reports import discharge_summary
+from care.emr.reports.discharge_summary import compile_typ
 from care.facility.models import (
     PrescriptionDosageType,
     PrescriptionType,
 )
-from care.facility.utils.reports import discharge_summary
-from care.facility.utils.reports.discharge_summary import compile_typ
 from care.utils.tests.test_utils import TestUtils
 
 
