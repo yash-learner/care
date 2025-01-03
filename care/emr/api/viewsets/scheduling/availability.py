@@ -210,7 +210,7 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
         """
         request_data = AvailabilityStatsRequestSpec(**request.data)
         # Fetch the entire schedule and calculate total slots available for each day
-        user = User.objects.filter(external_id=request_data.resource).first()
+        user = User.objects.filter(external_id=request_data.user).first()
         if not user:
             raise ValidationError("User does not exist")
         resource = SchedulableUserResource.objects.filter(user=user).first()
