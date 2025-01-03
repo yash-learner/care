@@ -35,3 +35,9 @@ class UserSchedulePermissions(enum.Enum):
         PermissionContext.FACILITY,
         [ADMIN_ROLE, STAFF_ROLE, FACILITY_ADMIN_ROLE, DOCTOR_ROLE, NURSE_ROLE],
     )
+    can_create_appointment = Permission(
+        "Can create appointment on facility",
+        "",
+        PermissionContext.FACILITY,
+        [ADMIN_ROLE, STAFF_ROLE, FACILITY_ADMIN_ROLE, DOCTOR_ROLE, NURSE_ROLE],
+    )
