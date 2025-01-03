@@ -1,4 +1,5 @@
 from care.emr.models.organization import FacilityOrganizationUser
+from care.security.authorization import AuthorizationController
 from care.security.authorization.base import (
     AuthorizationHandler,
 )
@@ -65,3 +66,6 @@ class UserScheduleAccess(AuthorizationHandler):
         return self.check_permission_in_facility_organization(
             [UserSchedulePermissions.can_write_user_booking.name], user, orgs=cache
         )
+
+
+AuthorizationController.register_internal_controller(UserScheduleAccess)
