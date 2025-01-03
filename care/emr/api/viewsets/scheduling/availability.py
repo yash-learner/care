@@ -107,8 +107,6 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
     def get_slots_for_day_handler(cls, facility_external_id, request_data):
         request_data = SlotsForDayRequestSpec(**request_data)
         user = get_object_or_404(User, external_id=request_data.user)
-        if not user:
-            raise ValidationError("Resource does not exist")
         schedulable_resource_obj = SchedulableUserResource.objects.filter(
             facility__external_id=facility_external_id,
             user=user,
