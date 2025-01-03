@@ -71,7 +71,7 @@ class ScheduleWriteSpec(ScheduleBaseSpec):
 
             resource, _ = SchedulableUserResource.objects.get_or_create(
                 facility=obj.facility,
-                resource=user,
+                user=user,
             )
             obj.resource = resource
             obj.availabilities = self.availabilities

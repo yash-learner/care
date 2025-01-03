@@ -104,7 +104,7 @@ class FacilitySchedulableUsersViewSet(EMRModelReadOnlyViewSet):
         return User.objects.filter(
             id__in=SchedulableUserResource.objects.filter(
                 facility__external_id=self.kwargs["facility_external_id"]
-            ).values("resource_id")
+            ).values("user_id")
         )
 
 

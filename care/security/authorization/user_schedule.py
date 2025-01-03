@@ -1,8 +1,6 @@
 from care.emr.models.organization import FacilityOrganizationUser
 from care.security.authorization import AuthorizationController
-from care.security.authorization.base import (
-    AuthorizationHandler,
-)
+from care.security.authorization.base import AuthorizationHandler
 from care.security.permissions.user_schedule import UserSchedulePermissions
 
 
@@ -42,8 +40,8 @@ class UserScheduleAccess(AuthorizationHandler):
         Check if the user has permission to write schedules in the facility
         """
         facility_orgs = FacilityOrganizationUser.objects.filter(
-            user=schedule_user, facility=facility
-        ).values_list("parent_cache")
+            user=schedule_user, organization__facility=facility
+        ).values_list("organization__parent_cache", flat=True)
         cache = []
         for org_cache in facility_orgs:
             cache.extend(org_cache)
@@ -57,8 +55,8 @@ class UserScheduleAccess(AuthorizationHandler):
         Check if the user has permission to write schedules in the facility
         """
         facility_orgs = FacilityOrganizationUser.objects.filter(
-            user=schedule_user, facility=facility
-        ).values_list("parent_cache")
+            user=schedule_user, organization__facility=facility
+        ).values_list("organization__parent_cache", flat=True)
         cache = []
         for org_cache in facility_orgs:
             cache.extend(org_cache)
