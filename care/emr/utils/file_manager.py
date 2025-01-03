@@ -38,6 +38,7 @@ class S3FilesManager(FileManger):
             Params={
                 "Bucket": bucket_name,
                 "Key": f"{file_obj.file_type}/{file_obj.internal_name}",
+                "ResponseContentDisposition": f"attachment; filename={file_obj.name}{file_obj.get_extension()}",
             },
             ExpiresIn=duration,  # seconds
         )
