@@ -52,6 +52,7 @@ class BookingStatusChoices(str, Enum):
     waitlist = "waitlist"
     in_consultation = "in_consultation"
 
+CANCELLED_STATUS_CHOICES = [BookingStatusChoices.entered_in_error.value , BookingStatusChoices.cancelled.value]
 
 class TokenBookingBaseSpec(EMRResource):
     __model__ = TokenBooking
