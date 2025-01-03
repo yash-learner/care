@@ -14,7 +14,7 @@ from care.security.authorization import AuthorizationController
 
 
 class AvailabilityExceptionFilters(FilterSet):
-    resource = UUIDFilter(field_name="resource__resource__external_id")
+    user = UUIDFilter(field_name="resource__user__external_id")
 
 
 class AvailabilityExceptionsViewSet(EMRModelViewSet):

@@ -36,9 +36,9 @@ class AvailabilityExceptionWriteSpec(AvailabilityExceptionBaseSpec):
         if not is_update:
             resource = None
             try:
-                user_resource = User.objects.get(external_id=self.resource)
+                user = User.objects.get(external_id=self.resource)
                 resource = SchedulableUserResource.objects.get(
-                    resource=user_resource,
+                    user=user,
                     facility=Facility.objects.get(external_id=self.facility),
                 )
                 obj.resource = resource

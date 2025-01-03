@@ -18,7 +18,7 @@ from care.users.models import User
 
 
 class ScheduleFilters(FilterSet):
-    resource = UUIDFilter(field_name="resource__resource__external_id")
+    user = UUIDFilter(field_name="resource__user__external_id")
 
 
 class ScheduleViewSet(EMRModelViewSet):

@@ -26,14 +26,14 @@ class TokenBookingFilters(FilterSet):
     status = CharFilter(field_name="status")
     date = DateFilter(field_name="token_slot__start_datetime__date")
     slot = UUIDFilter(field_name="token_slot__external_id")
-    resource = UUIDFilter(method="filter_by_resource")
+    user = UUIDFilter(method="filter_by_user")
     patient = UUIDFilter(field_name="patient__external_id")
 
-    def filter_by_resource(self, queryset, name, value):
+    def filter_by_user(self, queryset, name, value):
         if not value:
             return queryset
         resource = SchedulableUserResource.objects.filter(
-            resource__external_id=value
+            user__external_id=value
         ).first()
         if not resource:
             return queryset.none()
@@ -96,7 +96,7 @@ class TokenBookingViewSet(
             organization__facility=facility,
             user_id__in=SchedulableUserResource.objects.filter(
                 facility=facility
-            ).values("resource_id"),
+            ).values("user_id"),
         )
 
         return Response(
