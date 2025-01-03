@@ -269,8 +269,8 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
 
         booked_slots = (
             TokenSlot.objects.filter(
-                start_datetime__lte=request_data.to_date,
-                end_datetime__gte=request_data.from_date,
+                start_datetime__date__lte=request_data.to_date,
+                end_datetime__gt=request_data.from_date,
                 resource=resource,
             )
             .values("start_datetime__date")
