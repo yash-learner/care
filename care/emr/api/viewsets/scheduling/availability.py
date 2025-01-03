@@ -7,7 +7,7 @@ from django.db.models import Sum
 from django.utils import timezone
 from pydantic import UUID4, BaseModel, model_validator
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError, PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import EMRBaseViewSet, EMRRetrieveMixin
@@ -197,11 +197,11 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
     def create_appointment(self, request, *args, **kwargs):
         slot_obj = self.get_object()
         facility = slot_obj.resource.facility
-        if not AuthorizationController.call("can_create_appointment" , self.request.user , facility):
+        if not AuthorizationController.call(
+            "can_create_appointment", self.request.user, facility
+        ):
             raise PermissionDenied("You do not have permission to create appointments")
-        return self.create_appointment_handler(
-            slot_obj, request.data, request.user
-        )
+        return self.create_appointment_handler(slot_obj, request.data, request.user)
 
     @action(detail=False, methods=["POST"])
     def availability_stats(self, request, *args, **kwargs):
