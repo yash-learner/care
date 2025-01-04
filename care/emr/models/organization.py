@@ -35,8 +35,9 @@ class OrganizationCommonBase(EMRBaseModel):
                 self.root_org = self.parent
             else:
                 self.root_org = self.parent.root_org
-            self.parent.has_children = True
-            self.parent.save(update_fields=["has_children"])
+            if not self.parent.has_children:
+                self.parent.has_children = True
+                self.parent.save(update_fields=["has_children"])
         super().save()
 
     def get_parent_json(self):
