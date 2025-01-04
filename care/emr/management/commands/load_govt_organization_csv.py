@@ -124,7 +124,7 @@ class Command(BaseCommand):
         logger.info("Creating Organizations")
         for state, districts in data.items():
             state_obj, created = Organization.objects.filter(
-                name=state,
+                name__iexact=state,
                 org_type="govt",
                 metadata={"country": "India", "govt_org_type": "state"},
             ).get_or_create(
@@ -144,7 +144,7 @@ class Command(BaseCommand):
             )
             for district, local_bodies in districts.items():
                 district_obj, created = Organization.objects.filter(
-                    name=district,
+                    name__iexact=district,
                     parent=state_obj,
                     org_type="govt",
                     metadata={"country": "India", "govt_org_type": "district"},
@@ -169,7 +169,7 @@ class Command(BaseCommand):
                     for local_body_type, wards in local_body_types.items():
                         lb_type = local_body_type.lower().replace(" ", "_")
                         local_body_obj, created = Organization.objects.filter(
-                            name=local_body,
+                            name__iexact=local_body,
                             parent=district_obj,
                             org_type="govt",
                             metadata={"country": "India", "govt_org_type": lb_type},
@@ -195,7 +195,7 @@ class Command(BaseCommand):
                         )
                         for ward_number, ward_name in wards.items():
                             ward_obj, created = Organization.objects.get_or_create(
-                                name=ward_name,
+                                name__iexact=ward_name,
                                 parent=local_body_obj,
                                 org_type="govt",
                                 metadata={
