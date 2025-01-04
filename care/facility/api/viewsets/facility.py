@@ -159,7 +159,10 @@ class AllFacilityViewSet(
     viewsets.GenericViewSet,
 ):
     permission_classes = ()
-    queryset = Facility.objects.all().select_related("local_body", "district", "state")
+    authentication_classes = ()
+    queryset = Facility.objects.filter(is_public=True).select_related(
+        "local_body", "district", "state"
+    )
     serializer_class = FacilityBasicInfoSerializer
     filter_backends = (filters.DjangoFilterBackend, drf_filters.SearchFilter)
     filterset_class = FacilityFilter
