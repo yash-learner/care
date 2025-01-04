@@ -65,6 +65,15 @@ class OrganizationViewSet(EMRModelViewSet):
         # Deny all other permissions in OTP mode
         return not getattr(request.user, "is_alternative_login", False)
 
+    def validate_data(self, instance, model_obj=None):
+        """
+        Validating uniqueness on a given level
+        """
+        if Organization.validate_uniqueness(
+            Organization.objects.all(), instance, model_obj
+        ):
+            raise ValidationError("Organization already exists with same name")
+
     def authorize_delete(self, instance):
         if Organization.objects.filter(parent=instance).exists():
             raise PermissionDenied("Cannot delete organization with children")

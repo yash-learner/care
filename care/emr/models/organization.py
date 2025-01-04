@@ -73,6 +73,31 @@ class OrganizationCommonBase(EMRBaseModel):
         else:
             super().save(*args, **kwargs)
 
+    @classmethod
+    def validate_uniqueness(cls, queryset, pydantic_instance, model_instance):
+        if model_instance:
+            name = model_instance.name
+            level_cache = model_instance.level_cache
+            root_org = model_instance.root_org
+            queryset = queryset.exclude(id=model_instance.id)
+        else:
+            name = pydantic_instance.name
+            if pydantic_instance.parent:
+                parent = cls.objects.get(external_id=pydantic_instance.parent)
+                level_cache = parent.level_cache + 1
+                root_org = parent.root_org
+                if not root_org:
+                    root_org = parent
+            else:
+                level_cache = 0
+                root_org = None
+        if root_org:
+            queryset = queryset.filter(root_org=root_org)
+        else:
+            queryset = queryset.filter(root_org__isnull=True)
+        queryset = queryset.filter(level_cache=level_cache, name=name)
+        return queryset.exists()
+
 
 class FacilityOrganization(OrganizationCommonBase):
     facility = models.ForeignKey("facility.Facility", on_delete=models.CASCADE)

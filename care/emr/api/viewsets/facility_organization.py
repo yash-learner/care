@@ -55,6 +55,13 @@ class FacilityOrganizationViewSet(EMRModelViewSet):
                 raise PermissionDenied(
                     "Cannot create organizations under root organization"
                 )
+        # Validate Uniqueness
+        if FacilityOrganization.validate_uniqueness(
+            FacilityOrganization.objects.filter(facility=self.get_facility_obj()),
+            instance,
+            model_obj,
+        ):
+            raise ValidationError("Organization already exists with same name")
 
     def authorize_delete(self, instance):
         if instance.type == "root":
