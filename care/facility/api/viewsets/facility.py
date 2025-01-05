@@ -56,9 +56,7 @@ class FacilityViewSet(
 ):
     """Viewset for facility CRUD operations."""
 
-    queryset = Facility.objects.all().select_related(
-        "ward", "local_body", "district", "state"
-    )
+    queryset = Facility.objects.all().select_related()
     filter_backends = (
         filters.DjangoFilterBackend,
         drf_filters.SearchFilter,
@@ -66,7 +64,7 @@ class FacilityViewSet(
     filterset_class = FacilityFilter
     lookup_field = "external_id"
 
-    search_fields = ["name", "district__name", "state__name"]
+    search_fields = ["name"]
 
     FACILITY_CAPACITY_CSV_KEY = "capacity"
     FACILITY_DOCTORS_CSV_KEY = "doctors"
@@ -160,9 +158,7 @@ class AllFacilityViewSet(
 ):
     permission_classes = ()
     authentication_classes = ()
-    queryset = Facility.objects.filter(is_public=True).select_related(
-        "local_body", "district", "state"
-    )
+    queryset = Facility.objects.filter(is_public=True).select_related()
     serializer_class = FacilityBasicInfoSerializer
     filter_backends = (filters.DjangoFilterBackend, drf_filters.SearchFilter)
     filterset_class = FacilityFilter

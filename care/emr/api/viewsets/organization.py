@@ -32,6 +32,7 @@ class OrganizationFilter(filters.FilterSet):
     org_type = filters.CharFilter(field_name="org_type", lookup_expr="iexact")
     level_cache = filters.NumberFilter(field_name="level_cache")
 
+
 class OrganizationPublicViewSet(EMRModelReadOnlyViewSet):
     database_model = Organization
     pydantic_read_model = OrganizationReadSpec
