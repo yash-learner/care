@@ -15,9 +15,9 @@ class UserAccess(AuthorizationHandler):
             return True
         roles = self.get_role_from_permissions([UserPermissions.can_create_user.value])
         return (
-            OrganizationUser.objects.filter(user=user, roles_id__in=roles).exists()
+            OrganizationUser.objects.filter(user=user, role_id__in=roles).exists()
             or FacilityOrganizationUser.objects.filter(
-                user=user, roles_id__in=roles
+                user=user, role_id__in=roles
             ).exists()
         )
 
