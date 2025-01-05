@@ -41,7 +41,7 @@ class OrganizationCommonBase(EMRBaseModel):
         super().save()
 
     def get_parent_json(self):
-        if self.parent:
+        if self.parent_id:
             if self.cached_parent_json and timezone.now() < datetime.fromisoformat(
                 self.cached_parent_json["cache_expiry"]
             ):

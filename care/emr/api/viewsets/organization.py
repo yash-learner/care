@@ -41,7 +41,10 @@ class OrganizationPublicViewSet(EMRModelReadOnlyViewSet):
     permission_classes = []
 
     def get_queryset(self):
-        return Organization.objects.filter(org_type="govt").order_by("created_date")
+        queryset = super().get_queryset().order_by("created_date")
+        if "parent" in self.request.GET and not self.request.GET.get("parent"):
+            queryset = queryset.filter(parent__isnull=True)
+        return queryset
 
 
 class OrganizationViewSet(EMRModelViewSet):
