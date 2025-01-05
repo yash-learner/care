@@ -41,7 +41,7 @@ class OrganizationPublicViewSet(EMRModelReadOnlyViewSet):
     permission_classes = []
 
     def get_queryset(self):
-        return Organization.objects.filter(org_type="govt")
+        return Organization.objects.filter(org_type="govt").order_by("created_date")
 
 
 class OrganizationViewSet(EMRModelViewSet):
@@ -141,7 +141,10 @@ class OrganizationViewSet(EMRModelViewSet):
 
     def get_queryset(self):
         queryset = (
-            super().get_queryset().select_related("parent", "created_by", "updated_by")
+            super()
+            .get_queryset()
+            .select_related("parent", "created_by", "updated_by")
+            .order_by("created_date")
         )
         if "parent" in self.request.GET and not self.request.GET.get("parent"):
             # Filter for root organizations, For some reason its not working as intended in Django Filters
