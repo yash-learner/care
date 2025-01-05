@@ -36,7 +36,7 @@ from care.utils.queryset.facility import get_facility_queryset
 class GeoOrganizationFilter(filters.UUIDFilter):
     def filter(self, qs, value):
         if value:
-            organization = Organization.objects.get(external_id=value, org_type="govt")
+            organization = get_object_or_404(Organization, external_id=value)
             return qs.filter(geo_organization_cache__overlap=[organization.id])
         return qs
 
@@ -44,7 +44,7 @@ class GeoOrganizationFilter(filters.UUIDFilter):
 class FacilityFilter(filters.FilterSet):
     name = filters.CharFilter(field_name="name", lookup_expr="icontains")
     facility_type = filters.NumberFilter(field_name="facility_type")
-    geo_organization = GeoOrganizationFilter()
+    organization = GeoOrganizationFilter()
 
 
 class FacilityViewSet(
