@@ -168,19 +168,20 @@ class Command(BaseCommand):
         return data
 
     def create_ward(self, state, parent, ward_number, ward_name):
+        name = f"{ward_number}: {ward_name}"
         metadata = {
             "country": self.country,
             "govt_org_type": "ward",
             "govt_org_id": ward_number,
         }
         ward_obj, created = Organization.objects.filter(
-            name__iexact=ward_name,
+            name__iexact=name,
             parent=parent,
             org_type="govt",
             metadata=metadata,
         ).get_or_create(
             defaults={
-                "name": ward_name,
+                "name": name,
                 "root_org": state,
                 "parent": parent,
                 "org_type": "govt",
@@ -191,7 +192,7 @@ class Command(BaseCommand):
         )
         logger.debug(
             "Ward: %s, Created: %s, Ward ID: %s",
-            ward_name,
+            name,
             created,
             ward_obj.id,
         )
@@ -252,6 +253,8 @@ class Command(BaseCommand):
                 for local_body, local_body_types in local_bodies.items():
                     for local_body_type, children in local_body_types.items():
                         # children can be either ward or grama_panchayat
+                        lg_type = local_body_type.replace("_", " ").title()
+                        lb_name = f"{local_body} {lg_type}"
                         metadata = {
                             "country": self.country,
                             "govt_org_type": local_body_type,
@@ -262,13 +265,13 @@ class Command(BaseCommand):
                             metadata["govt_org_children_type"] = "ward"
 
                         local_body_obj, created = Organization.objects.filter(
-                            name__iexact=local_body,
+                            name__iexact=lb_name,
                             parent=district_obj,
                             org_type="govt",
                             metadata=metadata,
                         ).get_or_create(
                             defaults={
-                                "name": local_body,
+                                "name": lb_name,
                                 "root_org": state_obj,
                                 "parent": district_obj,
                                 "org_type": "govt",
@@ -290,15 +293,16 @@ class Command(BaseCommand):
                                     "govt_org_type": "grama_panchayat",
                                     "govt_org_children_type": "ward",
                                 }
+                                gp_name = f"{grama_panchayat} Grama Panchayat"
                                 grama_panchayat_obj, created = (
                                     Organization.objects.filter(
-                                        name__iexact=grama_panchayat,
+                                        name__iexact=gp_name,
                                         parent=local_body_obj,
                                         org_type="govt",
                                         metadata=metadata,
                                     ).get_or_create(
                                         defaults={
-                                            "name": grama_panchayat,
+                                            "name": gp_name,
                                             "root_org": state_obj,
                                             "parent": local_body_obj,
                                             "org_type": "govt",
@@ -310,7 +314,7 @@ class Command(BaseCommand):
                                 )
                                 logger.debug(
                                     "Block Panchayat: %s, Created: %s, Block Panchayat ID: %s",
-                                    grama_panchayat,
+                                    gp_name,
                                     created,
                                     grama_panchayat_obj.id,
                                 )
