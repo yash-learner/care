@@ -3,6 +3,7 @@ Base settings to build other settings files upon.
 """
 
 import logging
+import warnings
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -16,6 +17,8 @@ from healthy_django.healthcheck.django_database import DjangoDatabaseHealthCheck
 
 from care.utils.csp import config as csp_config
 from plug_config import manager
+
+warnings.filterwarnings("ignore", category=UserWarning)
 
 logger = logging.getLogger(__name__)
 

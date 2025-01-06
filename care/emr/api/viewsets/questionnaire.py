@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
 from pydantic import UUID4, BaseModel
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import EMRModelViewSet
@@ -13,6 +13,7 @@ from care.emr.models import (
     Patient,
     Questionnaire,
     QuestionnaireOrganization,
+    QuestionnaireResponse,
 )
 from care.emr.resources.organization.spec import OrganizationReadSpec
 from care.emr.resources.questionnaire.spec import (
@@ -58,6 +59,15 @@ class QuestionnaireViewSet(EMRModelViewSet):
                 QuestionnaireOrganization.objects.create(
                     questionnaire=instance, organization=organization_obj
                 )
+
+    def validate_data(self, instance, model_obj=None):
+        if (
+            model_obj
+            and not QuestionnaireResponse.objects.filter(
+                questionnaire=model_obj
+            ).exists()
+        ):
+            raise ValidationError("Cannot edit an active questionnaire")
 
     def authorize_create(self, instance):
         for org in instance.organizations:
