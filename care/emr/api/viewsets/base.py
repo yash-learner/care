@@ -131,7 +131,7 @@ class EMRUpdateMixin:
             instance.save()
             if getattr(self, "CREATE_QUESTIONNAIRE_RESPONSE", False):
                 QuestionnaireResponse.objects.create(
-                    subject_id=self.fetch_patient_from_instance(instance),
+                    subject_id=self.fetch_patient_from_instance(instance).external_id,
                     patient=self.fetch_patient_from_instance(instance),
                     encounter=self.fetch_encounter_from_instance(instance),
                     structured_responses={

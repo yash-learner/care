@@ -67,6 +67,7 @@ class AllergyIntoleranceViewSet(
             "can_write_patient_obj", self.request.user, self.get_patient_obj()
         ):
             raise PermissionDenied("You do not have permission to update encounter")
+        # TODO If there is an encounter, check access to the encounter
 
     def get_queryset(self):
         if not AuthorizationController.call(
