@@ -3,7 +3,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
 
 from care.emr.api.viewsets.base import EMRModelReadOnlyViewSet
-from care.emr.models import Patient
+from care.emr.models import Encounter, Patient
 from care.emr.models.questionnaire import QuestionnaireResponse
 from care.emr.resources.questionnaire_response.spec import QuestionnaireResponseReadSpec
 from care.security.authorization import AuthorizationController
@@ -39,7 +39,7 @@ class QuestionnaireResponseViewSet(EMRModelReadOnlyViewSet):
             )
             if "encounter" in self.request.GET:
                 encounter = get_object_or_404(
-                    Patient, external_id=self.request.GET["encounter"]
+                    Encounter, external_id=self.request.GET["encounter"]
                 )
         else:
             obj = get_object_or_404(QuestionnaireResponse, self.kwargs["external_id"])
