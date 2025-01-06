@@ -60,7 +60,7 @@ class AllergyIntoleranceViewSet(
         )
 
     def authorize_update(self, request_obj, model_instance):
-        self.authorize_create({}, model_instance)
+        self.authorize_create({})
 
     def authorize_create(self, instance):
         if not AuthorizationController.call(
