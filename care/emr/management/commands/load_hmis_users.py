@@ -49,7 +49,8 @@ class Command(BaseCommand):
     Optional CSV columns:
     - prefix (e.g., Dr., Mr., Ms.)
     - suffix
-    - geo_organization (UUID of government organization)
+    - geo_organization (UUID of government organization, OR use state column instead)
+    - state (name of state to lookup geo_organization, e.g., "Kerala", "Tamil Nadu")
     - department_name (name of department(s) in facility, comma-separated for multiple, e.g., "Anesthesia,OBG,Medicine")
     - sub_department_name (name of sub-department(s), comma-separated to match department order if provided)
     - role_name (name of role for facility department link, applies to all departments)
@@ -167,8 +168,12 @@ class Command(BaseCommand):
             user_data["prefix"] = row["prefix"].strip()
         if row.get("suffix"):
             user_data["suffix"] = row["suffix"].strip()
+        
+        # Handle geo_organization - either by UUID or by state name lookup
         if row.get("geo_organization"):
             user_data["geo_organization_id"] = row["geo_organization"].strip()
+        elif row.get("state"):
+            user_data["state_name"] = row["state"].strip()
 
         # Facility linking fields (comma-separated for multiple departments)
         if row.get("department_name"):
@@ -202,7 +207,7 @@ class Command(BaseCommand):
             if User.objects.filter(phone_number=data["phone_number"]).exists():
                 raise ValueError(f"Phone number '{data['phone_number']}' already exists")
 
-            # Get geo_organization if provided
+            # Get geo_organization if provided (by UUID or by state name)
             geo_organization = None
             if data.get("geo_organization_id"):
                 geo_organization = Organization.objects.filter(
@@ -211,7 +216,17 @@ class Command(BaseCommand):
                 ).first()
                 if not geo_organization:
                     logger.warning(
-                        "Geo organization not found: %s", data["geo_organization_id"]
+                        "Geo organization not found by UUID: %s", data["geo_organization_id"]
+                    )
+            elif data.get("state_name"):
+                # Lookup by state name
+                geo_organization = Organization.objects.filter(
+                    org_type="govt",
+                    name__iexact=data["state_name"],
+                ).first()
+                if not geo_organization:
+                    logger.warning(
+                        "Geo organization not found by state name: %s", data["state_name"]
                     )
 
             # Create the user
