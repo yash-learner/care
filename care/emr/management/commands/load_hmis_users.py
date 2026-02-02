@@ -248,11 +248,19 @@ class Command(BaseCommand):
 
             # Link user to facility department(s) with role
             if data.get("department_name") and data.get("role_name"):
+                # Get or create the role
                 facility_role = RoleModel.objects.filter(
                     name__iexact=data["role_name"]
                 ).first()
                 if not facility_role:
-                    raise ValueError(f"Role '{data['role_name']}' not found")
+                    # Create the role if it doesn't exist (non-system role)
+                    facility_role = RoleModel(
+                        name=data["role_name"],
+                        description=f"Auto-created role: {data['role_name']}",
+                        is_system=False,
+                    )
+                    facility_role.save()
+                    logger.info("Created new role: %s", data["role_name"])
 
                 department_names = data["department_name"]
                 sub_department_names = data.get("sub_department_name", [])
