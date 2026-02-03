@@ -24,6 +24,7 @@ from care.emr.resources.location.spec import (
     FacilityLocationEncounterUpdateSpec,
     FacilityLocationListSpec,
     FacilityLocationModeChoices,
+    FacilityLocationOperationalStatusChoices,
     FacilityLocationRetrieveSpec,
     FacilityLocationUpdateSpec,
     FacilityLocationWriteSpec,
@@ -473,7 +474,9 @@ class FacilityLocationEncounterViewSet(EMRModelViewSet):
             "can_list_facility_location_obj", self.request.user, facility, location
         ):
             raise PermissionDenied("You do not have permission to given location")
-        return FacilityLocationEncounter.objects.filter(location=location)
+        return FacilityLocationEncounter.objects.filter(location=location).order_by(
+            "-created_date"
+        )
 
 
 def close_related_location_from_encounter(instance):
@@ -482,6 +485,18 @@ def close_related_location_from_encounter(instance):
             FacilityLocation.objects.filter(current_encounter=instance).update(
                 current_encounter=None,
                 system_availability_status=LocationAvailabilityStatusChoices.available.value,
+            )
+            location_ids = (
+                FacilityLocationEncounter.objects.filter(encounter=instance)
+                .exclude(status__in=COMPLETED_CHOICES)
+                .values_list("location_id", flat=True)
+            )
+            FacilityLocation.objects.filter(
+                id__in=location_ids,
+                current_encounter=None,
+                operational_status=FacilityLocationOperationalStatusChoices.O.value,
+            ).update(
+                operational_status=FacilityLocationOperationalStatusChoices.U.value,
             )
             FacilityLocationEncounter.objects.filter(encounter=instance).exclude(
                 status__in=COMPLETED_CHOICES
