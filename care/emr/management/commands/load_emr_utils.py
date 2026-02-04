@@ -81,7 +81,7 @@ def normalize_title(title: str) -> str:
     return final.strip()
 
 
-def create_slug(name: str, ensure_unique: bool = False) -> str:
+def create_slug(name: str) -> str:
     """
     Create a slug from a name.
     Matches the TypeScript createSlug function.
@@ -91,8 +91,6 @@ def create_slug(name: str, ensure_unique: bool = False) -> str:
         ensure_unique: If True, adds a UUID-based suffix to ensure uniqueness
                        even for identical titles.
     """
-    import uuid
-
     if not name:
         return ""
 
@@ -102,17 +100,11 @@ def create_slug(name: str, ensure_unique: bool = False) -> str:
     slug = re.sub(r"-+", "-", slug)
     slug = slug.strip("-")
 
-    if ensure_unique:
-        # Use UUID for guaranteed uniqueness
-        unique_id = uuid.uuid4().hex[:16]
-        slug = slug[:8]  # Keep first 8 chars of name
-        slug = slug + "-" + unique_id
-    else:
-        slug = slug[:25]
-        if len(slug) < 25:
-            hash_suffix = hashlib.sha256(slug.encode()).hexdigest()
-            needed_hash = 25 - len(slug) - 1
-            slug = slug + "-" + hash_suffix[:needed_hash]
+    slug = slug[:25]
+    if len(slug) < 25:
+        hash_suffix = hashlib.sha256(slug.encode()).hexdigest()
+        needed_hash = 25 - len(slug) - 1
+        slug = slug + "-" + hash_suffix[:needed_hash]
 
     return slug
 

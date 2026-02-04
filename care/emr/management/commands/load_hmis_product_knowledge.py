@@ -275,8 +275,7 @@ class Command(BaseCommand):
                 raise ValueError(error_message) from e
 
             name = normalize_title(row["name"])
-            slug_value = create_slug(name)  # No ensure_unique, name should be unique
-
+            slug_value = create_slug(name)
             # Parse code
             code = self.parse_code(row.get("code"), row.get("display"))
 

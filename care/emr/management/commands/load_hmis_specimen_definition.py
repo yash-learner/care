@@ -276,7 +276,7 @@ class Command(BaseCommand):
 
             title = normalize_title(row["title"])
             # Use slug from CSV if provided, otherwise generate unique slug from title
-            slug_value = row.get("slug") or create_slug(title, ensure_unique=True)
+            slug_value = row.get("slug") or create_slug(title)
 
             return {
                 "title": title,

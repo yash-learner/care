@@ -225,7 +225,7 @@ class Command(BaseCommand):
                 raise ValueError(error_message) from e
 
             title = normalize_title(row["title"])
-            slug_value = row.get("slug") or create_slug(title, ensure_unique=True)
+            slug_value = row.get("slug") or create_slug(title)
 
             # Build price_components array
             price_components = self.build_price_components(row)

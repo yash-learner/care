@@ -224,7 +224,7 @@ class Command(BaseCommand):
 
             title = normalize_title(row["title"])
             # Use slug from CSV if provided, otherwise generate unique slug from title
-            slug_value = row.get("slug") or create_slug(title, ensure_unique=True)
+            slug_value = row.get("slug") or create_slug(title)
 
             # Handle permitted_data_type - lowercase and default to string
             permitted_data_type = (row.get("permitted_data_type") or "string").lower()
@@ -234,7 +234,7 @@ class Command(BaseCommand):
                 "slug_value": slug_value,
                 "status": (row.get("status") or "").strip() or "active",
                 "description": row.get("description", ""),
-                "category": row.get("category", "laboratory"),
+                "category": (row.get("category") or "laboratory").lower(),
                 "code": code,
                 "permitted_data_type": permitted_data_type,
                 "body_site": body_site,
@@ -372,13 +372,14 @@ class Command(BaseCommand):
 
                         successful.append(slug_value)
                         # Track warnings (e.g., code substitutions)
-                        if data.get("substitutions"):
+                        has_substitutions = bool(data.get("substitutions"))
+                        if has_substitutions:
                             warnings.append(slug_value)
                         output_rows.append(
                             {
                                 "title": data["title"],
                                 "slug_value": slug_value,
-                                "status": "Success",
+                                "status": "Warning" if has_substitutions else "Success",
                                 "error": "",
                                 "code_substitutions": data.get("substitutions", ""),
                             }
