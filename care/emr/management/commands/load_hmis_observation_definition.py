@@ -170,7 +170,7 @@ class Command(BaseCommand):
             method_code = row.get("method_code")
             method_system = row.get(
                 "method_system",
-                "http://terminology.hl7.org/CodeSystem/observation-methods",
+                "http://snomed.info/sct",
             )
             method_display = row.get("method_display")
 
