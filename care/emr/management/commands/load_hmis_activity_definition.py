@@ -64,6 +64,9 @@ class Command(BaseCommand):
     - charge_item_slugs (optional, comma-separated)
     - locations (optional, comma-separated location names)
     - derived_from_uri (optional)
+    - diagnostic_system
+    - diagnostic_code
+    - diagnostic_display
     """
 
     help = "Load Activity Definitions from CSV or Google Sheets"
@@ -254,6 +257,16 @@ class Command(BaseCommand):
                 row.get("body_site_display"),
             )
 
+            # Parse diagnostic report codes (optional)
+            diagnostic_report_codes = []
+            diagnostic_code = row.get("diagnostic_code")
+            if diagnostic_code:
+                diagnostic_report_codes.append({
+                    "system": row.get("diagnostic_system", "http://loinc.org"),
+                    "code": diagnostic_code.strip(),
+                    "display": row.get("diagnostic_display", ""),
+                })
+
             observation_slugs = []
             if row.get("observation_slugs"):
                 observation_slugs = [
@@ -301,6 +314,7 @@ class Command(BaseCommand):
                 "category": category,
                 "code": code,
                 "body_site": body_site,
+                "diagnostic_report_codes": diagnostic_report_codes,
                 "observation_slugs": observation_slugs,
                 "specimen_slugs": specimen_slugs,
                 "charge_item_slugs": charge_item_slugs,
@@ -412,6 +426,7 @@ class Command(BaseCommand):
                 category=data["category"],
                 code=data["code"],
                 body_site=data["body_site"],
+                diagnostic_report_codes=data["diagnostic_report_codes"],
                 observation_result_requirements=data["observation_ids"],
                 specimen_requirements=data["specimen_ids"],
                 charge_item_definitions=data["charge_item_ids"],
