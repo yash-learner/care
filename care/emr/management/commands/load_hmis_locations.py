@@ -152,31 +152,43 @@ class Command(BaseCommand):
                     logger.debug("    Room already exists: %s", room.name)
                     updated += 1
 
-                if department_name := data["department_name"]:
-                    org = FacilityOrganization.objects.filter(
-                        name=department_name
-                    ).first()
-                    if sub_department_name := data["sub_department_name"]:
+                # Department and Sub-Department columns support comma-separated values.
+                # They are paired by position (first dept with first sub-dept, second with second, etc.)
+                department_names = [
+                    n.strip() for n in data["department_name"].split(",")
+                ]
+                sub_department_names = [
+                    n.strip() for n in data["sub_department_name"].split(",")
+                ]
+                department_pairs = zip(
+                    department_names, sub_department_names, strict=True
+                )
+                for department_name, sub_department_name in department_pairs:
+                    if department_name:
                         org = FacilityOrganization.objects.filter(
-                            name=sub_department_name, parent=org
+                            facility=facility, name=department_name
                         ).first()
-                    if not org:
-                        logger.warning(
-                            "      Department/Sub-department '%s/%s' not found for room %s, skipping organization linking.",
-                            department_name,
-                            sub_department_name,
-                            room.name,
-                        )
-                    else:
-                        FacilityLocationOrganization.objects.get_or_create(
-                            location=room, organization=org
-                        )
-                        logger.debug(
-                            "      Linked Room %s to Organization %s",
-                            room.name,
-                            org.name,
-                        )
-                else:
+                        if sub_department_name:
+                            org = FacilityOrganization.objects.filter(
+                                facility=facility, name=sub_department_name, parent=org
+                            ).first()
+                        if not org:
+                            logger.warning(
+                                "      Department/Sub-department '%s/%s' not found for room %s, skipping organization linking.",
+                                department_name,
+                                sub_department_name,
+                                room.name,
+                            )
+                        else:
+                            FacilityLocationOrganization.objects.get_or_create(
+                                location=room, organization=org
+                            )
+                            logger.debug(
+                                "      Linked Room %s to Organization %s",
+                                room.name,
+                                org.name,
+                            )
+                if not department_names:
                     logger.warning(
                         "      No department name provided for room %s, skipping organization linking.",
                         room.name,
