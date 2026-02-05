@@ -37,6 +37,7 @@ class Command(BaseCommand):
 
     Expected CSV columns:
     - name (required)
+    - product_knowledge_slug (optional, slug value; if not provided, slug will be generated from name)
     - product_type (required: medication, nutritional_product, consumable)
     - category (required, category name)
     - display (optional, SNOMED display for code)
@@ -158,24 +159,30 @@ class Command(BaseCommand):
 
         # Preferred name
         if row.get("preferred_name"):
-            names.append({
-                "name_type": "preferred",
-                "name": str(row["preferred_name"]).strip(),
-            })
+            names.append(
+                {
+                    "name_type": "preferred",
+                    "name": str(row["preferred_name"]).strip(),
+                }
+            )
 
         # Original name
         if row.get("original_name"):
-            names.append({
-                "name_type": "original_name",
-                "name": str(row["original_name"]).strip(),
-            })
+            names.append(
+                {
+                    "name_type": "original_name",
+                    "name": str(row["original_name"]).strip(),
+                }
+            )
 
         # Alias name
         if row.get("alias_name"):
-            names.append({
-                "name_type": "alias",
-                "name": str(row["alias_name"]).strip(),
-            })
+            names.append(
+                {
+                    "name_type": "alias",
+                    "name": str(row["alias_name"]).strip(),
+                }
+            )
 
         return names
 
@@ -232,7 +239,7 @@ class Command(BaseCommand):
             if intended_routes:
                 definitional["intended_routes"] = intended_routes
 
-        return definitional if definitional else {}
+        return definitional or {}
 
     def process_row(self, row: dict, facility: Facility, created_by) -> dict:
         """
@@ -275,7 +282,13 @@ class Command(BaseCommand):
                 raise ValueError(error_message) from e
 
             name = normalize_title(row["name"])
-            slug_value = create_slug(name)
+            # Use product_knowledge_slug if provided, otherwise generate from name
+            if row.get("product_knowledge_slug"):
+                slug_value = str(row["product_knowledge_slug"]).strip()
+                if not slug_value:  # If stripped value is empty, generate from name
+                    slug_value = create_slug(name)
+            else:
+                slug_value = create_slug(name)
             # Parse code
             code = self.parse_code(row.get("code"), row.get("display"))
 
@@ -300,9 +313,9 @@ class Command(BaseCommand):
                 "code": code,
                 "base_unit": base_unit,
                 "alternate_identifier": row.get("hsn_code", "").strip() or None,
-                "names": names if names else [],
-                "storage_guidelines": storage_guidelines if storage_guidelines else [],
-                "definitional": definitional if definitional else {},
+                "names": names or [],
+                "storage_guidelines": storage_guidelines or [],
+                "definitional": definitional or {},
             }
 
         except (KeyError, ValueError) as e:
@@ -416,29 +429,35 @@ class Command(BaseCommand):
                             updated_count += 1
                             status = "Updated"
 
-                        output_rows.append({
-                            "name": data["name"],
-                            "slug_value": data["slug_value"],
-                            "status": status,
-                            "error": "",
-                        })
+                        output_rows.append(
+                            {
+                                "name": data["name"],
+                                "slug_value": data["slug_value"],
+                                "product_knowledge_slug": product.slug,
+                                "status": status,
+                                "error": "",
+                            }
+                        )
 
                     except Exception as e:
                         logger.error("Error processing row '%s': %s", row_name, e)
                         failed.append(row_name)
-                        output_rows.append({
-                            "name": row_name,
-                            "slug_value": "",
-                            "status": "Failed",
-                            "error": str(e),
-                        })
+                        output_rows.append(
+                            {
+                                "name": row_name,
+                                "slug_value": "",
+                                "product_knowledge_slug": "",
+                                "status": "Failed",
+                                "error": str(e),
+                            }
+                        )
 
             output_path = options.get("output") or default_output_path
             if output_path:
                 write_output_csv(
                     output_path,
                     output_rows,
-                    ["name", "slug_value", "status", "error"],
+                    ["name", "slug_value", "product_knowledge_slug", "status", "error"],
                 )
 
             self.stdout.write("\n=== Summary ===")
