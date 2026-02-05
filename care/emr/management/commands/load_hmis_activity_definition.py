@@ -309,7 +309,7 @@ class Command(BaseCommand):
                 "status": (row.get("status") or "").strip() or "active",
                 "description": row.get("description", ""),
                 "usage": row.get("usage", ""),
-                "classification": (row.get("category") or "laboratory").lower(),
+                "classification": (row.get("classification") or "laboratory").lower(),
                 "kind": row.get("kind", "service_request"),
                 "category": category,
                 "code": code,
