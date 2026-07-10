@@ -10,7 +10,25 @@ for a real API call.
 ```
 care/fixtures/
 ├── __init__.py
-├── base.py              # CareFixtureBase — API helper class
+├── base.py              # CareFixtureBase — assembles the per-domain mixins
+├── helpers/             # per-domain fixture mixins (one file per domain)
+│   ├── __init__.py
+│   ├── utils.py         # FixtureError, AttrDict, slugify, phone helpers
+│   ├── request.py       # RequestMixin — post/get/patch over APIClient
+│   ├── core.py          # orgs, facilities, locations, devices, users, patients, encounters
+│   ├── lab.py           # specimen/observation/charge-item/activity definitions + create_lab_test
+│   ├── inventory.py     # product knowledge, products, orders, deliveries
+│   ├── billing.py       # accounts, charge items, invoices, payments
+│   ├── scheduling.py    # schedules, slots, appointments, token queues
+│   ├── managing_org.py  # managing-org links, role assignments
+│   └── reports.py       # report templates
+├── loaders/             # composable load_* orchestrators (compose helpers into data)
+│   ├── __init__.py
+│   ├── billing.py       # load_billing
+│   ├── lab.py           # load_lab_definitions
+│   ├── inventory.py     # load_inventory
+│   ├── scheduling.py    # load_scheduling
+│   └── managing_org.py  # setup_managing_organization
 ├── constants.py         # Medical codes, builder helpers, data arrays
 ├── context.py           # care_fixture_context() — setup/teardown
 ├── scripts/
@@ -23,9 +41,14 @@ The system has three layers:
 
 | Layer | What it does                                                                                                                                                                                                                                                         | Stable API? |
 | --- |----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| --- |
-| `CareFixtureBase` (in `base.py`) | One Python method per resource — wraps `APIClient`, returns an `AttrDict`.                                                                                                                                                                                           | Yes — write your fixtures against this. |
+| `CareFixtureBase` (in `base.py`) | One Python method per resource, split across per-domain mixins in `helpers/` and assembled by `CareFixtureBase`. Wraps `APIClient`, returns an `AttrDict`. Call methods on the instance (`base.create_invoice(...)`) regardless of which mixin defines them.          | Yes — write your fixtures against this. |
 | `constants.py` | Reusable data: medical code constants (LOINC, SNOMED, UCUM, HL7), builder helpers (`build_price_components`, `simple_ranges`, `make_container`), data arrays (`LAB_TESTS`, `INVENTORY_ITEMS`, `MANAGING_ORG_USERS`, `FACILITY_DEPARTMENTS`, `DEFAULT_AVAILABILITY`). | Yes — import what you need. |
 | `care/fixtures/scripts/*.py` | Standalone fixture files. The default is `default_fixtures.py`. You can author your own and load them via `--path`.                                                                                                                                                  | This is *your* code; structure it however you like. |
+
+> **Adding a resource helper:** add the method to the relevant mixin in
+> `helpers/` (or create a new mixin and add it to the `CareFixtureBase` bases in
+> `base.py`). Mixins use `self.post` / `self.get` / `self.patch` from
+> `RequestMixin` and `self.fake` / `self.user` from `CareFixtureBase`.
 
 ---
 
@@ -122,6 +145,24 @@ Each method builds the request payload, calls the API, and returns an
 - `create_charge_item_definition(...)`
 - `create_activity_definition(...)`
 - `create_lab_test(...)` — composite that wires specimen → observation → charge → activity in one call
+
+### Billing
+
+- `create_account(facility_id, patient_id, **kwargs)` — a patient billing account (defaults to `status="active"`, `billing_status="open"`).
+- `update_account(facility_id, account, **kwargs)` — PATCH an account; used to set `primary_encounter` (an update-only field the create spec does not accept).
+- `create_charge_item(facility_id, account_id, patient_id, title, quantity=1, base_amount=500, **kwargs)` — an ad-hoc `billable` charge item (hand-priced via `build_price_components`, no catalogue link).
+- `apply_charge_item_defs(facility_id, requests)` — create one or more catalogue-backed charge items from existing charge item definitions. Each request is `{"quantity", "charge_item_definition" (slug), "patient", "account", "performer_actor"?}`. Returns `{}` (no ids) — recover them with `list_charge_items`.
+- `list_charge_items(facility_id, account_id, status="billable")` — list an account's charge items (used to collect ids after `apply_charge_item_defs`).
+- `create_invoice(facility_id, account_id, charge_items, created_date=None, **kwargs)` — an invoice linking `billable` charge items on the account.
+  - The invoice is created through the API as `draft` (the viewset forces `draft` and marks the linked charge items `billed`, then syncs totals).
+  - **`created_date` caveat:** the API stamps `created_date` to `now`. When `created_date` is passed, the helper backdates it via a direct ORM `update()` after creation — a deliberate exception to the API-only fixture rule, needed so the invoice list date-range filter has data spread across known dates.
+- `issue_invoice(facility_id, invoice)` — transitions a draft invoice to `issued` (snapshots line items and totals).
+- `balance_invoice(facility_id, invoice)` — transitions an issued invoice to `balanced` (marks its charge items `paid`).
+- `cancel_invoice(facility_id, invoice, reason="cancelled")` — voids an invoice via the cancel action; `reason` is `cancelled` or `entered_in_error` (reverts its charge items to `billable`).
+- `set_invoice_expression(facility_id, expression)` — sets the facility's invoice-number expression (e.g. `"f'#INV-{invoice_count + 100}-{current_year_yy}'"`, evaluated as a Python f-string) so generated invoices get numbers.
+- `create_payment_reconciliation(facility_id, account_id, tendered_amount, returned_amount=0, target_invoice=None, **kwargs)` — records a payment against an account (and optionally a specific invoice); the net `amount` is computed server-side as `tendered − returned`.
+
+The `load_billing(base, facility_id, patients, encounters=None)` orchestrator in `care/fixtures/billing.py` composes these into a comprehensive billing picture — accounts named `"<FirstName> <YYYY-MM-DD>"` tied to their primary encounter, charge items built from catalogue definitions (lab tests, medicines, consumables) performed by the seeding user, numbered invoices spread across known dates covering every status (draft, issued, balanced, cancelled, entered_in_error), and payments against the balanced invoices. It is called from `default_fixtures.py` after the lab and inventory definitions exist.
 
 ### Inventory
 
